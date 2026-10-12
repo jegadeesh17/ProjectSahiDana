@@ -1,0 +1,177 @@
+{
+  "species": {
+    "buffalo": [
+      "bhains",
+      "bhais",
+      "buffalo",
+      "भैंस",
+      "भैस"
+    ],
+    "cow": [
+      "gaay",
+      "gai ",
+      "cow",
+      "गाय"
+    ]
+  },
+  "feedAliases": {
+    "wheat_straw": [
+      "wheat bhusa",
+      "wheat straw",
+      "gehun ka bhusa",
+      "gehu ka bhusa",
+      "turi",
+      "bhusa",
+      "गेहूँ का भूसा",
+      "भूसा"
+    ],
+    "jowar_stover": [
+      "kadbi",
+      "jowar kadbi",
+      "sorghum stover",
+      "कड़बी"
+    ],
+    "bajra_grain": [
+      "bajra",
+      "pearl millet grain",
+      "pearl millet",
+      "बाजरा"
+    ],
+    "wheat_bran": [
+      "chokar",
+      "wheat bran",
+      "चोकर"
+    ],
+    "mustard_cake": [
+      "sarson khali",
+      "mustard cake",
+      "mustard khali",
+      "sarson",
+      "सरसों खली",
+      "सरसों"
+    ],
+    "cottonseed_cake": [
+      "binola khali",
+      "cottonseed cake",
+      "binola",
+      "बिनौला"
+    ],
+    "molasses": [
+      "molasses",
+      "shira",
+      "raab"
+    ],
+    "berseem": [
+      "berseem",
+      "बरसीम"
+    ],
+    "maize_green": [
+      "makka chara",
+      "maize green",
+      "green maize",
+      "makka",
+      "मक्का"
+    ],
+    "jowar_green": [
+      "jowar chari",
+      "jowar green",
+      "chari",
+      "ज्वार"
+    ],
+    "mineral_mix": [
+      "mineral mixture",
+      "mineral mix",
+      "khanij",
+      "खनिज"
+    ],
+    "pulse_chuni": [
+      "chuni",
+      "gram husk",
+      "चुनी"
+    ],
+    "bajra_stover": [
+      "karbi",
+      "bajra karbi",
+      "pearl millet stover",
+      "करबी"
+    ],
+    "bajra_green": [
+      "bajra chara",
+      "bajra green",
+      "बाजरा चारा"
+    ],
+    "maize_grain": [
+      "maize grain",
+      "makka grain"
+    ],
+    "lucerne": [
+      "lucerne",
+      "rijka"
+    ],
+    "guar_meal": [
+      "guar meal",
+      "guar korma",
+      "korma"
+    ],
+    "groundnut_cake": [
+      "groundnut cake",
+      "mungfali khal",
+      "मूंगफली खली"
+    ],
+    "rice_bran_dorb": [
+      "rice bran",
+      "dorb"
+    ],
+    "saras_compound": [
+      "saras",
+      "saras pashu aahar",
+      "सरस"
+    ]
+  },
+  "unmatchedHints": [
+    "probiotic",
+    "magic",
+    "tonic",
+    "premix",
+    "booster",
+    "powder mix"
+  ],
+  "kgWords": [
+    "kg",
+    "kilo",
+    "kilogram",
+    "किलो"
+  ],
+  "litreWords": [
+    "litre",
+    "liter",
+    "ltr",
+    "l/day",
+    "लीटर",
+    "लिटर"
+  ],
+  "separators": [
+    ",",
+    " and ",
+    " aur ",
+    "और",
+    " with ",
+    " has ",
+    " hai"
+  ],
+  "articles": [
+    "a ",
+    "an ",
+    "the "
+  ],
+  "sentenceTailWords": [
+    " hai",
+    " है",
+    " ke saath"
+  ],
+  "budgetWords": [
+    "budget",
+    "bajat",
+    "बजट"
+  ]
+}

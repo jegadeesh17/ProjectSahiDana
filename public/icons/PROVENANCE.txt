@@ -1,0 +1,9 @@
+Provenance of the raster files in this folder (icon-192.png, icon-512.png)
+
+Origin:   Rendered from public/favicon.svg for the SahiDana calm-health restyle (2026-10-12).
+Method:   A headless Chrome screenshot of the SVG at 192 and 512 pixels with a transparent
+          background. The SVG is hand-written geometry (a rounded green square, a progress
+          ring and a centre dot; green #12804a, white, tint #bfe5cf). No photograph, no stock
+          image, no AI image generation, no third-party artwork.
+Licence:  Project-owned (MIT, same as the repository).
+Status:   PLACEHOLDER. Replace with a designed icon before a public release.

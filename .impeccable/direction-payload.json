@@ -1,0 +1,98 @@
+{
+  "title": "Choose the visual world for SahiDana (re-roll: grounded in the paravet's world)",
+  "question": "Directions drawn from objects paravets, farmers and vets handle every day, fused with SahiDana's solver and tap-to-audit trail.",
+  "options": [
+    {
+      "id": "feed-sack-analysis-panel",
+      "label": "Feed-Sack Analysis Panel",
+      "kicker": "THE ROLL",
+      "lineage": "Printed cattle-feed sacks (woven polypropylene, two-colour flexo) with their boxed 'typical analysis' panel, feeding instructions and inkjet batch/MRP stamp",
+      "thesis": "Every paravet has read a feed sack's analysis box: SahiDana prints the solved ration as that box, with ruled nutrient rows (required, supplied, coverage), an MRP-style ₹/day block, and an inkjet-stamped solver line; the fine print under each number opens its NDDB/ICAR source.",
+      "palette": ["#f4f6f2", "#0d5c36", "#ffcc00", "#141414", "#c62828"],
+      "materials": [
+        "cool white woven-sack ground (flat, no texture behind numbers)",
+        "two-colour flexo: deep fodder green bands, signal-yellow callouts",
+        "black ruled analysis box with heavy outer frame",
+        "dot-matrix inkjet stamp for solver status and batch line",
+        "condensed bold sans caps for heads, tabular figures for every number"
+      ],
+      "viewport": "Phone at 390px: a green flexo band carries SAHIDANA and the tagline; below it the animal line (Buffalo · 450 kg · 8 L · 6.5% fat) and the feeds-on-hand chips; then the black-framed RATION ANALYSIS box, kg/day per feed, ₹/day in an MRP-style yellow block, five ruled nutrient rows with flat flexo coverage bars, and an inkjet line 'LP OPTIMAL · 5/5 MET · SOLVED 13-10-26'. Every figure carries a small source key.",
+      "raised": [
+        { "from": "vernacular-ephemera-jet-age-ticket-wallet", "raise": "States stamp onto the sheet and never vanish: INFEASIBLE, VERIFIED and OFFLINE land as rubber-stamp marks over the analysis box." },
+        { "from": "wayfinding-cartography-signage-terminal-yellow-wayfinding", "raise": "On a phone the sheet shows only the next decision (animal, then feeds, then Balance) with the primary action fixed at thumb height." },
+        { "from": "rw-manual-acetate-tab-board", "raise": "Each feed class owns one full-strength flexo hue (roughage, green fodder, concentrate, mineral), used as the row chip and nowhere else." }
+      ],
+      "risk": "Sack print can read as feed-company packaging; the build must look like an analysis report, never like an ad for a product to buy, and must keep woven texture away from the numbers for outdoor contrast."
+    },
+    {
+      "id": "milk-society-slip-passbook",
+      "label": "Milk-Society Slip & Passbook",
+      "kicker": "IMPECCABLE’S PICK",
+      "lineage": "Village dairy cooperative collection slips and the member passbook (date, shift, litres, fat, SNF, rate, ₹), thermal-printed and purple-stamped",
+      "thesis": "Farmers and paravets already trust the society slip that turns fat % and litres into rupees: SahiDana prints the ration as that slip, ruled passbook columns per feed (kg, ₹/kg, ₹), a totals line, and the society's purple stamp as the verification mark.",
+      "palette": ["#ffffff", "#1a1a1a", "#5b2a86", "#1f7a4d"],
+      "materials": [
+        "white thermal roll with darkened (not grey) print",
+        "ruled passbook columns and a double-ruled totals line",
+        "purple society rubber stamp for verified and solved states",
+        "monospaced figures aligned to the decimal"
+      ],
+      "viewport": "Phone at 390px: a slip header (SAHIDANA · ration slip · date), the animal line in passbook style, a column table of feeds with kg/day, ₹/kg and ₹, a double rule and the ₹/day total, then the five nutrient rows as required vs supplied, and a purple 'LP OPTIMAL' stamp. Tapping any figure opens its source as a carbon copy beneath.",
+      "risk": "This is my top grounded pick and also the most familiar: receipt aesthetics are common, and thermal-print type must be darkened to pass AA outdoors."
+    },
+    {
+      "id": "rw-manual-acetate-tab-board",
+      "label": "Acetate Tab-Board Manual",
+      "verdict": "declined",
+      "lineage": "Boxed-software reference manuals with coloured divider boards",
+      "thesis": "Punched acetate leaves over full-strength section boards.",
+      "palette": ["#f3f1ea", "#e8a317", "#2f8f4e", "#2a4fbf"],
+      "materials": ["milk acetate", "full-strength divider boards"],
+      "viewport": "Tabbed manual sections down the fore edge.",
+      "risk": "A software-manual world no paravet recognises.",
+      "case": "Declined: loses audience fit and adds navigation chrome to a one-scroll task.",
+      "kept": "One full-strength hue per feed class.",
+      "hero": "https://impeccable.style/worlds/cards/rw-manual-acetate-tab-board-hero.webp"
+    },
+    {
+      "id": "vernacular-ephemera-jet-age-ticket-wallet",
+      "label": "Jet-Age Ticket Wallet",
+      "verdict": "declined",
+      "lineage": "Carbon-copy airline coupons and baggage tags",
+      "thesis": "A coupon book where each leg tears off and states stamp themselves.",
+      "palette": ["#ffffff", "#1b2a4a", "#c8102e", "#5a3e8c"],
+      "materials": ["coupon stock", "carbon numerals", "VOID stamp"],
+      "viewport": "Coupon stubs stacked down a phone.",
+      "risk": "Air travel is foreign to the paravet's day.",
+      "case": "Declined: loses audience fit; a coupon sequence fragments a ration that must be read whole.",
+      "kept": "States stamp onto the sheet and never vanish.",
+      "hero": "https://impeccable.style/worlds/cards/vernacular-ephemera-jet-age-ticket-wallet-hero.webp"
+    },
+    {
+      "id": "wayfinding-cartography-signage-terminal-yellow-wayfinding",
+      "label": "Terminal Yellow Wayfinding",
+      "verdict": "declined",
+      "lineage": "Airport overhead yellow sign bands",
+      "thesis": "One decision per band, gate numbers monumental.",
+      "palette": ["#ffd100", "#111111", "#ffffff"],
+      "materials": ["yellow sign panels", "white pictograms"],
+      "viewport": "Overhead bands guiding the next step.",
+      "risk": "Signage grammar cannot hold a dense nutrient table.",
+      "case": "Declined: loses audience fit and cannot carry the audit table.",
+      "kept": "On phones, show only the next decision.",
+      "hero": "https://impeccable.style/worlds/cards/wayfinding-cartography-signage-terminal-yellow-wayfinding-hero.webp"
+    }
+  ],
+  "reroll": { "registers": ["safer", "bolder"] },
+  "buildPath": { "value": "code", "toggle": false },
+  "canon": true,
+  "canonCard": {
+    "label": "Clean Agricultural SaaS Utility",
+    "thesis": "Standard modern mobile form and table UI with emerald accents and clean cards.",
+    "palette": ["#ffffff", "#0f172a", "#059669"],
+    "materials": ["clean card grid", "standard form controls"],
+    "viewport": "Standard mobile SaaS layout with form cards and progress bars.",
+    "risk": "Looks like a generic dashboard template unless citation pills stand out."
+  },
+  "steer": true
+}

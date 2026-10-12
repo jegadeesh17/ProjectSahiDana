@@ -1,0 +1,226 @@
+{
+  "milestones": [
+    {
+      "milestone_id": "M1",
+      "name": "MVP vertical slice",
+      "tasks": [
+        {
+          "id": "M1-TASK-01",
+          "title": "Dependencies, gitignore entries, and data compilation script with provenance validation",
+          "owner": "backend-developer",
+          "description": "Update package.json to add javascript-lp-solver to dependencies, @vercel/node and vite-node to devDependencies, and a \"compile:data\": \"node scripts/compile_data.mjs\" script. Append stack-specific ignore rules (eval/out/, .vercel/, playwright-report/, test-results/, coverage/) to .gitignore. Create src/types/javascript-lp-solver.d.ts for typed Solver.Solve calls. Implement scripts/compile_data.mjs to compile data/feeds.csv, data/breeds.csv, and data/requirements.json into src/data/feeds.v1.json, src/data/breeds.v1.json, and src/data/requirements.v1.json. Enforce NFC Devanagari normalization, enum validation for vertical and price_reliability, available_months parsing (1-12), price reliability rules (mandi, trade_report, listing, team_estimate requiring price_note_en/hi, or empty price columns when no default price exists), breed cap computation (is_non_descript -> dahd_average, peak_daily_yield_kg -> cited_peak, lactation_yield_high_kg -> range_top, avg_daily_yield_kg -> breed_average, lactation_yield_kg / lactation_length_days -> breed_average_calc), and roughageMinShareOfDm citation checks. Create tests/unit/compileData.test.ts to test all validation and cap-derivation rules on valid and malformed fixtures.",
+          "files_to_create": [
+            "scripts/compile_data.mjs",
+            "src/types/javascript-lp-solver.d.ts",
+            "tests/unit/compileData.test.ts"
+          ],
+          "files_to_modify": [
+            ".gitignore",
+            "package.json"
+          ],
+          "acceptance_criteria": "SPEC AC-2.4, AC-2.5, AC-3.2, AC-3.3, AC-3.4, AC-3.6, AC-5.12, AC-L1.7: npx vitest run tests/unit/compileData.test.ts verifies that compile_data.mjs NFC-normalizes Devanagari strings, computes milkCapLPerDay and capBasis in the exact SPEC priority order (cited_peak before lactation averages), allows empty default price columns when no price is found, and rejects rows with invalid verticals, invalid available_months, missing price reliability/date/source when a price is set, team_estimate without a note, team-asserted Devanagari without local_name_latn, peak_daily_yield_kg without a citation, or roughageMinShareOfDm without a valid (0, 1) value and ICAR/NDDB doc/page citation.",
+          "status": "pending"
+        },
+        {
+          "id": "M1-TASK-02",
+          "title": "Transcribe cited feed library, breed standards, and requirement tables into v1 JSON and align domain types",
+          "owner": "backend-developer",
+          "description": "Create data/feeds.csv (~25-30 Jaipur-area feeds across indigenous_forage, crop_residue, agro_byproduct, and mineral from docs/DATA_SOURCES.md §2-§4, excluding mustard straw per SPEC OQ10; NDDB 2012 DM-basis CP, ME, Ca, P with printed page numbers; Feedipedia DM% citations; Jaipur available_months and {en, hi} season_note pairs; dated prices with reliability labels or empty price columns when no price was found). Create data/breeds.csv with all 14 breeds from docs/DATA_SOURCES.md §5 (including Bhadawari) plus nondescript_cow (3.86 L/day, 2024-25) and nondescript_buffalo (4.73 L/day, 2023-24) from DAHD BAHS 2025, cited peaks for Murrah (9.64), Nili-Ravi (9.40), Bhadawari (6.93), and Sahiwal (11.15), and Hindi names in local_name_deva. Create data/requirements.json with CELKAU/ICAR maintenance tables, ICAR 2013 / NASEM 2021 per-litre lactation requirements by fat%, NRC 2001 Ch. 1 Eq. 1-1 DMI ceiling constants (WOL=20), and the cited ICAR/NDDB roughageMinShareOfDm (if no ICAR/NDDB citation is found in primary sources, stop and ask the user). Run scripts/compile_data.mjs to generate src/data/*.v1.json. Align src/domain/types.ts, src/domain/breeds.ts, src/domain/feedNames.ts, and src/domain/nutrition.ts with the frozen architecture: remove category and availabilityTag from FeedItem, add VERTICAL_CLASS to feedNames.ts, support nullable defaultPriceInrPerKgAsFed/priceSource/priceDate/priceReliability/priceNote on FeedItem, add isRoughage(feed) derived from vertical, and move 'roughage' immediately after 'intake' and before 'CP' in BINDING_ORDER. Create tests/unit/breeds.test.ts and tests/unit/season.test.ts.",
+          "files_to_create": [
+            "data/feeds.csv",
+            "data/breeds.csv",
+            "data/requirements.json",
+            "src/data/feeds.v1.json",
+            "src/data/breeds.v1.json",
+            "src/data/requirements.v1.json",
+            "tests/unit/breeds.test.ts",
+            "tests/unit/season.test.ts"
+          ],
+          "files_to_modify": [
+            "src/domain/types.ts",
+            "src/domain/breeds.ts",
+            "src/domain/feedNames.ts",
+            "src/domain/nutrition.ts",
+            "src/data/feeds.prototype.json",
+            "src/data/breeds.prototype.json"
+          ],
+          "acceptance_criteria": "SPEC AC-1.1, AC-2.4, AC-2.5, AC-3.2, AC-3.3, AC-3.4, AC-3.5, AC-3.6, AC-5.10, AC-5.12, AC-L1.4, AC-L1.7: npx vitest run tests/unit/breeds.test.ts tests/unit/season.test.ts verifies that all 14 breeds plus 2 non-descript rows match DATA_SOURCES.md §5, stored caps equal recomputed caps (Murrah 9.64, Nili-Ravi 9.40, Bhadawari 6.93, Sahiwal 11.15 with capBasis 'cited_peak'; non-descript 3.86 and 4.73 with 'dahd_average' and DAHD year), feeds.v1.json has 25-30 cited feeds across the 4 verticals with no category field, and inSeason marks update by month without altering solver inputs.",
+          "status": "pending"
+        },
+        {
+          "id": "M1-TASK-03",
+          "title": "Linear nutrient requirements engine, NRC 2001 DMI ceiling, and two-stage LP solver",
+          "owner": "backend-developer",
+          "description": "Create src/domain/requirements.ts reading src/data/requirements.v1.json to compute linear maintenance + per-litre requirement models for CP, ME, Ca, and P, the NRC 2001 Eq. 1-1 dry-matter intake ceiling DM_max(Y) = k0 + kY * Y at week of lactation 20, and the cited roughage minimum share r. Create src/domain/solver.ts using javascript-lp-solver: omit the prototype's 85% DM floor (prototype alignment #2: only the NRC upper ceiling and the homogeneous roughage row sum_{i in R}(1-r)d_i x_i - sum_{i notin R} r d_i x_i >= 0 apply); enforce BINDING_ORDER = ['budget', 'breed_cap', 'intake', 'roughage', 'CP', 'ME', 'Ca', 'P'] evaluated on the Stage 2 solution at Y* (prototype alignment #3); run (1) Maintenance LP at Y=0 with infeasibility diagnosis for nutrients, roughage (AC-E2.2), or DM conflict and priced-feed suggestions (AC-E2.1), (2) Budget below maintenance check suggesting only unselected feeds with a non-null default price (AC-E7.1), (3) Dry animal shortcut at T=0 returning the maintenance ration and dry_animal verdict (AC-5.13), (4) Stage 1 max milk Y* <= max(breedCap, T) within budget, (5) Stage 2 min cost at Y* (binding detection) and at S = floor(10 * Y* + 1e-7) / 10 (displayed ration), (6) Stage 2' at T without budget cap for B and Z, and (7) double-precision numerical verification within 1e-6. Align BINDING_ORDER in src/services/mockSolver.ts. Create tests/unit/requirements.test.ts and tests/unit/verdict.test.ts, and expand tests/unit/solver.test.ts.",
+          "files_to_create": [
+            "src/domain/requirements.ts",
+            "src/domain/solver.ts",
+            "tests/unit/requirements.test.ts",
+            "tests/unit/verdict.test.ts"
+          ],
+          "files_to_modify": [
+            "src/services/mockSolver.ts",
+            "tests/unit/solver.test.ts"
+          ],
+          "acceptance_criteria": "SPEC AC-2.1, AC-5.1, AC-5.2, AC-5.3, AC-5.4, AC-5.5, AC-5.6, AC-5.7, AC-5.8, AC-5.9, AC-5.10, AC-5.11, AC-5.12, AC-5.13, AC-E2.1, AC-E2.2, AC-E7.1: npx vitest run tests/unit/requirements.test.ts tests/unit/solver.test.ts tests/unit/verdict.test.ts verifies closed-form k0 and kY against NRC 2001 Eq. 1-1, Stage 1 and Stage 2 optimality, S <= Y* <= max(cap, T), one test case per binding constraint in BINDING_ORDER ('budget', 'breed_cap', 'intake', 'roughage', 'CP', 'ME', 'Ca', 'P') with only that constraint tight, roughage DM >= r * total DM within 1e-6, all verdict branches using unrounded Y* vs T, roughage-only and nutrient infeasibility diagnosis, and below-maintenance fix suggestions excluding unpriced feeds.",
+          "status": "pending"
+        },
+        {
+          "id": "M1-TASK-04",
+          "title": "Wire liveAdapter with v1 data and browser solver into existing UI components",
+          "owner": "frontend-developer",
+          "description": "Create src/services/liveAdapter.ts implementing RationAppAdapter with src/data/feeds.v1.json, src/data/breeds.v1.json, computeRequirements (src/domain/requirements.ts), and solveRation (src/domain/solver.ts), plus deterministic offline/template behaviour for extractFromText and explainRation until M2. Update src/services/rationService.ts so liveAdapter is selected when VITE_USE_MOCK_ADAPTER === 'false' (and export a helper so tests can exercise both adapters). Update src/components/FeedName.tsx to use VERTICAL_CLASS[feed.vertical] and vertical_${feed.vertical} instead of category (prototype alignment #1). Update src/components/FeedSelector.tsx, src/domain/audit.ts, and src/App.tsx to support feeds with defaultPriceInrPerKgAsFed === null (prefilling an empty price input per AC-3.2 and rendering user price provenance in auditFeedPrice), and update src/components/RationResultsPanel.tsx and src/domain/audit.ts so auditRoughageMin and auditRoughageShare display the cited ICAR/NDDB roughage citation from requirements.v1.json. Preserve the Round 4 one-line 'How to use' banner (data-testid=\"how-to-use\") in src/App.tsx. Create tests/unit/adapter.test.ts and update tests/unit/resultUi.test.tsx and tests/unit/oneLanguage.test.tsx.",
+          "files_to_create": [
+            "src/services/liveAdapter.ts",
+            "tests/unit/adapter.test.ts"
+          ],
+          "files_to_modify": [
+            "src/services/rationService.ts",
+            "src/components/FeedName.tsx",
+            "src/components/FeedSelector.tsx",
+            "src/components/RationResultsPanel.tsx",
+            "src/domain/audit.ts",
+            "src/domain/presets.ts",
+            "src/App.tsx",
+            "tests/unit/resultUi.test.tsx",
+            "tests/unit/oneLanguage.test.tsx"
+          ],
+          "acceptance_criteria": "SPEC AC-1.1, AC-2.1, AC-2.4, AC-2.5, AC-3.1, AC-3.2, AC-3.3, AC-3.4, AC-3.5, AC-3.6, AC-4.1, AC-4.2, AC-4.3, AC-5.1, AC-5.2, AC-5.9, AC-5.10, AC-5.12, AC-6.1, AC-6.2, AC-6.3, AC-8.1, AC-E1.1, AC-E1.2, AC-L1.1, AC-L1.2, AC-L1.3, AC-L1.4, AC-L1.7: npm test passes all unit and component tests against both mockAdapter and liveAdapter, confirming vertical chip classes, empty price prefill when a feed has no default price, cited roughage minimum in Show details and the audit drawer, the Round 4 how-to-use banner, and strict one-language-per-screen rendering in English and Hindi.",
+          "status": "pending"
+        },
+        {
+          "id": "M1-TASK-05",
+          "title": "PWA offline precaching config, Vercel routing, and E2E offline vertical-slice test",
+          "owner": "platform-engineer",
+          "description": "Verify and update vite.config.ts and vercel.json so vite-plugin-pwa precaches all compiled v1 JSON files, app bundles, and self-hosted @fontsource/noto-sans and @fontsource/noto-sans-devanagari woff2 subsets (keeping bundled font assets under the 300 KB budget), and vercel.json routes /api/* to the serverless function while serving index.html for the PWA shell. Create tests/e2e/ration-journey.spec.ts (Playwright) to test the full M1 offline journey: load the app, verify the one-line 'How to use' banner, toggle English/Hindi, select species and breed, open the breed cap audit drawer, search feeds in English/transliterated/Devanagari across vertical groups, change the season month, enter today's ration and budget, switch the browser context offline (context.setOffline(true)), verify Fill from description and Explain are disabled with 'Needs internet', tap Balance ration offline, toggle Show details, inspect cited and solver audit drawers, and copy the text summary.",
+          "files_to_create": [
+            "tests/e2e/ration-journey.spec.ts"
+          ],
+          "files_to_modify": [
+            "vite.config.ts",
+            "vercel.json"
+          ],
+          "acceptance_criteria": "SPEC AC-1.1, AC-6.1, AC-6.2, AC-6.3, AC-8.1, AC-E3.1, AC-L1.1: npx playwright test tests/e2e/ration-journey.spec.ts passes in headless Chromium with context.setOffline(true), and npm run build succeeds with total bundled woff2 font size <= 300 KB.",
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "milestone_id": "M2",
+      "name": "Core flows",
+      "tasks": [
+        {
+          "id": "M2-TASK-01",
+          "title": "Client-side explanation number verifier, Devanagari language gate, and authorized number collector",
+          "owner": "backend-developer",
+          "description": "Update src/domain/verifier.ts to implement collectAuthorizedNumbers(context) and verifyExplanationNumbers(explanationText, authorizedNumbers). collectAuthorizedNumbers gathers all numeric values displayed or used in the run: animal inputs (bodyWeightKg, milkYieldLitersPerDay, milkFatPct, budgetInrPerDay), breed figures (milkCapLPerDay, fatPctLow, fatPctHigh), nutrient requirements at S, and solver outputs (supportedMilkLPerDay S, effectiveCapLPerDay, maintenanceCostInrPerDay M, costAtTodayMilkInrPerDay B, verdict gainLPerDay X or savingInrPerDay Z, totalKgAsFed, totalCostInr, underBudgetInr, currentCostInr, savingsInr, savingsPct, roughageSharePct, roughageMinSharePct, per-feed kgAsFed/costInr/priceInrPerKg, supplied nutrients, and coveragePct). verifyExplanationNumbers first checks the language gate (any Devanagari character U+0900..U+097F in explanationText fails verification per AC-L1.6), then parses all numeric tokens and verifies each token v against authorized set A within |v - a| <= max(0.05, 0.01 * |a|) or matching rounded values at 0, 1, or 2 decimal places. Create tests/unit/verifier.test.ts.",
+          "files_to_create": [
+            "tests/unit/verifier.test.ts"
+          ],
+          "files_to_modify": [
+            "src/domain/verifier.ts"
+          ],
+          "acceptance_criteria": "SPEC AC-7.1, AC-E6.1, AC-L1.3, AC-L1.6: npx vitest run tests/unit/verifier.test.ts verifies that explanations containing only authorized numbers (including S, X, Z, B, M, cap, and coverage) return status 'verified' with exact verifiedCount, any untraced number is returned in flaggedNumbers, any Devanagari character in the LLM explanation body fails the language gate, and both English and Hindi halves of buildTemplateExplanation pass verification with 0 untraced numbers.",
+          "status": "pending"
+        },
+        {
+          "id": "M2-TASK-02",
+          "title": "Serverless OpenRouter proxy (api/llm.ts) with model fallback chain and nutrient safety",
+          "owner": "backend-developer",
+          "description": "Create api/llm.ts implementing POST /api/llm for action: 'extract' and action: 'explain'. Read OPENROUTER_API_KEY, OPENROUTER_MODEL (default meta-llama/llama-3.3-70b-instruct:free), and comma-separated OPENROUTER_FALLBACK_MODELS from server environment variables. On HTTP 429, 5xx, or upstream timeout, automatically retry across the fallback chain. For 'extract': validate freeText (1-1000 chars), instruct the model to parse English, Hindi, or Hinglish descriptions (bhains -> buffalo, gaay -> cow, kilo -> kg, doodh -> milk, rupaye roz -> budgetInrPerDay) and match feed and breed names only against the provided catalog and breeds lists, strip any breedId not in the species breed list, place unknown feeds in unmatchedFeeds, and never accept or emit nutrient, price, season, or breed-cap numbers (AC-E5.1). For 'explain': prompt for a concise plain-English factual explanation (no Devanagari, no veterinary advice) using only the provided authorizedNumbers (and on attempt 2 explicitly forbidding flaggedNumbers). Return structured error codes (RATE_LIMITED, UPSTREAM_ERROR, TIMEOUT, INVALID_REQUEST). Create tests/unit/llmProxy.test.ts.",
+          "files_to_create": [
+            "api/llm.ts",
+            "tests/unit/llmProxy.test.ts"
+          ],
+          "files_to_modify": [],
+          "acceptance_criteria": "SPEC AC-2.3, AC-7.1, AC-E4.1, AC-E4.2, AC-E5.1, AC-E6.1, AC-L1.5, AC-L1.6: npx vitest run tests/unit/llmProxy.test.ts verifies primary model calls, automatic fallback retry on HTTP 429/502, structured error codes when all models fail, rejection of out-of-catalog breedId or LLM-supplied nutrient fields, and preservation of unmatched feed names.",
+          "status": "pending"
+        },
+        {
+          "id": "M2-TASK-03",
+          "title": "Integrate liveAdapter with /api/llm and verifier retry flow, and add online AI E2E tests",
+          "owner": "frontend-developer",
+          "description": "Update src/services/liveAdapter.ts so extractFromText calls POST /api/llm (action: 'extract') with toLatinDigits(freeText), the v1 feed catalog, and v1 breed list, validates extracted breedId against the extracted species (AC-2.3), and throws LlmError on API failure; and explainRation calls POST /api/llm (action: 'explain', attempt: 1) with collectAuthorizedNumbers(context), runs verifyExplanationNumbers, performs at most one retry (attempt: 2 with flaggedNumbers) when untraced numbers or Devanagari characters are detected (AC-E6.1), and falls back to buildTemplateExplanation(context) with reason 'untraced_numbers' or 'llm_error' if attempt 2 fails or the request errors (AC-E4.2). Set VITE_USE_MOCK_ADAPTER default to 'false' in src/services/rationService.ts for production builds while allowing test overrides. Expand tests/unit/adapter.test.ts and tests/e2e/ration-journey.spec.ts (using page.route('**/api/llm', ...)) to cover online extraction, mandatory confirmation, unmatched feed mapping/dropping, verified explanation badge, single retry on untraced numbers, and deterministic fallback on 429/timeout.",
+          "files_to_create": [],
+          "files_to_modify": [
+            "src/services/liveAdapter.ts",
+            "src/services/rationService.ts",
+            "tests/unit/adapter.test.ts",
+            "tests/e2e/ration-journey.spec.ts"
+          ],
+          "acceptance_criteria": "SPEC AC-2.2, AC-2.3, AC-7.1, AC-E4.1, AC-E4.2, AC-E5.1, AC-E6.1, AC-L1.5, AC-L1.6: npx vitest run tests/unit/adapter.test.ts and npx playwright test tests/e2e/ration-journey.spec.ts verify OpenRouter privacy notice visibility, English and Hinglish extraction into the unconfirmed prefilled state, mandatory confirmation before balancing, unmatched feed mapping/dropping, 'All N numbers verified' badge rendering, one-time regeneration when an untraced number is injected, and deterministic template fallback on HTTP 429 or upstream failure.",
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "milestone_id": "M3",
+      "name": "Polish and edge cases",
+      "tasks": [
+        {
+          "id": "M3-TASK-01",
+          "title": "Benchmark animal suite (eval/test_animals.json) and independent SciPy LP solver cross-check",
+          "owner": "backend-developer",
+          "description": "Create eval/test_animals.json with at least 15 benchmark test animals spanning cows and buffaloes, all capBasis rules (cited_peak, range_top, breed_average_calc, dahd_average), dry animals (T=0), every verdict kind (gain, at_breed_level, above_breed_level, below_today feasible and infeasible, same_as_today, dry_animal, budget_below_maintenance), every binding constraint in BINDING_ORDER ('budget', 'breed_cap', 'intake', 'roughage', 'CP', 'ME', 'Ca', 'P'), and nutrient/roughage infeasibility cases. Create scripts/dump_solver_results.ts (runnable via npx vite-node) to run the browser TypeScript solver and verifier on eval/test_animals.json and write eval/out/browser_results.json. Create eval/cross_check_solver.py and eval/test_scipy_agreement.py using scipy.optimize.linprog (HiGHS) to solve the exact two-stage LP formulation (maintenance, Stage 1, Stage 2 at Y* and S, Stage 2' at T, with homogeneous roughage row and no 85% DM floor) directly from src/data/*.v1.json and assert agreement with browser_results.json plus 100% constraint satisfaction, % cost saved metrics, and 0 unverified explanation numbers.",
+          "files_to_create": [
+            "eval/test_animals.json",
+            "scripts/dump_solver_results.ts",
+            "eval/cross_check_solver.py",
+            "eval/test_scipy_agreement.py"
+          ],
+          "files_to_modify": [
+            "package.json"
+          ],
+          "acceptance_criteria": "SPEC AC-5.1, AC-5.3, AC-5.4, AC-5.5, AC-5.6, AC-5.7, AC-5.11, AC-5.12, AC-5.13, AC-E2.1, AC-E2.2, AC-E6.1, AC-E7.1: npx vite-node scripts/dump_solver_results.ts && python -m pytest -q eval/test_scipy_agreement.py passes across all 15+ benchmark animals, confirming that browser javascript-lp-solver and Python SciPy HiGHS agree within 1e-4 on M, Y*, S, Stage 2 costs, B, Z, verdict, and binding constraint, 100% of optimal rations satisfy all nutrient/DM/roughage/budget/cap constraints within 1e-6, and 0 unverified numbers pass the verifier.",
+          "status": "pending"
+        },
+        {
+          "id": "M3-TASK-02",
+          "title": "Multilingual extraction benchmark on 30 labelled descriptions (eval/evaluate_extraction.py)",
+          "owner": "backend-developer",
+          "description": "Create eval/test_descriptions.json containing 30 hand-labelled free-text descriptions (10 English, 10 Hindi in Devanagari, 10 Hinglish, grouped into 10 semantic triples that expect identical extracted species, breedId, bodyWeightKg, milkYieldLitersPerDay, milkFatPct, budgetInrPerDay, matchedFeeds, and unmatchedFeeds). Create eval/evaluate_extraction.py and eval/test_extraction_eval.py to run extraction evaluation against the deterministic/mock extractor (and optionally live /api/llm when OPENROUTER_API_KEY is set), compute field-level and full-record extraction accuracy across all 30 descriptions, verify cross-language parity across English/Hindi/Hinglish triples (AC-L1.5), and verify that unmatched feeds are isolated without injecting LLM nutrient or price values (AC-E5.1).",
+          "files_to_create": [
+            "eval/test_descriptions.json",
+            "eval/evaluate_extraction.py",
+            "eval/test_extraction_eval.py"
+          ],
+          "files_to_modify": [],
+          "acceptance_criteria": "SPEC AC-2.3, AC-E5.1, AC-L1.5: python -m pytest -q eval/test_extraction_eval.py passes on all 30 labelled descriptions, confirming English/Hindi/Hinglish extraction parity, field-level accuracy reporting, and strict nutrient-safety compliance.",
+          "status": "pending"
+        },
+        {
+          "id": "M3-TASK-03",
+          "title": "End-to-end language & offline font verification (tests/e2e/language.spec.ts) and UI polish/harden pass",
+          "owner": "frontend-developer",
+          "description": "Apply the UI polish and harden pass across src/index.css, src/App.tsx, src/components/AuditDrawer.tsx, and src/components/RationResultsPanel.tsx: verify WCAG 2.2 AA contrast (>= 4.5:1), 44x44 px minimum touch targets on 390x844 mobile viewports, focus restoration when closing AuditDrawer via Esc/scrim/Close, prefers-reduced-motion media query compliance, and desktop >= 1024px layout (no nested scrollbar in result card, inline Balance button on desktop, sticky bottom bar on mobile only). Create tests/e2e/language.spec.ts (Playwright) covering every AC-L1.2 screen state (initial, prefilled, validation error, infeasible, budget below maintenance, offline, LLM error/fallback, solved with details collapsed and expanded, audit drawer, copy confirmation) in both English and Hindi modes, checking language isolation outside [data-lang-exempt], Latin digits 0-9 everywhere (AC-L1.3), localStorage persistence under sahidana.lang across online and offline reloads (AC-L1.1), and offline Devanagari font loading via document.fonts.check('16px \"Noto Sans Devanagari\"').",
+          "files_to_create": [
+            "tests/e2e/language.spec.ts"
+          ],
+          "files_to_modify": [
+            "src/index.css",
+            "src/App.tsx",
+            "src/components/AuditDrawer.tsx",
+            "src/components/RationResultsPanel.tsx"
+          ],
+          "acceptance_criteria": "SPEC AC-L1.1, AC-L1.2, AC-L1.3, AC-L1.4, AC-L1.6, AC-L1.7, AC-E3.1: npx playwright test tests/e2e/language.spec.ts passes in headless Chromium, verifying zero Devanagari leakage in English mode, zero unexempted Latin words in Hindi mode, Latin digits across all states, reload persistence online/offline, and offline Noto Sans Devanagari font readiness.",
+          "status": "pending"
+        },
+        {
+          "id": "M3-TASK-04",
+          "title": "Human data & Hindi verification gate checks and handover README.md",
+          "owner": "backend-developer",
+          "description": "Extend tests/unit/compileData.test.ts with a provenance and verification-gate audit that checks every row of data/feeds.csv, data/breeds.csv, and data/requirements.json for complete citation fields, reports the status of the human verification gate (verified_on / verifiedOn) and native-speaker Hindi review gate (HINDI_REVIEW in src/i18n/strings.ts), and ensures zero prototype fixture flags exist in src/data/*.v1.json. Create the root README.md documenting SahiDana's Track 6 deliverables (D.01 two-stage LP optimizer, D.02 Jaipur three-vertical seasonal feed library and cited breed table, D.03 offline field-paravet PWA), architecture and data provenance rules, local development, test and SciPy cross-check commands, evaluation summary (15+ animals, 30 descriptions, 0 unverified numbers), and the UAT human verification / Hindi review checklist. Update docs/PROJECT_STATUS.md.",
+          "files_to_create": [
+            "README.md"
+          ],
+          "files_to_modify": [
+            "tests/unit/compileData.test.ts",
+            "docs/PROJECT_STATUS.md"
+          ],
+          "acceptance_criteria": "SPEC AC-1.1, AC-6.1, AC-L1.2: npm run test:full and python -m pytest -q eval/ pass with zero errors, src/data/*.v1.json contains zero prototype fixture markers, and README.md provides complete setup, verification, and audit reproduction instructions.",
+          "status": "pending"
+        }
+      ]
+    }
+  ]
+}

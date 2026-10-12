@@ -3,6 +3,15 @@
 ## Vision
 SahiDana ("Sahi dana, har number ka hisaab.") is an open, auditable, offline-first ration balancer for field paravets. A browser LP solver computes the least-cost daily ration from a cited regional feed library. When online, an LLM fills the form from a free-text description and explains the ration, and every number in that explanation is verified against the solver output or a cited source row.
 
+## Track 6 card (official, re-grounding 2026-10-12)
+
+> "Formulate algorithmic nutritional balancing tools that calculate least-cost daily feeding rations utilizing indigenous forage, seasonal crop residue, and local agro-byproducts to maximize milk yield while reducing dairy maintenance expenditure."
+
+- **D.01** Linear programming optimizer for least-cost nutrition: a two-stage LP. Stage 1 maximises the milk the budget's feeds can support, capped by the cited breed potential. Stage 2 finds the cheapest ration at that milk.
+- **D.02** Comprehensive regional crop byproduct library: about 30 Jaipur-area feeds in three verticals (indigenous forage, seasonal crop residues, local agro-byproducts) plus mineral. Each has its available months, an NDDB citation and a dated price with its reliability. A breed table gives milk potential.
+- **D.03** Offline progressive web app for field paravets: confirms the paravet persona. The screen is simple by default, with the details behind "Show details".
+- Decisions and research: `docs/FEEDBACK.md` Round 3, `docs/DATA_SOURCES.md`.
+
 ## Target Persona
 A field paravet or extension worker in Rajasthan/North India. They work on a basic Android phone with patchy connectivity, at the farmer's doorstep. Secondary: the vet or judge auditing a ration.
 
@@ -14,7 +23,7 @@ Prototype, meaning the thinnest working path per milestone. Exception: the solve
 | Fact | Value | Reason |
 |---|---|---|
 | `ui` | yes | |
-| `deploy` | yes | public URL for D.03 |
+| `deploy` | yes | public URL so judges can click through (not one of D.01–D.03) |
 | `sensitive-data` | no | no accounts or stored personal data; inputs are animal and feed data. The UI shows a notice that free-text goes to OpenRouter, and that free models may log prompts. |
 | `existing-code` | no | |
 
@@ -56,10 +65,15 @@ Prototype, meaning the thinnest working path per milestone. Exception: the solve
 - An explanation containing a number that can't be traced is flagged and regenerated once; if it fails again, the template is used.
 
 **Non-goals (whole hackathon):**
-- Hindi or Rajasthani UI or voice; nobody on the team can verify it. Local feed names come from the source only.
+- Voice input or output, and Rajasthani UI copy.
+- A Hindi LLM explanation (the explanation stays English, with a deterministic Hindi template line; see "Language" below).
+
+**Language:** Hindi/English toggle, default English, one language per screen, Latin digits (FEEDBACK Rounds 1–2, ADR-0009; supersedes the 2026-10-12 side-by-side decision).
+
 - Accounts, login or a server database.
 - Live mandi prices.
 - Calves, heifers, bulls, pregnancy allowances, goats and sheep. Scope is adult cows and buffalo, lactating or dry.
 - Micro-minerals beyond Ca and P.
 - Veterinary or medical advice.
 - A native app.
+
