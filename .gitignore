@@ -20,3 +20,17 @@ venv/
 Thumbs.db
 .vscode/
 .idea/
+
+# Keys and certificates
+*.pem
+*.key
+
+# Reviews and local sources
+.ui-review/
+.impeccable/review/
+sources/
+
+# Node / Frontend build
+node_modules/
+dist/
+
