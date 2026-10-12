@@ -19,7 +19,7 @@
             "package.json"
           ],
           "acceptance_criteria": "SPEC AC-2.4, AC-2.5, AC-3.2, AC-3.3, AC-3.4, AC-3.6, AC-5.12, AC-L1.7: npx vitest run tests/unit/compileData.test.ts verifies that compile_data.mjs NFC-normalizes Devanagari strings, computes milkCapLPerDay and capBasis in the exact SPEC priority order (cited_peak before lactation averages), allows empty default price columns when no price is found, and rejects rows with invalid verticals, invalid available_months, missing price reliability/date/source when a price is set, team_estimate without a note, team-asserted Devanagari without local_name_latn, peak_daily_yield_kg without a citation, or roughageMinShareOfDm without a valid (0, 1) value and ICAR/NDDB doc/page citation.",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "M1-TASK-02",

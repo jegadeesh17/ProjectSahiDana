@@ -34,3 +34,10 @@ sources/
 node_modules/
 dist/
 
+# Evaluation, deployment, and test artifacts
+eval/out/
+.vercel/
+playwright-report/
+test-results/
+coverage/
+
