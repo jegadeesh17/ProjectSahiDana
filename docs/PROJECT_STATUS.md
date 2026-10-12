@@ -16,5 +16,10 @@
 
 ## Resume here (saved 2026-10-12)
 
-**Current step:** Phase 3.1 (M1 Build Loop), starting with `M1-TASK-01`.
+- **Current step:** Phase 3.1 (M1 Build Loop) — **`M1-TASK-03`** in `docs/TASKS.json` (`src/domain/requirements.ts`, `src/domain/solver.ts`, `tests/unit/requirements.test.ts`, `tests/unit/verdict.test.ts`, `tests/unit/solver.test.ts`).
+- **Completed & committed in this session:**
+  - **Phase 2.2c–2.4:** Round 4 "How to use" banner added and prototype accepted; `docs/ARCHITECTURE.md` frozen (`03b4397`); `docs/TASKS.json`, `.env.example`, and Round 4 prototype committed (`534db57`).
+  - **`M1-TASK-01` (`completed`, commit `3c3004a`):** `scripts/compile_data.mjs`, `src/types/javascript-lp-solver.d.ts`, `tests/unit/compileData.test.ts` (84/84 tests passing).
+  - **`M1-TASK-02` (`completed`, commit `ea3c0ee`):** Transcribed `data/feeds.csv` (30 feeds), `data/breeds.csv` (16 breed rows), `data/requirements.json` (with ICAR/NDDB 0.40 roughage minimum), compiled `src/data/*.v1.json`, aligned `src/domain/types.ts` & `breeds.ts`, and verified `tests/unit/breeds.test.ts` & `tests/unit/season.test.ts` (95/95 tests passing).
+- **When resuming:** Check `git status --porcelain` first (in case the background `M1-TASK-03` subagent wrote files after pausing). If `src/domain/requirements.ts` and `src/domain/solver.ts` exist, inspect them and run `qa-tester` for `M1-TASK-03` (Attempt 1); otherwise delegate `M1-TASK-03` (Attempt 1) to `backend-developer`. Note: `.env` currently has `VITE_USE_MOCK_ADAPTER=true` until `M1-TASK-04` wires `src/services/liveAdapter.ts`.
 
