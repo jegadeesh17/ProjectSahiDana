@@ -1,5 +1,6 @@
 import { biText, t } from '../i18n/strings';
-import { CATEGORY_CLASS } from '../domain/feedNames';
+import { VERTICAL_STRING } from '../domain/feedGroups';
+import { VERTICAL_CLASS } from '../domain/feedNames';
 import type { FeedItem } from '../domain/types';
 import { Bi } from '../i18n/Bi';
 import { feedLabel } from '../i18n/feedLabel';
@@ -26,11 +27,11 @@ export function FeedName({ feed }: { feed: FeedItem }) {
   );
 }
 
-/** A small soft dot: one muted hue per feed class, never the only carrier of meaning. */
+/** A small soft dot: one muted hue per feed vertical, never the only carrier of meaning. */
 export function FeedChip({ feed }: { feed: FeedItem }) {
-  const labelId = `category_${feed.category}` as const;
+  const labelId = VERTICAL_STRING[feed.vertical];
   return (
-    <span className={`chip ${CATEGORY_CLASS[feed.category]}`} title={biText(t(labelId))}>
+    <span className={`chip ${VERTICAL_CLASS[feed.vertical]}`} title={biText(t(labelId))}>
       <span className="sr-only">
         <Bi id={labelId} />
       </span>

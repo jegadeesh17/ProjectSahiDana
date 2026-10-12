@@ -16,8 +16,6 @@ export interface AnimalProfile {
   isConfirmed: boolean;
 }
 
-export type FeedCategory = 'dry_roughage' | 'green_fodder' | 'concentrate' | 'byproduct' | 'mineral';
-
 /** The three verticals of the Track 6 card, plus Mineral. The picker shows the groups in this order. */
 export type FeedVertical = 'indigenous_forage' | 'crop_residue' | 'agro_byproduct' | 'mineral';
 export const FEED_VERTICALS: readonly FeedVertical[] = ['indigenous_forage', 'crop_residue', 'agro_byproduct', 'mineral'];
@@ -32,7 +30,6 @@ export interface FeedItem {
   localNameLatnCitation: string | null;
   localNameDeva: string | null;
   localNameDevaProvenance: 'cited' | 'team-asserted' | null;
-  category: FeedCategory;
   vertical: FeedVertical;
   dmPct: number;
   cpPctDm: number;
@@ -44,26 +41,38 @@ export interface FeedItem {
   sourceTable: string;
   sourcePage: string;
   dmSourceCitation: string;
-  defaultPriceInrPerKgAsFed: number;
-  priceSource: string;
+  provenanceStatus: 'cited' | 'derived' | 'team-asserted';
+  nutrientNote?: string | null;
+  defaultPriceInrPerKgAsFed: number | null;
+  priceSource: string | null;
+  priceSourceUrl?: string | null;
   /** YYYY-MM-DD. A month-only source uses the first of the month and says so in priceNote. */
-  priceDate: string;
-  priceReliability: PriceReliability;
+  priceDate: string | null;
+  priceReliability: PriceReliability | null;
   /** Range, caveat, or the stated reason for a team estimate. */
-  priceNote: BiText;
+  priceNote: BiText | null;
   /** Months (1 to 12) in which the feed is available near Jaipur. */
   availableMonths: number[];
   /** Source note about the season, in both languages; shown in the audit sheet. */
   seasonNote: BiText;
-  availabilityTag: string;
-  provenanceStatus: 'cited' | 'team-asserted';
+  seasonCitation?: string;
+  seasonProvenance?: 'cited' | 'team-asserted';
+  verifiedOn?: string | null;
   /** Prototype only: marks every fixture value so nobody mistakes it for the cited library (M1). */
-  sourceKey: string;
-  isPrototypeFixture: boolean;
+  sourceKey?: string;
+  isPrototypeFixture?: boolean;
 }
 
 /** How the milk cap was derived (SPEC shared definitions). */
 export type CapBasis = 'cited_peak' | 'range_top' | 'breed_average' | 'breed_average_calc' | 'dahd_average';
+
+export interface BreedCitation {
+  doc: string;
+  table: string;
+  page: string;
+  url?: string | null;
+  year?: string | null;
+}
 
 /** One row of the breed table (DATA_SOURCES section 5). Sources give milk in kg; the app treats 1 kg as about 1 L. */
 export interface BreedStandard {
@@ -72,7 +81,10 @@ export interface BreedStandard {
   englishName: string;
   localNameLatn: string | null;
   localNameDeva: string | null;
+  localNameDevaProvenance?: 'cited' | 'team-asserted' | null;
+  isNonDescript?: boolean;
   femaleBodyWeightKg: number | null;
+  bodyWeightCitation?: BreedCitation | null;
   /** Cited lactation yield in kg per lactation; null when only a range is cited. */
   lactationYieldKg: number | null;
   lactationYieldLowKg: number | null;
@@ -84,22 +96,28 @@ export interface BreedStandard {
   avgDailyYieldKg: number | null;
   /** Cited fat percent (the low end of a range); null when the sources give none. */
   fatPct: number | null;
+  fatPctLow?: number | null;
   /** The high end when a range is cited; null for a single value or no value. */
   fatPctHigh: number | null;
   /** Cited peak daily yield in kg; null when no peak is cited. When set it is the cap. */
   peakDailyYieldKg: number | null;
+  peakCitation?: BreedCitation | null;
   /** States the range when the peak is the upper value of one; null otherwise. */
   peakNote: BiText | null;
   capBasis: CapBasis;
   milkCapLPerDay: number;
+  yieldCitation?: BreedCitation;
+  yieldFigureYear?: string | null;
+  fatCitation?: BreedCitation | null;
   sourceDoc: string;
   sourceTable: string;
   sourcePage: string;
   sourceNote: string;
   provenanceStatus: 'cited' | 'team-asserted';
+  verifiedOn?: string | null;
   /** Prototype only: PROTO-BREED-* */
-  sourceKey: string;
-  verificationStatus: string;
+  sourceKey?: string;
+  verificationStatus?: string;
 }
 
 export interface SelectedFeedInput {
@@ -151,7 +169,18 @@ export interface RationFeedLine {
 /** Something that can stop a ration: a nutrient, or the minimum roughage share of dry matter. */
 export type LimitingKey = NutrientKey | 'roughage';
 
-export type BindingConstraint = 'budget' | 'breed_cap' | 'intake' | 'CP' | 'ME' | 'Ca' | 'P' | 'roughage';
+export type BindingConstraint = 'budget' | 'breed_cap' | 'intake' | 'roughage' | 'CP' | 'ME' | 'Ca' | 'P';
+
+export const BINDING_ORDER: readonly BindingConstraint[] = [
+  'budget',
+  'breed_cap',
+  'intake',
+  'roughage',
+  'CP',
+  'ME',
+  'Ca',
+  'P',
+] as const;
 
 /** Room-for-improvement verdict (AC-5.6, 5.7, 5.11, OQ14) and the budget-below-maintenance case (AC-E7.1). */
 export type Verdict =

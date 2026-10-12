@@ -133,7 +133,12 @@ describe('the cap is never exceeded', () => {
   it('with a generous budget, every breed stops at its own cap', () => {
     const rich = ['wheat_straw', 'maize_green', 'bajra_grain', 'wheat_bran', 'mustard_cake', 'mineral_mix'].map((feedId) => {
       const feed = feeds.find((f) => f.id === feedId)!;
-      return { feedId, priceInrPerKgAsFed: feed.defaultPriceInrPerKgAsFed, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null };
+      return {
+        feedId,
+        priceInrPerKgAsFed: feed.defaultPriceInrPerKgAsFed ?? 0,
+        maxKgAsFedPerDay: null,
+        currentKgAsFedPerDay: null,
+      };
     });
     for (const breed of BREEDS) {
       const outcome = solveRation(
@@ -191,8 +196,10 @@ describe('breed table', () => {
     for (const feed of feeds) {
       expect(feed.seasonNote.en.length, feed.id).toBeGreaterThan(0);
       expect(feed.seasonNote.hi.length, feed.id).toBeGreaterThan(0);
-      expect(feed.priceNote.en.length, feed.id).toBeGreaterThan(0);
-      expect(feed.priceNote.hi.length, feed.id).toBeGreaterThan(0);
+      if (feed.priceNote !== null) {
+        expect(feed.priceNote.en.length, feed.id).toBeGreaterThan(0);
+        expect(feed.priceNote.hi.length, feed.id).toBeGreaterThan(0);
+      }
     }
   });
 });

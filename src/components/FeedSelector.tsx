@@ -167,7 +167,9 @@ export function FeedSelector({
               const show = (f: FeedField) => (touched[`${d.feedId}-${f}`] ? errors[f] : undefined);
               const priceNum = parseDecimal(d.price);
               const capNum = parseDecimal(d.cap);
-              const edited = !Number.isNaN(priceNum) && Math.abs(priceNum - feed.defaultPriceInrPerKgAsFed) > 1e-9;
+              const edited =
+                !Number.isNaN(priceNum) &&
+                (feed.defaultPriceInrPerKgAsFed === null || Math.abs(priceNum - feed.defaultPriceInrPerKgAsFed) > 1e-9);
               return (
                 <li key={d.feedId} className="feedrow" data-prefilled={prefilled ? 'true' : undefined}>
                   <div className="feedrow-head">
@@ -227,9 +229,14 @@ export function FeedSelector({
                     <button
                       type="button"
                       className="linkbtn num"
-                      onClick={() => open(auditFeedPrice(feed, Number.isNaN(priceNum) ? feed.defaultPriceInrPerKgAsFed : priceNum))}
+                      onClick={() => open(auditFeedPrice(feed, Number.isNaN(priceNum) ? (feed.defaultPriceInrPerKgAsFed ?? 0) : priceNum))}
                     >
-                      {formatInrPerKg(feed.defaultPriceInrPerKgAsFed)} · {formatDateShort(feed.priceDate)} · <Bi id={RELIABILITY_STRING[feed.priceReliability]} /> ·{' '}
+                      {feed.defaultPriceInrPerKgAsFed !== null && feed.priceDate !== null && feed.priceReliability !== null ? (
+                        <>
+                          {formatInrPerKg(feed.defaultPriceInrPerKgAsFed)} · {formatDateShort(feed.priceDate)} ·{' '}
+                          <Bi id={RELIABILITY_STRING[feed.priceReliability]} /> ·{' '}
+                        </>
+                      ) : null}
                       <Bi id="action_view_source" />
                     </button>
                     {edited && (
@@ -304,10 +311,14 @@ export function FeedSelector({
                               <FeedName feed={feed} />
                             </span>
                             <span className="librow-meta num">
-                              {formatInrPerKg(feed.defaultPriceInrPerKgAsFed)} · <Bi id={RELIABILITY_STRING[feed.priceReliability]} />
+                              {feed.defaultPriceInrPerKgAsFed !== null && feed.priceReliability !== null ? (
+                                <>
+                                  {formatInrPerKg(feed.defaultPriceInrPerKgAsFed)} · <Bi id={RELIABILITY_STRING[feed.priceReliability]} />
+                                </>
+                              ) : null}
                               {inSeason(feed, month) && (
                                 <>
-                                  {' · '}
+                                  {feed.defaultPriceInrPerKgAsFed !== null && feed.priceReliability !== null ? ' · ' : ''}
                                   <SeasonMark feed={feed} month={month} quiet />
                                 </>
                               )}

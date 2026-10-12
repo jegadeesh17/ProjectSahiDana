@@ -1,17 +1,16 @@
 import type { BiText } from '../i18n/strings';
-import type { FeedCategory, FeedItem, LimitingKey, NutrientKey } from './types';
+import type { FeedItem, FeedVertical, LimitingKey, NutrientKey } from './types';
 
 /** Hindi half: Devanagari name, else transliteration, else English. English half: the English name. */
 export function feedNameBi(feed: FeedItem): BiText {
   return { hi: feed.localNameDeva ?? feed.localNameLatn ?? feed.englishName, en: feed.englishName };
 }
 
-/** One full-strength hue per feed class (tokens in index.css). Used only on the row chip. */
-export const CATEGORY_CLASS: Record<FeedCategory, string> = {
-  dry_roughage: 'chip-dry',
-  green_fodder: 'chip-green',
-  concentrate: 'chip-conc',
-  byproduct: 'chip-byp',
+/** One full-strength hue per feed vertical (tokens in index.css). Used only on the row chip. */
+export const VERTICAL_CLASS: Record<FeedVertical, string> = {
+  indigenous_forage: 'chip-green',
+  crop_residue: 'chip-dry',
+  agro_byproduct: 'chip-byp',
   mineral: 'chip-min',
 };
 

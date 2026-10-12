@@ -10,6 +10,11 @@ export interface PerKg {
   p: number;
 }
 
+/** Roughage feeds are those in the indigenous_forage and crop_residue verticals (SPEC AC-5.12). */
+export function isRoughage(feed: Pick<FeedItem, 'vertical'>): boolean {
+  return feed.vertical === 'indigenous_forage' || feed.vertical === 'crop_residue';
+}
+
 /** Nutrient content per kg AS FED (DM-basis values times the dry matter fraction). */
 export function perKgFed(feed: FeedItem): PerKg {
   const dm = feed.dmPct / 100;

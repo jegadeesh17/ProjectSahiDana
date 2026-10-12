@@ -1,5 +1,5 @@
 // Grouping and season marks for the feed picker (AC-3.3, AC-3.4).
-import type { FeedItem, FeedVertical } from './types';
+import type { FeedItem, FeedVertical, PriceReliability } from './types';
 import { FEED_VERTICALS } from './types';
 
 export interface FeedGroup {
@@ -14,9 +14,13 @@ export function groupFeeds(feeds: FeedItem[]): FeedGroup[] {
   );
 }
 
+export const groupByVertical = groupFeeds;
+
 export function inSeason(feed: FeedItem, month: number): boolean {
   return feed.availableMonths.includes(month);
 }
+
+export const isInSeason = inSeason;
 
 export const VERTICAL_STRING = {
   indigenous_forage: 'vertical_indigenous_forage',
@@ -30,4 +34,4 @@ export const RELIABILITY_STRING = {
   trade_report: 'reliability_trade_report',
   listing: 'reliability_listing',
   team_estimate: 'reliability_team_estimate',
-} as const satisfies Record<FeedItem['priceReliability'], string>;
+} as const satisfies Record<PriceReliability, string>;

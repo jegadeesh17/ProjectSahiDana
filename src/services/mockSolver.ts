@@ -234,9 +234,9 @@ function suggestFeeds(limiting: LimitingKey[], inputs: SelectedFeedInput[]): Fee
   const byFeed = new Map<string, LimitingKey[]>();
   for (const n of targets) {
     if (n === 'roughage') {
-      const rough = FEEDS.filter((f) => !chosen.has(f.id) && isRoughage(f) && f.defaultPriceInrPerKgAsFed > 0).sort(
-        (a, b) => b.meMcalPerKgDm - a.meMcalPerKgDm,
-      )[0];
+      const rough = FEEDS.filter(
+        (f) => !chosen.has(f.id) && isRoughage(f) && f.defaultPriceInrPerKgAsFed !== null && f.defaultPriceInrPerKgAsFed > 0,
+      ).sort((a, b) => b.meMcalPerKgDm - a.meMcalPerKgDm)[0];
       if (rough) byFeed.set(rough.id, [...(byFeed.get(rough.id) ?? []), n]);
       continue;
     }
@@ -268,7 +268,7 @@ function budgetShortfall(
   const chosen = new Set(inputs.map((i) => i.feedId));
   let fix: { id: string; cost: number } | null = null;
   for (const feed of FEEDS) {
-    if (chosen.has(feed.id)) continue;
+    if (chosen.has(feed.id) || feed.defaultPriceInrPerKgAsFed === null) continue;
     const extra: SelectedFeedInput = {
       feedId: feed.id,
       priceInrPerKgAsFed: feed.defaultPriceInrPerKgAsFed,

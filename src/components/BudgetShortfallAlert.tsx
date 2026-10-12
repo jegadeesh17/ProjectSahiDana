@@ -37,7 +37,7 @@ export function BudgetShortfallAlert({ report, library, onAddFeed }: Props) {
         <Bi id="notice_shortfall_body" />
       </p>
       <div className="inf-group">
-        {fix && report.maintenanceWithFixInrPerDay !== null ? (
+        {fix && fix.defaultPriceInrPerKgAsFed !== null && report.maintenanceWithFixInrPerDay !== null ? (
           <>
             <h4 className="inf-sub">
               <Bi id="label_cheaper_feed" />

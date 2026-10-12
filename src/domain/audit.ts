@@ -205,7 +205,14 @@ export function auditSavings(solution: RationSolution): AuditMeta | null {
 
 /** Feed row source: price and composition with the full citation fields, the price's reliability and the user's own edit. */
 export function auditFeedPrice(feed: FeedItem, price: number): AuditMeta {
-  const edited = Math.abs(price - feed.defaultPriceInrPerKgAsFed) > 1e-9;
+  const edited = feed.defaultPriceInrPerKgAsFed === null || Math.abs(price - feed.defaultPriceInrPerKgAsFed) > 1e-9;
+  const extraRows: { label: BiText; value: string | BiText }[] = [];
+  if (feed.priceReliability !== null) {
+    extraRows.push({ label: t('audit_price_reliability'), value: t(RELIABILITY_STRING[feed.priceReliability]) });
+  }
+  if (feed.priceNote !== null) {
+    extraRows.push({ label: t('audit_price_note'), value: feed.priceNote });
+  }
   return {
     id: `price-${feed.id}`,
     label: t('audit_label_price', { feed: feedNameBi(feed) }),
@@ -213,19 +220,16 @@ export function auditFeedPrice(feed: FeedItem, price: number): AuditMeta {
     numericValue: price,
     originType: edited ? 'user_input' : 'cited_source',
     notes: edited ? [t('audit_note_user_price')] : undefined,
-    extraRows: [
-      { label: t('audit_price_reliability'), value: t(RELIABILITY_STRING[feed.priceReliability]) },
-      { label: t('audit_price_note'), value: feed.priceNote },
-    ],
+    extraRows: extraRows.length > 0 ? extraRows : undefined,
     citation: {
-      doc: `${feed.priceSource} · ${feed.priceDate}`,
+      doc: feed.priceSource && feed.priceDate ? `${feed.priceSource} · ${feed.priceDate}` : feed.sourceDoc,
       table: feed.sourceTable,
       page: feed.sourcePage,
       formula: `CP ${formatNumber(feed.cpPctDm, 1)}% · ME ${formatNumber(feed.meMcalPerKgDm, 2)} Mcal/kg · Ca ${formatNumber(feed.caGramsPerKgDm, 1)} g/kg · P ${formatNumber(feed.pGramsPerKgDm, 1)} g/kg (DM basis) · DM ${formatNumber(feed.dmPct, 0)}%`,
       provenanceStatus: 'team-asserted',
     },
     solverConstraint: null,
-    sourceKey: feed.sourceKey,
+    sourceKey: feed.sourceKey ?? feed.id,
   };
 }
 

@@ -220,8 +220,13 @@ function Workspace() {
   const addFeed = (feedId: string) => {
     const feed = library.find((f) => f.id === feedId);
     if (!feed || feeds.some((d) => d.feedId === feedId)) return;
-    editFeeds([...feeds, { feedId, price: String(feed.defaultPriceInrPerKgAsFed), cap: '', current: '' }]);
-    showToast(`${bi('state_added')}: ${feedLabel(feed)} (${formatInrPerKg(feed.defaultPriceInrPerKgAsFed)})`);
+    const priceStr = feed.defaultPriceInrPerKgAsFed !== null ? String(feed.defaultPriceInrPerKgAsFed) : '';
+    editFeeds([...feeds, { feedId, price: priceStr, cap: '', current: '' }]);
+    showToast(
+      feed.defaultPriceInrPerKgAsFed !== null
+        ? `${bi('state_added')}: ${feedLabel(feed)} (${formatInrPerKg(feed.defaultPriceInrPerKgAsFed)})`
+        : `${bi('state_added')}: ${feedLabel(feed)}`,
+    );
   };
   const removeFeed = (feedId: string) => editFeeds(feeds.filter((d) => d.feedId !== feedId));
 

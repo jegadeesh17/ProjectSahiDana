@@ -6,7 +6,6 @@
     "localNameLatnCitation": "PROTOTYPE FIXTURE: typical-value placeholder, not transcribed from the NDDB booklet",
     "localNameDeva": "बाजरा चारा",
     "localNameDevaProvenance": "team-asserted",
-    "category": "green_fodder",
     "vertical": "indigenous_forage",
     "dmPct": 22,
     "cpPctDm": 8,
@@ -36,7 +35,6 @@
       "en": "Kharif fodder: green from July to October.",
       "hi": "खरीफ़ चारा: जुलाई से अक्टूबर तक हरा।"
     },
-    "availabilityTag": "Seasonal",
     "provenanceStatus": "team-asserted",
     "sourceKey": "PROTO-FEED-bajra_green",
     "isPrototypeFixture": true
@@ -48,7 +46,6 @@
     "localNameLatnCitation": "PROTOTYPE FIXTURE: typical-value placeholder, not transcribed from the NDDB booklet",
     "localNameDeva": "ज्वार चरी",
     "localNameDevaProvenance": "team-asserted",
-    "category": "green_fodder",
     "vertical": "indigenous_forage",
     "dmPct": 25,
     "cpPctDm": 7,
@@ -78,7 +75,6 @@
       "en": "Sown in April and August, cut at 70 to 90 days: June to July and October to November.",
       "hi": "अप्रैल और अगस्त में बुवाई, 70 से 90 दिन में कटाई: जून से जुलाई और अक्टूबर से नवंबर।"
     },
-    "availabilityTag": "Seasonal",
     "provenanceStatus": "team-asserted",
     "sourceKey": "PROTO-FEED-jowar_green",
     "isPrototypeFixture": true
@@ -90,7 +86,6 @@
     "localNameLatnCitation": "PROTOTYPE FIXTURE: typical-value placeholder, not transcribed from the NDDB booklet",
     "localNameDeva": "मक्का चारा",
     "localNameDevaProvenance": "team-asserted",
-    "category": "green_fodder",
     "vertical": "indigenous_forage",
     "dmPct": 23,
     "cpPctDm": 8,
@@ -125,7 +120,6 @@
       "en": "Grown in summer, the rains and early winter: March to November.",
       "hi": "गर्मी, बरसात और शुरुआती सर्दी में उगता है: मार्च से नवंबर।"
     },
-    "availabilityTag": "Seasonal",
     "provenanceStatus": "team-asserted",
     "sourceKey": "PROTO-FEED-maize_green",
     "isPrototypeFixture": true
@@ -137,7 +131,6 @@
     "localNameLatnCitation": "PROTOTYPE FIXTURE: typical-value placeholder, not transcribed from the NDDB booklet",
     "localNameDeva": "लोबिया",
     "localNameDevaProvenance": "team-asserted",
-    "category": "green_fodder",
     "vertical": "indigenous_forage",
     "dmPct": 20,
     "cpPctDm": 18,
@@ -167,7 +160,6 @@
       "en": "Sown February to March or July, ready in about three months: May to June and October to November.",
       "hi": "फ़रवरी से मार्च या जुलाई में बुवाई, लगभग तीन महीने में तैयार: मई से जून और अक्टूबर से नवंबर।"
     },
-    "availabilityTag": "Seasonal",
     "provenanceStatus": "team-asserted",
     "sourceKey": "PROTO-FEED-cowpea_green",
     "isPrototypeFixture": true
@@ -179,7 +171,6 @@
     "localNameLatnCitation": "PROTOTYPE FIXTURE: typical-value placeholder, not transcribed from the NDDB booklet",
     "localNameDeva": "ग्वार चारा",
     "localNameDevaProvenance": "team-asserted",
-    "category": "green_fodder",
     "vertical": "indigenous_forage",
     "dmPct": 22,
     "cpPctDm": 18,
@@ -210,7 +201,6 @@
       "en": "Sown late March to mid July, cut at 80 to 90 days: June to October.",
       "hi": "मार्च के अंत से मध्य जुलाई तक बुवाई, 80 से 90 दिन में कटाई: जून से अक्टूबर।"
     },
-    "availabilityTag": "Seasonal",
     "provenanceStatus": "team-asserted",
     "sourceKey": "PROTO-FEED-guar_green",
     "isPrototypeFixture": true
@@ -222,7 +212,6 @@
     "localNameLatnCitation": "PROTOTYPE FIXTURE: typical-value placeholder, not transcribed from the NDDB booklet",
     "localNameDeva": "बरसीम",
     "localNameDevaProvenance": "team-asserted",
-    "category": "green_fodder",
     "vertical": "indigenous_forage",
     "dmPct": 15,
     "cpPctDm": 19,
@@ -254,7 +243,6 @@
       "en": "Rabi fodder under irrigation: November to April.",
       "hi": "रबी का चारा, सिंचाई में: नवंबर से अप्रैल।"
     },
-    "availabilityTag": "Seasonal",
     "provenanceStatus": "team-asserted",
     "sourceKey": "PROTO-FEED-berseem",
     "isPrototypeFixture": true
@@ -266,7 +254,6 @@
     "localNameLatnCitation": null,
     "localNameDeva": null,
     "localNameDevaProvenance": null,
-    "category": "green_fodder",
     "vertical": "indigenous_forage",
     "dmPct": 22,
     "cpPctDm": 20,
@@ -300,7 +287,6 @@
       "en": "Perennial rabi fodder under irrigation: October to May.",
       "hi": "सिंचाई वाला बहुवर्षीय रबी चारा: अक्टूबर से मई।"
     },
-    "availabilityTag": "Seasonal",
     "provenanceStatus": "team-asserted",
     "sourceKey": "PROTO-FEED-lucerne",
     "isPrototypeFixture": true
@@ -312,7 +298,6 @@
     "localNameLatnCitation": "PROTOTYPE FIXTURE: typical-value placeholder, not transcribed from the NDDB booklet",
     "localNameDeva": "जई",
     "localNameDevaProvenance": "team-asserted",
-    "category": "green_fodder",
     "vertical": "indigenous_forage",
     "dmPct": 22,
     "cpPctDm": 12,
@@ -342,7 +327,6 @@
       "en": "Green oats from January to the end of April (NDDB p. 42).",
       "hi": "हरी जई जनवरी से अप्रैल के अंत तक (NDDB पृ. 42)।"
     },
-    "availabilityTag": "Seasonal",
     "provenanceStatus": "team-asserted",
     "sourceKey": "PROTO-FEED-oats_green",
     "isPrototypeFixture": true
@@ -354,7 +338,6 @@
     "localNameLatnCitation": "PROTOTYPE FIXTURE: typical-value placeholder, not transcribed from the NDDB booklet",
     "localNameDeva": "करड़",
     "localNameDevaProvenance": "team-asserted",
-    "category": "dry_roughage",
     "vertical": "indigenous_forage",
     "dmPct": 88,
     "cpPctDm": 5,
@@ -384,7 +367,6 @@
       "en": "Monsoon grass; the hay is cut after the rains: July to October.",
       "hi": "बरसाती घास; बरसात के बाद सूखी घास काटी जाती है: जुलाई से अक्टूबर।"
     },
-    "availabilityTag": "Seasonal",
     "provenanceStatus": "team-asserted",
     "sourceKey": "PROTO-FEED-marvel_grass",
     "isPrototypeFixture": true
@@ -396,7 +378,6 @@
     "localNameLatnCitation": "PROTOTYPE FIXTURE: typical-value placeholder, not transcribed from the NDDB booklet",
     "localNameDeva": "लूंग",
     "localNameDevaProvenance": "team-asserted",
-    "category": "dry_roughage",
     "vertical": "indigenous_forage",
     "dmPct": 88,
     "cpPctDm": 15,
@@ -429,7 +410,6 @@
       "en": "Leaf from March to June; lopped in winter. Contains tannins, so feed it in small amounts.",
       "hi": "पत्ती मार्च से जून; सर्दी में छँटाई। इसमें टैनिन होता है, इसलिए थोड़ी मात्रा में खिलाएँ।"
     },
-    "availabilityTag": "Seasonal",
     "provenanceStatus": "team-asserted",
     "sourceKey": "PROTO-FEED-khejri_leaf",
     "isPrototypeFixture": true
@@ -441,7 +421,6 @@
     "localNameLatnCitation": "PROTOTYPE FIXTURE: typical-value placeholder, not transcribed from the NDDB booklet",
     "localNameDeva": "गेहूँ का भूसा",
     "localNameDevaProvenance": "team-asserted",
-    "category": "dry_roughage",
     "vertical": "crop_residue",
     "dmPct": 90,
     "cpPctDm": 3.5,
@@ -479,7 +458,6 @@
       "en": "Harvested March to April and stored; available all year.",
       "hi": "मार्च से अप्रैल में कटाई और भंडारण; पूरे साल मिलता है।"
     },
-    "availabilityTag": "Year-round",
     "provenanceStatus": "team-asserted",
     "sourceKey": "PROTO-FEED-wheat_straw",
     "isPrototypeFixture": true
@@ -491,7 +469,6 @@
     "localNameLatnCitation": "PROTOTYPE FIXTURE: typical-value placeholder, not transcribed from the NDDB booklet",
     "localNameDeva": "करबी",
     "localNameDevaProvenance": "team-asserted",
-    "category": "dry_roughage",
     "vertical": "crop_residue",
     "dmPct": 92,
     "cpPctDm": 5.2,
@@ -529,7 +506,6 @@
       "en": "Harvested September to October (the largest crop near Jaipur) and stored; available all year.",
       "hi": "सितंबर से अक्टूबर में कटाई (जयपुर के पास सबसे बड़ी फ़सल) और भंडारण; पूरे साल मिलता है।"
     },
-    "availabilityTag": "Year-round",
     "provenanceStatus": "team-asserted",
     "sourceKey": "PROTO-FEED-bajra_stover",
     "isPrototypeFixture": true
@@ -541,7 +517,6 @@
     "localNameLatnCitation": "PROTOTYPE FIXTURE: typical-value placeholder, not transcribed from the NDDB booklet",
     "localNameDeva": "जौ का भूसा",
     "localNameDevaProvenance": "team-asserted",
-    "category": "dry_roughage",
     "vertical": "crop_residue",
     "dmPct": 90,
     "cpPctDm": 4,
@@ -579,7 +554,6 @@
       "en": "Harvested March to April and stored; available all year.",
       "hi": "मार्च से अप्रैल में कटाई और भंडारण; पूरे साल मिलता है।"
     },
-    "availabilityTag": "Year-round",
     "provenanceStatus": "team-asserted",
     "sourceKey": "PROTO-FEED-barley_straw",
     "isPrototypeFixture": true
@@ -591,7 +565,6 @@
     "localNameLatnCitation": "PROTOTYPE FIXTURE: typical-value placeholder, not transcribed from the NDDB booklet",
     "localNameDeva": "मूंगफली का भूसा",
     "localNameDevaProvenance": "team-asserted",
-    "category": "dry_roughage",
     "vertical": "crop_residue",
     "dmPct": 90,
     "cpPctDm": 15,
@@ -623,7 +596,6 @@
       "en": "Harvested September to October; sold for about four months after.",
       "hi": "सितंबर से अक्टूबर में कटाई; इसके बाद लगभग चार महीने बिकता है।"
     },
-    "availabilityTag": "Seasonal",
     "provenanceStatus": "team-asserted",
     "sourceKey": "PROTO-FEED-groundnut_haulm",
     "isPrototypeFixture": true
@@ -635,7 +607,6 @@
     "localNameLatnCitation": null,
     "localNameDeva": null,
     "localNameDevaProvenance": null,
-    "category": "dry_roughage",
     "vertical": "crop_residue",
     "dmPct": 90,
     "cpPctDm": 10.1,
@@ -668,7 +639,6 @@
       "en": "Harvested February to April; sold for about four months after.",
       "hi": "फ़रवरी से अप्रैल में कटाई; इसके बाद लगभग चार महीने बिकता है।"
     },
-    "availabilityTag": "Seasonal",
     "provenanceStatus": "team-asserted",
     "sourceKey": "PROTO-FEED-gram_straw",
     "isPrototypeFixture": true
@@ -680,7 +650,6 @@
     "localNameLatnCitation": "PROTOTYPE FIXTURE: typical-value placeholder, not transcribed from the NDDB booklet",
     "localNameDeva": "फलगटी",
     "localNameDevaProvenance": "team-asserted",
-    "category": "dry_roughage",
     "vertical": "crop_residue",
     "dmPct": 90,
     "cpPctDm": 8,
@@ -712,7 +681,6 @@
       "en": "Harvest September to October (month not official); sold for about four months after.",
       "hi": "सितंबर से अक्टूबर में कटाई (महीना आधिकारिक नहीं); इसके बाद लगभग चार महीने बिकता है।"
     },
-    "availabilityTag": "Seasonal",
     "provenanceStatus": "team-asserted",
     "sourceKey": "PROTO-FEED-guar_straw",
     "isPrototypeFixture": true
@@ -724,7 +692,6 @@
     "localNameLatnCitation": null,
     "localNameDeva": null,
     "localNameDevaProvenance": null,
-    "category": "dry_roughage",
     "vertical": "crop_residue",
     "dmPct": 90,
     "cpPctDm": 9,
@@ -756,7 +723,6 @@
       "en": "Harvest September to October (month not official); sold for about four months after. Highly palatable.",
       "hi": "सितंबर से अक्टूबर में कटाई (महीना आधिकारिक नहीं); इसके बाद लगभग चार महीने बिकता है। बहुत स्वादिष्ट।"
     },
-    "availabilityTag": "Seasonal",
     "provenanceStatus": "team-asserted",
     "sourceKey": "PROTO-FEED-moong_straw",
     "isPrototypeFixture": true
@@ -768,7 +734,6 @@
     "localNameLatnCitation": "PROTOTYPE FIXTURE: typical-value placeholder, not transcribed from the NDDB booklet",
     "localNameDeva": "कड़बी",
     "localNameDevaProvenance": "team-asserted",
-    "category": "dry_roughage",
     "vertical": "crop_residue",
     "dmPct": 90,
     "cpPctDm": 4.5,
@@ -800,7 +765,6 @@
       "en": "Harvested October to November; sold for about four months after.",
       "hi": "अक्टूबर से नवंबर में कटाई; इसके बाद लगभग चार महीने बिकता है।"
     },
-    "availabilityTag": "Seasonal",
     "provenanceStatus": "team-asserted",
     "sourceKey": "PROTO-FEED-jowar_stover",
     "isPrototypeFixture": true
@@ -812,7 +776,6 @@
     "localNameLatnCitation": "PROTOTYPE FIXTURE: typical-value placeholder, not transcribed from the NDDB booklet",
     "localNameDeva": "सरसों खली",
     "localNameDevaProvenance": "team-asserted",
-    "category": "byproduct",
     "vertical": "agro_byproduct",
     "dmPct": 91,
     "cpPctDm": 35,
@@ -850,7 +813,6 @@
       "en": "Rajasthan crushes most of India’s mustard; the cake is available all year.",
       "hi": "राजस्थान देश की ज़्यादातर सरसों पेरता है; खल पूरे साल मिलती है।"
     },
-    "availabilityTag": "Year-round",
     "provenanceStatus": "team-asserted",
     "sourceKey": "PROTO-FEED-mustard_cake",
     "isPrototypeFixture": true
@@ -862,7 +824,6 @@
     "localNameLatnCitation": "PROTOTYPE FIXTURE: typical-value placeholder, not transcribed from the NDDB booklet",
     "localNameDeva": "बिनौला खली",
     "localNameDevaProvenance": "team-asserted",
-    "category": "byproduct",
     "vertical": "agro_byproduct",
     "dmPct": 92,
     "cpPctDm": 25,
@@ -900,7 +861,6 @@
       "en": "Made in the cotton belt of north-west Rajasthan; available all year.",
       "hi": "उत्तर-पश्चिम राजस्थान की कपास पट्टी में बनती है; पूरे साल मिलती है।"
     },
-    "availabilityTag": "Year-round",
     "provenanceStatus": "team-asserted",
     "sourceKey": "PROTO-FEED-cottonseed_cake",
     "isPrototypeFixture": true
@@ -912,7 +872,6 @@
     "localNameLatnCitation": "PROTOTYPE FIXTURE: typical-value placeholder, not transcribed from the NDDB booklet",
     "localNameDeva": "ग्वार कोरमा",
     "localNameDevaProvenance": "team-asserted",
-    "category": "byproduct",
     "vertical": "agro_byproduct",
     "dmPct": 90,
     "cpPctDm": 45,
@@ -950,7 +909,6 @@
       "en": "By-product of the Jodhpur guar-gum industry; available all year.",
       "hi": "जोधपुर के गोंद उद्योग का उप-उत्पाद; पूरे साल मिलता है।"
     },
-    "availabilityTag": "Year-round",
     "provenanceStatus": "team-asserted",
     "sourceKey": "PROTO-FEED-guar_meal",
     "isPrototypeFixture": true
@@ -962,7 +920,6 @@
     "localNameLatnCitation": "PROTOTYPE FIXTURE: typical-value placeholder, not transcribed from the NDDB booklet",
     "localNameDeva": "मूंगफली खली",
     "localNameDevaProvenance": "team-asserted",
-    "category": "byproduct",
     "vertical": "agro_byproduct",
     "dmPct": 92,
     "cpPctDm": 40,
@@ -1000,7 +957,6 @@
       "en": "Mainly made in Gujarat and brought in; available all year.",
       "hi": "मुख्यतः गुजरात में बनती है और वहाँ से आती है; पूरे साल मिलती है।"
     },
-    "availabilityTag": "Year-round",
     "provenanceStatus": "team-asserted",
     "sourceKey": "PROTO-FEED-groundnut_cake",
     "isPrototypeFixture": true
@@ -1012,7 +968,6 @@
     "localNameLatnCitation": "PROTOTYPE FIXTURE: typical-value placeholder, not transcribed from the NDDB booklet",
     "localNameDeva": "चोकर",
     "localNameDevaProvenance": "team-asserted",
-    "category": "byproduct",
     "vertical": "agro_byproduct",
     "dmPct": 89,
     "cpPctDm": 16,
@@ -1050,7 +1005,6 @@
       "en": "Jaipur flour mills produce it all year.",
       "hi": "जयपुर की आटा मिलें पूरे साल बनाती हैं।"
     },
-    "availabilityTag": "Year-round",
     "provenanceStatus": "team-asserted",
     "sourceKey": "PROTO-FEED-wheat_bran",
     "isPrototypeFixture": true
@@ -1062,7 +1016,6 @@
     "localNameLatnCitation": "PROTOTYPE FIXTURE: typical-value placeholder, not transcribed from the NDDB booklet",
     "localNameDeva": "डी-ऑयल्ड राइस ब्रान",
     "localNameDevaProvenance": "team-asserted",
-    "category": "byproduct",
     "vertical": "agro_byproduct",
     "dmPct": 90,
     "cpPctDm": 17,
@@ -1100,7 +1053,6 @@
       "en": "Traded all year; not verified as made locally.",
       "hi": "पूरे साल बिकता है; स्थानीय उत्पादन की पुष्टि नहीं।"
     },
-    "availabilityTag": "Year-round",
     "provenanceStatus": "team-asserted",
     "sourceKey": "PROTO-FEED-rice_bran_dorb",
     "isPrototypeFixture": true
@@ -1112,7 +1064,6 @@
     "localNameLatnCitation": "PROTOTYPE FIXTURE: typical-value placeholder, not transcribed from the NDDB booklet",
     "localNameDeva": "चुनी",
     "localNameDevaProvenance": "team-asserted",
-    "category": "byproduct",
     "vertical": "agro_byproduct",
     "dmPct": 90,
     "cpPctDm": 14,
@@ -1150,7 +1101,6 @@
       "en": "Dal mills produce it all year.",
       "hi": "दाल मिलें पूरे साल बनाती हैं।"
     },
-    "availabilityTag": "Year-round",
     "provenanceStatus": "team-asserted",
     "sourceKey": "PROTO-FEED-pulse_chuni",
     "isPrototypeFixture": true
@@ -1162,7 +1112,6 @@
     "localNameLatnCitation": "PROTOTYPE FIXTURE: typical-value placeholder, not transcribed from the NDDB booklet",
     "localNameDeva": "बाजरा",
     "localNameDevaProvenance": "team-asserted",
-    "category": "concentrate",
     "vertical": "agro_byproduct",
     "dmPct": 90,
     "cpPctDm": 12,
@@ -1200,7 +1149,6 @@
       "en": "Main kharif cereal, harvested October and stored; available all year.",
       "hi": "मुख्य खरीफ़ अनाज, अक्टूबर में कटाई और भंडारण; पूरे साल मिलता है।"
     },
-    "availabilityTag": "Year-round",
     "provenanceStatus": "team-asserted",
     "sourceKey": "PROTO-FEED-bajra_grain",
     "isPrototypeFixture": true
@@ -1212,7 +1160,6 @@
     "localNameLatnCitation": "PROTOTYPE FIXTURE: typical-value placeholder, not transcribed from the NDDB booklet",
     "localNameDeva": "मक्का",
     "localNameDevaProvenance": "team-asserted",
-    "category": "concentrate",
     "vertical": "agro_byproduct",
     "dmPct": 88,
     "cpPctDm": 9,
@@ -1250,7 +1197,6 @@
       "en": "Sold through Rajasthan mandis all year.",
       "hi": "राजस्थान की मंडियों में पूरे साल बिकता है।"
     },
-    "availabilityTag": "Year-round",
     "provenanceStatus": "team-asserted",
     "sourceKey": "PROTO-FEED-maize_grain",
     "isPrototypeFixture": true
@@ -1262,7 +1208,6 @@
     "localNameLatnCitation": "PROTOTYPE FIXTURE: typical-value placeholder, not transcribed from the NDDB booklet",
     "localNameDeva": "शीरा",
     "localNameDevaProvenance": "team-asserted",
-    "category": "byproduct",
     "vertical": "agro_byproduct",
     "dmPct": 75,
     "cpPctDm": 4,
@@ -1300,7 +1245,6 @@
       "en": "Available all year; not verified as made locally.",
       "hi": "पूरे साल मिलता है; स्थानीय उत्पादन की पुष्टि नहीं।"
     },
-    "availabilityTag": "Year-round",
     "provenanceStatus": "team-asserted",
     "sourceKey": "PROTO-FEED-molasses",
     "isPrototypeFixture": true
@@ -1312,7 +1256,6 @@
     "localNameLatnCitation": "PROTOTYPE FIXTURE: typical-value placeholder, not transcribed from the NDDB booklet",
     "localNameDeva": "सरस पशु आहार",
     "localNameDevaProvenance": "team-asserted",
-    "category": "concentrate",
     "vertical": "agro_byproduct",
     "dmPct": 90,
     "cpPctDm": 21,
@@ -1350,7 +1293,6 @@
       "en": "Made at RCDF plants (Kaladera in Jaipur and others); available all year.",
       "hi": "RCDF के संयंत्रों (जयपुर का कालाडेरा आदि) में बनता है; पूरे साल मिलता है।"
     },
-    "availabilityTag": "Year-round",
     "provenanceStatus": "team-asserted",
     "sourceKey": "PROTO-FEED-saras_compound",
     "isPrototypeFixture": true
@@ -1362,7 +1304,6 @@
     "localNameLatnCitation": "PROTOTYPE FIXTURE: typical-value placeholder, not transcribed from the NDDB booklet",
     "localNameDeva": "खनिज मिश्रण",
     "localNameDevaProvenance": "team-asserted",
-    "category": "mineral",
     "vertical": "mineral",
     "dmPct": 98,
     "cpPctDm": 0,
@@ -1400,7 +1341,6 @@
       "en": "NDDB area-specific mineral mixture; available all year.",
       "hi": "NDDB का क्षेत्र-विशिष्ट खनिज मिश्रण; पूरे साल मिलता है।"
     },
-    "availabilityTag": "Year-round",
     "provenanceStatus": "team-asserted",
     "sourceKey": "PROTO-FEED-mineral_mix",
     "isPrototypeFixture": true

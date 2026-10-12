@@ -45,7 +45,7 @@
             "src/data/breeds.prototype.json"
           ],
           "acceptance_criteria": "SPEC AC-1.1, AC-2.4, AC-2.5, AC-3.2, AC-3.3, AC-3.4, AC-3.5, AC-3.6, AC-5.10, AC-5.12, AC-L1.4, AC-L1.7: npx vitest run tests/unit/breeds.test.ts tests/unit/season.test.ts verifies that all 14 breeds plus 2 non-descript rows match DATA_SOURCES.md §5, stored caps equal recomputed caps (Murrah 9.64, Nili-Ravi 9.40, Bhadawari 6.93, Sahiwal 11.15 with capBasis 'cited_peak'; non-descript 3.86 and 4.73 with 'dahd_average' and DAHD year), feeds.v1.json has 25-30 cited feeds across the 4 verticals with no category field, and inSeason marks update by month without altering solver inputs.",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "M1-TASK-03",
