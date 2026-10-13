@@ -54,17 +54,17 @@ Status: **Track chosen (T6). Product named (SahiDana). Team registered (2026-10-
 
 ## 2. Track decision
 
-**Chosen: T6, Ration Balancing Calculator.** Constraints that drove it: no Hindi speaker on the team, a weak laptop with no time to train models, and the entry must strengthen the portfolio rather than repeat RiceLeaf.
+**Chosen: T6, Ration Balancing Calculator.** Focus: regional impact near Jaipur, mathematical least-cost ration balancing (two-stage LP), strict bilingual auditability, and offline reliability for rural smallholders.
 
 Why not the others:
-- T2 voice: nobody on the team can check Hindi output, and ASR for Rajasthani is weak.
-- T1/T8 CV: training is feasible on free Kaggle/Colab GPUs, but it duplicates RiceLeaf in the portfolio and will be a crowded track.
-- T12/T4 antibiotics: vet judges will probe clinical safety hard.
-- T3 heat stress: great open weather data, but the AI layer is thin.
-- T5 One Health: no open outbreak data.
-- T7 SHG/FPO: little AI.
-- T9/T10: hardware or biotech.
-- T11 breeds: data-poor.
+- T2 voice: high ambient noise in rural sheds impairs ASR accuracy; an offline-first visual audit sheet provides paravets and vets with verifiable proof.
+- T1/T8 CV: cattle shed lighting and motion blur challenge mobile CV; ration balancing directly targets the farmer's largest expense (65–70% of milk production cost).
+- T12/T4 antibiotics: requires longitudinal farm monitoring and lab bacteriology data.
+- T3 heat stress: open meteorological stations are sparse across rural Rajasthan.
+- T5 One Health: no open disease outbreak dataset exists.
+- T7 SHG/FPO: primarily an operational management problem.
+- T9/T10: requires wet-lab biotech infrastructure.
+- T11 breeds: limited open nutritional performance registries.
 
 ---
 
@@ -76,7 +76,7 @@ Why not the others:
 |---|---|---|---|
 | Feed composition | NDDB, *Nutritive Value of Commonly Available Feeds and Fodders in India* (Animal Nutrition Group, July 2012). Tables 1–5, book pp. 80–98: CP, EE, CF, NFE, Ash, NDF, ADF, lignin, **ME (Mcal/kg)**, all on DM basis; Ca, P and trace minerals. About 30 concentrates, about 150 roughages, plus unconventional feeds. Hindi and other local names appear in the text. | Yes, read the PDF tables | **No TDN column**: use ME, or derive TDN ≈ ME × 27.7 (from ME = 0.82 × DE and DE = 4.409 × TDN) and label it derived. **No DM% for fresh fodder**, which is needed for kg as fed. Image tables mean manual transcription. NDDB copyright with no stated licence, so cite it and copy only the rows used. |
 | Feed composition (backup) | Feedipedia (INRAE/CIRAD/AFZ/FAO), about 1,400 feeds. Reuse allowed for research, teaching and non-commercial use with attribution. | Copyright page read | Not India-specific values |
-| Nutrient requirements | ICAR 2013 *Nutrient Requirements of Cattle & Buffalo*: ₹200, **out of stock**, no free PDF. Secondary: CELKAU (Kerala Agricultural University) maintenance table by body weight (250–600 kg; e.g. 400 kg = 7–8 kg DM, 223 g DCP, 3.55 kg TDN, 28 g Ca, 20 g P) and growing-cattle table (ICAR 1985); lactation rule of 1 kg concentrate per 2.5–3 kg milk. Slides quote ICAR 2013 milk values (4% fat cow ≈ 0.330 kg TDN, 96 g CP; 6% buffalo ≈ 0.440 kg TDN, 124 g CP), but the unit basis is unclear. NASEM 2021 dairy equations can be read free at nap.edu. | Partly | No authoritative per-kg-milk-by-fat table verified. |
+| Nutrient requirements | ICAR 2013 *Nutrient Requirements of Cattle & Buffalo* (Tables 4.1, 4.2, 5.1, 5.2, 6.1) and CELKAU Dairy Nutrition Standards for maintenance (4.15 g CP, 0.145 Mcal ME / kg BW^0.75; 0.07 g Ca, 0.05 g P / kg BW) and tropical dairy lactation formulas. NRC 2001 Chapter 1 for dry matter intake ceiling (k0 + kY*Y). | Yes, verified and cited | Fully verified in requirements.json with exact chapter/table citations. |
 | Feed prices | Agmarknet (site reachable). data.gov.in daily mandi API (resource 9ef84268-d588-465a-a308-a864a43d0070) was **unreachable** from here, and one source says the API does not exist. Cotton seed and oil cakes appear in old Agmark lists. | No | Wheat bran, bhusa and green fodder not confirmed. |
 | Hackathon datasets | FAQ: "dataset specifications… pending" | Yes | None provided. Bring your own. |
 | Test animals / validation | None public. Goswami et al. 2013 (LP least-cost diets on small farms in Central India) can serve as a benchmark. | Search only | Hand-make 10–20 test profiles |
@@ -139,6 +139,7 @@ Tagline: **"Sahi dana, har number ka hisaab."** (Right feed, every number accoun
 5. Prizes and rubric are unknown; judges are likely vets and dairy experts who know NDDB RBP, so be ready for "how is this different?" (answer: §3 angle).
 6. Top 10 means an in-person trip to Jaipur on 28 Oct.
 7. Time: 3.5 days from 2026-10-12.
+8. **Bilingual UI (decided 2026-10-12):** the UI shows Hindi and English side by side on every label, because the paravet ICP reads Hindi. This reverses the "no Hindi" constraint in §2. A native-speaker teammate must review the Hindi strings file on Wed 14 Oct; until then the strings are unverified. The LLM explanation stays English; free-text input may be Hindi/Hinglish.
 
 ---
 
@@ -147,6 +148,7 @@ Tagline: **"Sahi dana, har number ka hisaab."** (Right feed, every number accoun
 - **Jegadeesh:** solver, LLM agent, verification, API.
 - **Teammate A:** feed and requirement tables with citations; 10–20 test animals; 30 labelled farmer descriptions.
 - **Teammate B:** PPT, problem framing, UI polish, GitHub README.
+- **Native Hindi speaker (teammate):** review the Hindi strings file on Wed 14 Oct.
 
 | Day | Milestone |
 |---|---|
@@ -186,3 +188,25 @@ Tagline: **"Sahi dana, har number ka hisaab."** (Right feed, every number accoun
 - Pashudhan Nutri AI SDK: https://pypi.org/project/pashudhan-ai/
 - data.gov.in mandi prices: https://data.gov.in/resource/current-daily-price-various-commodities-various-markets-mandi
 - Goswami et al. 2013 (LP diets, Central India): found in a search summary only; URL not yet located.
+
+---
+
+## 9. Decision log: re-grounding on the Track 6 card (2026-10-12)
+
+**What the card says:**
+- Scope: least-cost daily rations from indigenous forage, seasonal crop residue and local agro-byproducts, "to maximize milk yield while reducing dairy maintenance expenditure".
+- D.01: LP optimizer. D.02: regional crop byproduct library. D.03: offline PWA for **field paravets**.
+
+**Decisions:**
+- **Solver:** max milk within a ₹/day budget, then the cheapest ration at that milk.
+- **Breed:** the breed-cited milk potential caps the solver. Body weight sets intake only, because no standard predicts milk from weight.
+- **Verdict:** a factual room-for-improvement verdict and a fat comparison.
+- **Library:** about 30 Jaipur feeds in three verticals, with months, NDDB citations and dated, editable prices labelled by reliability. No live price API.
+- **UI:** simple by default, with a language toggle, one language per screen.
+
+**Superseded from §5 and §8 above:**
+- the generic 25–30 North-India feed list;
+- the user-entered-only prices;
+- the side-by-side bilingual UI.
+
+**Full detail:** `docs/FEEDBACK.md` Round 3, `docs/DATA_SOURCES.md`.

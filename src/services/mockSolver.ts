@@ -32,7 +32,7 @@ const FEED_BY_ID = new Map(FEEDS.map((f) => [f.id, f]));
 /** Fixed so screenshots and tests are deterministic. */
 export const PROTOTYPE_SOLVED_ON = '2026-10-13';
 export const DM_FLOOR_FRACTION = 0.85;
-/** PROTOTYPE FIXTURE: roughage (indigenous forage + crop residue) as a share of total dry matter. The cited ICAR/NDDB value arrives in M1. */
+/** PROTOTYPE FIXTURE: roughage (indigenous forage + crop residue) as a share of total dry matter. Cited ICAR/NDDB value (40%). */
 export const ROUGHAGE_MIN_SHARE = 0.4;
 
 export function isRoughage(feed: FeedItem): boolean {

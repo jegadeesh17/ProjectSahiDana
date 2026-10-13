@@ -2,7 +2,8 @@
   "name": "sahidana",
   "private": true,
   "version": "0.1.0",
-  "description": "SahiDana: offline-first, auditable dairy ration balancer (Phase 2 clickable prototype on the mock adapter)",
+  "description": "SahiDana: offline-first, auditable regional dairy ration optimizer for field paravets",
+  "homepage": "https://sahidana.vercel.app",
   "type": "module",
   "scripts": {
     "dev": "vite",

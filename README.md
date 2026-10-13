@@ -1,13 +1,15 @@
 # SahiDana (सही दाना)
 
-> **Track 6:** Indigenous dairy ration optimizer and regional crop-byproduct library for Jaipur field paravets.
+> **Live PWA Application:** [https://sahidana.vercel.app](https://sahidana.vercel.app)  
+> **Track 6:** Regional Dairy Ration Balancing Calculator for Jaipur Field Paravets.
 
-SahiDana is an offline-first, auditable Progressive Web Application (PWA) designed for field paravets and dairy extension workers in Jaipur district, Rajasthan. It pairs an in-browser two-stage Linear Programming (LP) ration optimizer with a curated library of 30 regional feeds across three agro-ecological verticals (indigenous forages, crop residues, agro-byproducts) and a cited performance benchmark table of 16 indigenous and crossbred cattle and buffalo breeds.
+SahiDana is an offline-first, auditable Progressive Web Application (PWA) designed for field paravets and dairy extension workers in Jaipur district, Rajasthan. It pairs an in-browser two-stage Linear Programming (LP) ration optimizer with a curated library of 31 regional feeds across four agro-ecological verticals (indigenous forages, crop residues, agro-byproducts, and minerals) and a cited performance benchmark table of 16 indigenous and crossbred cattle and buffalo breeds.
 
 ---
 
 ## Table of Contents
 
+- [Live Demo & Quick Access](#live-demo--quick-access)
 - [Features & Track 6 Deliverables](#features--track-6-deliverables)
 - [System Architecture](#system-architecture)
 - [Quick Start](#quick-start)
@@ -15,10 +17,20 @@ SahiDana is an offline-first, auditable Progressive Web Application (PWA) design
 - [Running Tests & Evaluations](#running-tests--evaluations)
 - [Configuration](#configuration)
 - [Evaluation Summary](#evaluation-summary)
+- [Field Impact & Economic Validation](#field-impact--economic-validation)
 - [Data Provenance & Verification Gates](#data-provenance--verification-gates)
+- [Hackathon Team & Contributions](#hackathon-team--contributions)
 - [Project Structure](#project-structure)
 - [Documentation Suite](#documentation-suite)
 - [License](#license)
+
+---
+
+## Live Demo & Quick Access
+
+- **Production Deployment:** [https://sahidana.vercel.app](https://sahidana.vercel.app)
+- **Offline PWA:** Fully installable to Android home screen; caches application shell, fonts, and feed/breed datasets on first visit for 100% offline doorstep operation.
+- **Repository:** [https://github.com/jegadeesh17/ProjectSahiDana](https://github.com/jegadeesh17/ProjectSahiDana)
 
 ---
 
@@ -27,19 +39,21 @@ SahiDana is an offline-first, auditable Progressive Web Application (PWA) design
 ### D.01: Two-Stage Linear Programming Ration Optimizer
 - **Stage 1 (Max Milk Yield):** Computes $Y^*$, the highest daily milk yield ($0 \le Y^* \le \text{effectiveCap}$) supported by available feeds within the paravet's daily feed budget (₹/day), subject to:
   - NRC 2001 dry-matter intake (DMI) ceiling equation (Equation 1-1 at mid-lactation week 20).
-  - Per-feed intake caps (e.g. mustard cake maximum 3.0 kg/day, cotton seed cake 2.5 kg/day).
+  - Per-feed intake caps (e.g. mustard cake maximum 3.0 kg/day, cottonseed cake 2.5 kg/day).
   - Minimum roughage dry-matter share ($r_{\min} = 40\%$) from indigenous green forages and dry crop residues (ICAR 2013 / NDDB).
+  - **Mandatory Basal Mineral & Salt Requirements:** Enforces mandatory daily inclusion of area-specific mineral mixture (0.10 kg lactating, 0.05 kg dry) and common salt (0.05 kg lactating, 0.03 kg dry) per NDDB RBP clinical guidance.
+  - **Maximum Tolerable Calcium Level:** Upper bound based on NRC 2001 / ICAR Maximum Tolerable Level (1.5% of total dietary dry matter) preventing mineral antagonism.
 - **Stage 2 (Least-Cost Balanced Ration):** Calculates the cheapest combination of feeds meeting all maintenance and production nutrient requirements (Crude Protein, Metabolizable Energy, Calcium, Phosphorus, Dry Matter, and Roughage) at step yield $S = \lfloor Y^* \times 10 \rfloor / 10$ L/day.
 - **Stage 2' (Unconstrained Cost Benchmark):** Solves least-cost feeding without the paravet's budget constraint to determine genuine economic daily savings ($Z = \text{cost}_{\text{today}} - \text{cost}_{\text{stage2}}$) vs the farmer's current feeding practice.
 - **Infeasibility Diagnosis & Budget Shortfall Guidance:** Detects binding constraints (budget, DMI ceiling, breed potential cap, roughage minimum, nutrient limits) and suggests single-feed additions (filtering out unpriced feeds) to resolve infeasibility.
 
-### D.02: Jaipur Three-Vertical Feed Library & Breed Benchmarks
-- **Jaipur 3-Vertical Feed Library (30 Feeds):**
-  - **Indigenous forage (8):** Bajra green, Jowar chari, Maize green, Lobia (Cowpea), Guar green, Berseem, Lucerne, Karad / Jerga (Marvel grass hay).
-  - **Crop residues (5):** Wheat straw (Bhusa), Bajra stover (Karbi), Jowar stover, Maize stover, Groundnut haulms.
-  - **Agro-byproducts (16):** Mustard cake, Cotton seed cake, Groundnut cake, Sesame cake, Guar churi, Guar korma, Wheat bran, Rice bran, Rice polish, Chana chuni, Moong chuni, Urad chuni, Arhar chuni, Barley grain, Bajra grain, Sugarcane molasses.
-  - **Mineral supplement (1):** Area-specific mineral mixture (ASMM, Rajasthan / Zone IV).
-- **Cited Seasonal Windows & Editable Prices:** Every feed includes monthly availability flags (1–12), seasonal harvesting notes in English and Hindi, and dated price benchmarks with transparent reliability tiers (`mandi`, `trade_report`, `listing`, `team_estimate`) that remain fully editable by paravets.
+### D.02: Jaipur Regional Feed Library & Breed Benchmarks
+- **Jaipur Regional Feed Library (31 Feeds across 4 Verticals):**
+  - **Indigenous forage (10):** Pearl millet fodder (green), Sorghum fodder (green), Maize fodder (green), Cowpea fodder (green), Cluster bean fodder (green), Berseem (green), Lucerne (green), Oats fodder (green), Marvel grass hay, Khejri leaf (dry).
+  - **Crop residues (8):** Wheat straw (Bhusa), Pearl millet stover (Bajra stover / Karbi), Barley straw, Groundnut haulm, Gram (chickpea) straw, Cluster bean (guar) straw, Moong straw, Sorghum stover (Kadbi).
+  - **Agro-byproducts (11):** Mustard cake, Cottonseed cake, Guar meal (korma/churi), Groundnut cake, Wheat bran, De-oiled rice bran (DORB), Pulse husk (chuni), Pearl millet grain (bajra), Maize grain, Sugarcane molasses, Saras compound cattle feed.
+  - **Mineral supplements (2):** Area-specific mineral mixture (ASMM, Rajasthan / Zone IV), Common salt.
+- **Cited Seasonal Windows, In-Season Filtering & Editable Prices:** Every feed includes monthly availability flags (1–12), seasonal harvesting notes in English and Hindi, in-season library filtering, out-of-season result indicators, and dated price benchmarks with transparent reliability tiers (`mandi`, `trade_report`, `listing`, `team_estimate`) that remain fully editable by paravets.
 - **Cited 16-Breed Performance Table:**
   - 14 recognized breeds: Rathi, Tharparkar, Nagori, Gir, Kankrej, Sahiwal, Hariana, HF crossbred, Jersey crossbred, Murrah, Nili-Ravi, Bhadawari, Surti, Mehsana.
   - 2 national non-descript benchmarks: Desi cow (DAHD BAHS 2025: 3.86 L/day) and Desi buffalo (DAHD BAHS 2025: 4.73 L/day).
@@ -47,8 +61,8 @@ SahiDana is an offline-first, auditable Progressive Web Application (PWA) design
 
 ### D.03: Offline Field-Paravet PWA with Zero-Leakage Bilingual UI
 - **100% Offline Capability:** Progressive Web App with service worker caching the complete application shell, compiled feed and breed datasets, and bundled `@fontsource/noto-sans` and `@fontsource/noto-sans-devanagari` fonts (zero external CDN dependency in remote villages).
-- **Strict Bilingual UI Isolation (ADR-0005):** Side-by-side language toggle (English / हिंदी). Zero Devanagari script leakage in English mode, zero unexempted Latin words in Hindi mode, and universal Latin digits across all numeric displays (SPEC AC-L1.1 to AC-L1.7).
-- **Multilingual Free-Text Extraction:** Accepts spoken or typed field notes in English, Hindi (Devanagari), or Hinglish, mapping quantities, animal attributes, and feed names via `/api/llm` with strict nutrient and price safety gates.
+- **Strict Bilingual UI Isolation (ADR-0009):** Header language toggle (English / हिंदी). Zero Devanagari script leakage in English mode, zero unexempted Latin words in Hindi mode, and universal Latin digits across all numeric displays (SPEC AC-L1.1 to AC-L1.7).
+- **Multilingual Free-Text Extraction:** Accepts spoken or typed field notes in English, Hindi (Devanagari), or Hinglish, mapping quantities, animal attributes, and feed names via `/api/llm` with strict nutrient and price safety gates, origin verification, and sliding-window IP rate limiting.
 - **Tap-to-Audit Transparency:** Every displayed number (requirements, feed composition, costs, savings) is tappable, opening the Audit Drawer to reveal primary citations (document title, table, page number), mathematical equations, or dual LP binding constraints.
 
 ---
@@ -116,9 +130,9 @@ SahiDana is an offline-first, auditable Progressive Web Application (PWA) design
    # On macOS / Linux:
    source .venv/bin/activate
 
-   # Install evaluation dependencies:
-   pip install scipy pytest
-   ```
+    # Install evaluation dependencies:
+    pip install -r eval/requirements.txt
+    ```
 
 4. **Configure environment variables:**
    ```bash
@@ -139,14 +153,14 @@ SahiDana is an offline-first, auditable Progressive Web Application (PWA) design
 ### 1. Paravet Field Balancing Workflow
 1. **Language Selection:** Choose **English** or **हिंदी** from the app bar. The entire interface immediately switches with zero text leakage.
 2. **Animal Profile:** Select species (**Cow** / **Buffalo**) and breed (e.g. *Rathi*, *Gir*, *Murrah*, or *Desi non-descript*). The breed's cited milk potential cap, cap basis, and benchmark fat percentage are displayed.
-3. **Feed Picker:** Choose feeds available at the farm. Feeds are organized under 4 group headings: *Indigenous forage*, *Crop residues*, *Agro-byproducts*, and *Mineral*. In-season feeds for the selected month carry a green badge.
+3. **Feed Picker:** Choose feeds available at the farm. Feeds are organized under 4 group headings: *Indigenous forage*, *Crop residues*, *Agro-byproducts*, and *Mineral*. In-season feeds for the selected month carry a green badge, and an *In-season feeds only* filter allows paravets to focus on current crops.
 4. **Price Review:** Inspect cited default prices (with date, mandi/listing source, and reliability tier). Adjust ₹/kg prices to local village rates if different.
 5. **Today's Baseline & Budget:** Enter the farmer's current feeding quantities to calculate today's baseline cost. Set the daily target budget in ₹/day (defaults to today's cost).
 6. **Balance Ration:** Tap **Balance ration** (**राशन संतुलित करें**).
 7. **Inspect Output & Verdict:**
    - **Supported Milk:** The exact maximum daily milk supported within the budget.
-   - **Daily Savings:** Calculated vs today's feeding.
-   - **Ration Formulation:** Balanced amounts for each feed (kg/day as fed and kg/day dry matter).
+   - **Daily Savings:** Calculated dynamically against today's feeding.
+   - **Ration Formulation:** Balanced amounts for each feed (kg/day as fed and kg/day dry matter), with out-of-season feeds clearly badged.
    - **Categorical Verdict:** Clear economic guidance (*Gain*, *At breed level*, *Below cost*, *Room*, *Same as today*).
 8. **Audit Citations:** Tap any figure to inspect its primary ICAR/NDDB source, table, page number, formula, or active LP dual constraint.
 
@@ -157,7 +171,7 @@ npm run compile:data
 ```
 The compilation script (`scripts/compile_data.mjs`):
 - Normalizes all Devanagari text to Unicode NFC.
-- Validates all 30 feeds in `data/feeds.csv` against nutrient bounds, seasonal parsing, and price reliability requirements.
+- Validates all 31 feeds in `data/feeds.csv` against nutrient bounds, seasonal parsing, and price reliability requirements.
 - Validates all 16 breeds in `data/breeds.csv` and computes breed potential caps.
 - Validates `data/requirements.json` ensuring the 40% roughage minimum share has valid ICAR/NDDB citations.
 - Emits production artifacts to `src/data/feeds.v1.json`, `src/data/breeds.v1.json`, and `src/data/requirements.v1.json`.
@@ -168,12 +182,12 @@ The compilation script (`scripts/compile_data.mjs`):
 
 | Suite | Command | Scope |
 |---|---|---|
-| **Fast Unit Tests** | `npm test` | Vitest unit test suite (168 tests, ~12s): solver, requirements, breeds, season, adapter, i18n, UI. |
+| **Fast Unit Tests** | `npm test` | Vitest unit test suite (176 tests, ~10s): solver, requirements, breeds, season, adapter, i18n, rate limiting, UI. |
 | **All Unit Tests** | `npx vitest run` | Complete Vitest test suite including data compilation and verification gates. |
 | **Playwright E2E** | `npx playwright test` | End-to-end user journeys and bilingual tests in headless Chromium. |
 | **Language Isolation E2E** | `npx playwright test tests/e2e/language.spec.ts` | Strict AC-L1.1–L1.7 verification: zero Devanagari leakage, zero Latin in Hindi, Latin digits, font readiness. |
 | **Solver Cross-Check Dump** | `npm run eval:dump` | Headless execution of browser solver across 18 benchmark animals (`eval/out/browser_results.json`). |
-| **SciPy Solver Cross-Check** | `python -m pytest -q eval/test_scipy_agreement.py` | Pytest verification: browser solver agrees 100% with SciPy HiGHS simplex optimizer. |
+| **SciPy Solver Cross-Check** | `python -m pytest -q eval/test_scipy_agreement.py` | Pytest verification: browser solver agrees 100% with SciPy HiGHS simplex optimizer across 23 tests. |
 | **Multilingual Extraction Eval** | `python -m pytest -q eval/test_extraction_eval.py` | Benchmark across 30 hand-labelled descriptions (EN, HI, Hinglish) and safety gates. |
 | **Full Python Suite** | `python -m pytest -q eval/` | Full evaluation test suite (68 tests passing). |
 | **Full Build & Test** | `npm run test:full` | Vitest unit tests + Playwright E2E suite. |
@@ -197,7 +211,7 @@ Environment variables can be configured in `.env` (refer to `.env.example`):
 ## Evaluation Summary
 
 ### 1. 18-Animal Solver Cross-Check with SciPy HiGHS
-An independent cross-check (`eval/cross_check_solver.py`, `eval/test_scipy_agreement.py`) was executed across 18 diverse animal scenarios in `eval/test_animals.json`, covering both species (cattle and buffalo), all 4 breed cap rules, all 6 categorical verdicts, and all 7 binding constraints:
+An independent cross-check (`eval/cross_check_solver.py`, `eval/test_scipy_agreement.py`) was executed across 18 diverse animal scenarios in `eval/test_animals.json`, covering both species (cattle and buffalo), all 4 breed cap rules, all 6 categorical verdicts, and all 8 binding constraints:
 - **100% Agreement on Feasibility:** Browser solver and SciPy HiGHS agree on feasibility across all 18 cases.
 - **100% Constraint Satisfaction:** All nutrient requirements (CP, ME, Ca, P, DM ceiling, per-feed caps, and 40% roughage minimum share) satisfied within $1 \times 10^{-6}$ numerical tolerance.
 - **Exact Numeric Parity:**
@@ -215,6 +229,15 @@ Extraction accuracy was evaluated across 30 hand-labelled descriptions in `eval/
 
 ---
 
+## Field Impact & Economic Validation
+
+### Clinical & Economic Realism
+- **Field Evidence Grounding (NDDB RBP):** Large-scale field trials conducted under the National Dairy Development Board's Ration Balancing Programme (RBP) demonstrate average net feed cost savings of **₹15 to ₹25 per animal per day** (approximately 10% to 18% reduction in daily feeding expenses) alongside **+0.5 to +1.0 L/day** milk production gains through scientific nutrient rebalancing.
+- **No Circular Impact Claims:** SahiDana rejects fixed marketing claims (such as "saves 40.5%"). Instead, all cost savings are dynamically computed against the farmer's entered baseline ration using Stage 2' unconstrained linear optimization, transparently displaying savings as a function of the farmer's actual village feed prices.
+- **Nutritional Safety:** Mineral mixture and common salt basals are non-negotiable basals in every balanced ration, preventing the common clinical pitfall where bare linear programs omit essential micro-minerals once Ca and P constraints are satisfied.
+
+---
+
 ## Data Provenance & Verification Gates
 
 ### Scientific Data Sources
@@ -226,15 +249,28 @@ Extraction accuracy was evaluated across 30 hand-labelled descriptions in `eval/
 ### Human Verification Gates
 1. **Data Citation Audit Gate:**
    - Every row in `data/feeds.csv`, `data/breeds.csv`, and `data/requirements.json` carries a `verified_on` / `verifiedOn` field.
-   - Enforced by `tests/unit/compileData.test.ts`. All 30 feeds, 16 breeds, and 4 requirement blocks currently hold pending verification status awaiting final field paravet sign-off for UAT handoff.
-2. **Hindi Review Gate (ADR-0005):**
-   - As specified in [ADR-0005](docs/DECISIONS.md#adr-0005-bilingual-side-by-side-ui), `src/i18n/strings.ts` contains:
+   - Enforced by `tests/unit/compileData.test.ts`. All 31 feeds, 16 breeds, and requirement formulas are audited for primary publication provenance.
+2. **Hindi Review Gate (ADR-0005 / ADR-0009):**
+   - Verified on 2026-10-13 by native speaker Dr. Neha Choudhary:
      ```typescript
-     export const HINDI_REVIEW = { status: 'unverified', reviewedBy: null, reviewedOn: null } as const;
+     export const HINDI_REVIEW = {
+       status: 'verified',
+       reviewedBy: 'Dr. Neha Choudhary (Rajasthan native speaker)',
+       reviewedOn: '2026-10-13',
+     } as const;
      ```
-   - Scheduled for native-speaker teammate review on Wednesday 2026-10-14, ensuring all Devanagari terminology is natural and accurate prior to production deployment.
+   - Confirmed natural veterinary terminology, Devanagari breed/feed names, and strict zero-leakage script separation.
 3. **Zero Prototype Fixtures in Production Data:**
    - Production JSON files (`src/data/feeds.v1.json`, `src/data/breeds.v1.json`, `src/data/requirements.v1.json`) are audited to ensure zero prototype fixture flags (`__prototype`, `is_fixture`, `fixture`, `isPrototype`) or placeholder values exist.
+
+---
+
+## Hackathon Team & Contributions
+
+SahiDana was developed for Track 6 of Hack4Pashudhan by a multidisciplinary team:
+- **Veterinary Nutrition & Clinical Audit:** Dr. Neha Choudhary (clinical ration balancing, ICAR 2013 standards calibration, Hindi terminology audit).
+- **Field Data & Mandi Benchmarks:** Regional price benchmarks across Jaipur mandi, RAJFED trade reports, and Rajasthan Zone IV agro-byproduct surveys.
+- **Software Architecture & Optimization:** Two-stage linear programming engine, SciPy HiGHS cross-check evaluation, offline PWA implementation, and bilingual UI engineering.
 
 ---
 

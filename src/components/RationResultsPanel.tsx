@@ -14,11 +14,14 @@ import {
 import {
   auditBreedCap,
   auditMaintenance,
+  auditSeason,
   auditSupportedMilk,
   auditUnderBudget,
   bindingName,
   feedLimitNames,
 } from '../domain/auditMilk';
+import { inSeason } from '../domain/feedGroups';
+import { currentMonth } from '../i18n/months';
 import { breedById, BREEDS, CAP_BASIS_STRING } from '../domain/breeds';
 import type { AnimalProfile, BreedStandard, FeedItem, RationSolution, RationSolveOutcome, RequirementResult } from '../domain/types';
 import { auditUserInput } from '../domain/audit';
@@ -38,6 +41,7 @@ import { InfeasibilityAlert } from './InfeasibilityAlert';
 import { NutrientCoverageBars } from './NutrientCoverageBars';
 import { StatusPill } from './StatusPill';
 import { SupportsHeadline, VerdictCard } from './VerdictCard';
+import { useAudit } from './AuditDrawer';
 
 type Profile = Omit<AnimalProfile, 'isConfirmed'>;
 
@@ -191,6 +195,8 @@ function SolvedBody({
   breeds?: BreedStandard[];
 }) {
   const [details, setDetails] = useState(false);
+  const { open } = useAudit();
+  const thisMonth = currentMonth();
   const byId = new Map(library.map((f) => [f.id, f]));
   const breed = breedById(profile.breedId, breeds);
   const dry = solution.verdict.kind === 'dry_animal';
@@ -237,6 +243,17 @@ function SolvedBody({
                     <span className="rowname">
                       <FeedChip feed={feed} />
                       <FeedName feed={feed} />
+                      {!inSeason(feed, thisMonth) && (
+                        <button
+                          type="button"
+                          className="pill pill-warn pill-btn ml-1"
+                          data-season="out"
+                          aria-haspopup="dialog"
+                          onClick={() => open(auditSeason(feed))}
+                        >
+                          <Bi id="state_out_of_season" />
+                        </button>
+                      )}
                     </span>
                   </th>
                   <td className="r">

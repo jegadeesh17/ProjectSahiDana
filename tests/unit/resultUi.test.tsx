@@ -162,7 +162,7 @@ describe('breed, budget and the feed picker', () => {
     act(() => {
       fireEvent.click(container.querySelector<HTMLElement>('[data-preset="buffalo"]')!);
     });
-    const budget = [...container.querySelectorAll<HTMLInputElement>('input.input')].find((i) => i.value === '299.5')!;
+    const budget = [...container.querySelectorAll<HTMLInputElement>('input.input')].find((i) => i.value === '299.9')!;
     expect(budget).toBeTruthy();
     expect(container.querySelector('[data-pill="budget-default"]')).toBeTruthy();
     act(() => {

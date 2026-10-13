@@ -35,7 +35,7 @@ SahiDana formulates least-cost daily dairy rations (`kg/day` as fed per feed) fo
 - **Offline-first core:** Animal requirement lookup, LP optimization (`javascript-lp-solver`), infeasibility diagnosis, deterministic explanation template, and clipboard text summary work 100% offline.
 - **Online AI assist with strict guardrails:** Free-text extraction and plain-English explanation run via `/api/llm` (OpenRouter free models with fallback chain). A visible disclosure states free-text goes to OpenRouter and free models may log prompts. Unmatched LLM feed names are flagged for mapping or removal; untraced explanation numbers trigger at most one retry before falling back to a deterministic template.
 - **Honest provenance tags:** Feed nutrient composition (`CP`, `ME`, `Ca`, `P` on DM basis) cites NDDB Tables 1–5 with page numbers; fresh-fodder `DM%` cites a second source; `TDN` is display-only (`ME × 27.7`) and labelled `derived`; any unverified regional/seasonal tag or default price is labelled `team-asserted`.
-- **Bilingual UI:** every label, button, message and state is shown in Hindi and English side by side (no toggle); numbers stay in Latin digits with `kg`, `L`, `₹`. Free-text extraction accepts Hindi, Hinglish or English; the LLM explanation stays English with bilingual badges and template. Hindi strings live in one file, reviewed by a native-speaker teammate.
+- **Bilingual UI (ADR-0009):** clean language toggle (English / हिंदी) in the app bar; strict single-language isolation per screen with zero script leakage; numbers stay in Latin digits with `kg`, `L`, `₹`. Free-text extraction accepts Hindi, Hinglish or English; the LLM explanation stays English with active-language template badges. Hindi strings live in `src/i18n/strings.ts`, verified by native speaker Dr. Neha Choudhary.
 - **Explicit non-goals:** voice and Rajasthani UI copy; no login/accounts or server database; no live mandi API; adult cows and buffaloes only; no micro-minerals beyond `Ca` and `P`; no veterinary/medical diagnosis.
 
 ## Brand Commitments
@@ -61,6 +61,6 @@ SahiDana formulates least-cost daily dairy rations (`kg/day` as fed per feed) fo
 ## Accessibility & Inclusion
 
 - WCAG 2.2 AA contrast and touch target sizing (`>= 44×44 px`) suited for one-handed mobile operation in bright daylight.
-- Hindi + English side-by-side copy throughout, so a paravet and the farmer beside them can both read the screen; Devanagari set in a face with full Hindi coverage at the same weight and size as the Latin.
+- Full Hindi and English localization via instantaneous app bar toggle (ADR-0009), allowing paravet or farmer to operate completely in their preferred language with zero visual clutter; Devanagari set in self-hosted Noto Sans Devanagari with full glyph coverage at identical weight and size as Latin.
 - Bilingual feed search (English + local Hindi/Rajasthani names, in Devanagari and transliteration) so extension workers can match farmer terminology directly.
 

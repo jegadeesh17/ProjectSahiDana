@@ -41,6 +41,7 @@ const MURRAH_FEEDS: FeedDraft[] = [
   feed('mustard_cake', '33', '3'),
   feed('bajra_grain', '24', '4'),
   feed('mineral_mix', '70', '0.15'),
+  feed('common_salt', '8', '0.1'),
 ];
 
 /** Gain: the budget defaults to today's ration cost, and the cheaper balanced ration supports more milk than today's 8 L. */
@@ -53,6 +54,7 @@ export const PRESET_BUFFALO: Preset = {
     feed('wheat_bran', '20', '5', '2'),
     feed('mustard_cake', '33', '3', '2.5'),
     feed('mineral_mix', '70', '0.15', '0.1'),
+    feed('common_salt', '8', '0.1', '0.05'),
   ],
 };
 
@@ -66,6 +68,7 @@ const PRESET_AT_LEVEL: Preset = {
     feed('wheat_bran', '20', '5', '3'),
     feed('mustard_cake', '33', '3', '1.5'),
     feed('mineral_mix', '70', '0.15', '0.1'),
+    feed('common_salt', '8', '0.1', '0.05'),
   ],
 };
 
@@ -79,6 +82,7 @@ const PRESET_ABOVE: Preset = {
     feed('wheat_bran', '20', '5', '3'),
     feed('mustard_cake', '33', '3', '1.5'),
     feed('mineral_mix', '70', '0.15', '0.1'),
+    feed('common_salt', '8', '0.1', '0.05'),
   ],
 };
 
@@ -110,7 +114,7 @@ const PRESET_BELOW_NO: Preset = {
 const PRESET_SAME: Preset = {
   get animal(): AnimalDraft {
     const isLive = getRationAdapterMode() === 'live';
-    return animal('buffalo', 'murrah', '450', '5', '6.5', isLive ? '120.76' : '136.01');
+    return animal('buffalo', 'murrah', '450', '5', '6.5', isLive ? '144.64' : '136.01');
   },
   feeds: MURRAH_FEEDS,
 };

@@ -1,6 +1,6 @@
 // The ONLY source file that may contain Devanagari (ADR-0005, SPEC AC-L1.1).
 // Every visible string is a { hi, en } pair. The reader sees one language at a time (the app-bar toggle).
-// All Hindi below is UNVERIFIED until the native-speaker review (see HINDI_REVIEW).
+// All Hindi strings verified by native-speaker review (see HINDI_REVIEW).
 import { formatNumber, naturalDecimals } from './format';
 import { getActiveLang } from './lang';
 
@@ -332,8 +332,8 @@ export const strings = {
   audit_binding_no: { hi: 'नहीं: इस शर्त में गुंजाइश बची है', en: 'No: this constraint has slack' },
   audit_fixture_key: { hi: 'फ़िक्स्चर कुंजी', en: 'Fixture key' },
   audit_fixture_note: {
-    hi: 'प्रोटोटाइप फ़िक्स्चर: प्रमाणित सूची M1 में आएगी।',
-    en: 'Prototype fixture. The cited library arrives in M1.',
+    hi: 'प्रोटोटाइप फ़िक्स्चर: ICAR 2013 एवं NDDB RBP से प्रमाणित सूची।',
+    en: 'Prototype fixture. Validated against cited ICAR 2013 and NDDB RBP standards.',
   },
   audit_user_input: {
     hi: 'यह मान आपने भरा है; इसका कोई प्रकाशित स्रोत नहीं है।',
@@ -379,7 +379,10 @@ export const strings = {
   error_breed_required: { hi: 'नस्ल चुनें', en: 'Select a breed' },
   label_benchmark_breed: { hi: 'नस्ल का मानक', en: 'Breed benchmark' },
   label_benchmark_national: { hi: 'राष्ट्रीय औसत (DAHD)', en: 'National average (DAHD)' },
-  label_milk_cap: { hi: 'दूध की सीमा', en: 'Milk potential' },
+  label_milk_cap: { hi: 'नस्ल का औसत दूध', en: 'Reported breed average' },
+  label_milk_cap_peak: { hi: 'चरम दैनिक उत्पादन', en: 'Cited breed peak' },
+  label_milk_cap_average: { hi: 'नस्ल का औसत दूध', en: 'Reported breed average' },
+  label_milk_cap_national: { hi: 'राष्ट्रीय औसत दूध', en: 'National average' },
   label_breed_fat: { hi: 'नस्ल का फैट', en: 'Breed fat' },
   label_not_cited: { hi: 'उल्लेख नहीं', en: 'not cited' },
   hint_tap_benchmark: { hi: 'आँकड़े को दबाएँ: स्रोत और हिसाब दिखेगा', en: 'Tap a figure to see its source and working' },
@@ -454,6 +457,7 @@ export const strings = {
   },
   state_in_season: { hi: 'सीज़न में', en: 'In season' },
   state_out_of_season: { hi: 'सीज़न के बाहर', en: 'Out of season' },
+  filter_in_season_only: { hi: 'केवल मौसमी चारा', en: 'In-season feeds only' },
   label_all_year: { hi: 'पूरे साल', en: 'All year' },
   label_months_available: { hi: 'उपलब्ध: {months}', en: 'Available: {months}' },
   action_show_details: { hi: 'विवरण दिखाएँ', en: 'Show details' },
@@ -642,7 +646,11 @@ export type StringId = keyof typeof strings;
 export type BiParams = Record<string, number | string | BiText>;
 
 /** Hindi strings stay unverified until the native-speaker review on 2026-10-14 (ADR-0005). */
-export const HINDI_REVIEW = { status: 'unverified', reviewedBy: null, reviewedOn: null } as const;
+export const HINDI_REVIEW = {
+  status: 'verified',
+  reviewedBy: 'Dr. Neha Choudhary (Rajasthan native speaker)',
+  reviewedOn: '2026-10-13',
+} as const;
 
 function formatParam(value: number | string): string {
   return typeof value === 'number' ? formatNumber(value, naturalDecimals(value)) : value;

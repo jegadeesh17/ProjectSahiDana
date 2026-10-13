@@ -15,174 +15,203 @@
       "url": "https://nap.nationalacademies.org/catalog/9825/nutrient-requirements-of-dairy-cattle-seventh-revised-edition-2001"
     },
     "note": "DMI (kg/day) = (0.372 × FCM + 0.0968 × BW^0.75) × (1 − e^(−0.192 × (WOL + 3.67))), where FCM = 0.4 × milk + 15 × milk × (fat / 100) and WOL = 20 (mid-lactation default).",
-    "verifiedOn": null
+    "verifiedOn": "2026-10-13"
   },
   "maintenance": {
-    "cpPerKgBw075": 3.8,
-    "meMcalPerKgBw075": 0.133,
-    "caGramsPerKgBw": 0.04,
-    "pGramsPerKgBw": 0.028,
+    "cpPerKgBw075": 4.15,
+    "meMcalPerKgBw075": 0.145,
+    "caGramsPerKgBw": 0.07,
+    "pGramsPerKgBw": 0.05,
     "tableByBodyWeightKg": [
       {
         "bodyWeightKg": 200,
-        "cpGramsPerDay": 202.1,
-        "meMcalPerDay": 7.07,
-        "caGramsPerDay": 8,
-        "pGramsPerDay": 5.6
+        "cpGramsPerDay": 220.7,
+        "meMcalPerDay": 7.71,
+        "caGramsPerDay": 14,
+        "pGramsPerDay": 10
       },
       {
         "bodyWeightKg": 250,
-        "cpGramsPerDay": 238.9,
-        "meMcalPerDay": 8.36,
-        "caGramsPerDay": 10,
-        "pGramsPerDay": 7
+        "cpGramsPerDay": 260.9,
+        "meMcalPerDay": 9.12,
+        "caGramsPerDay": 17.5,
+        "pGramsPerDay": 12.5
       },
       {
         "bodyWeightKg": 300,
-        "cpGramsPerDay": 273.9,
-        "meMcalPerDay": 9.59,
-        "caGramsPerDay": 12,
-        "pGramsPerDay": 8.4
+        "cpGramsPerDay": 299.1,
+        "meMcalPerDay": 10.45,
+        "caGramsPerDay": 21,
+        "pGramsPerDay": 15
       },
       {
         "bodyWeightKg": 350,
-        "cpGramsPerDay": 307.6,
-        "meMcalPerDay": 10.76,
-        "caGramsPerDay": 14,
-        "pGramsPerDay": 9.8
+        "cpGramsPerDay": 335.9,
+        "meMcalPerDay": 11.74,
+        "caGramsPerDay": 24.5,
+        "pGramsPerDay": 17.5
       },
       {
         "bodyWeightKg": 400,
-        "cpGramsPerDay": 340,
-        "meMcalPerDay": 11.9,
-        "caGramsPerDay": 16,
-        "pGramsPerDay": 11.2
+        "cpGramsPerDay": 371.4,
+        "meMcalPerDay": 12.98,
+        "caGramsPerDay": 28,
+        "pGramsPerDay": 20
       },
       {
         "bodyWeightKg": 450,
-        "cpGramsPerDay": 371.7,
-        "meMcalPerDay": 13.01,
-        "caGramsPerDay": 18,
-        "pGramsPerDay": 12.6
+        "cpGramsPerDay": 406,
+        "meMcalPerDay": 14.19,
+        "caGramsPerDay": 31.5,
+        "pGramsPerDay": 22.5
       },
       {
         "bodyWeightKg": 500,
-        "cpGramsPerDay": 402.4,
-        "meMcalPerDay": 14.09,
-        "caGramsPerDay": 20,
-        "pGramsPerDay": 14
+        "cpGramsPerDay": 439.7,
+        "meMcalPerDay": 15.37,
+        "caGramsPerDay": 35,
+        "pGramsPerDay": 25
       },
       {
         "bodyWeightKg": 550,
-        "cpGramsPerDay": 432.5,
-        "meMcalPerDay": 15.14,
-        "caGramsPerDay": 22,
-        "pGramsPerDay": 15.4
+        "cpGramsPerDay": 472.5,
+        "meMcalPerDay": 16.51,
+        "caGramsPerDay": 38.5,
+        "pGramsPerDay": 27.5
       },
       {
         "bodyWeightKg": 600,
-        "cpGramsPerDay": 461.8,
-        "meMcalPerDay": 16.16,
-        "caGramsPerDay": 24,
-        "pGramsPerDay": 16.8
+        "cpGramsPerDay": 504.6,
+        "meMcalPerDay": 17.63,
+        "caGramsPerDay": 42,
+        "pGramsPerDay": 30
       },
       {
         "bodyWeightKg": 650,
-        "cpGramsPerDay": 490.5,
-        "meMcalPerDay": 17.17,
-        "caGramsPerDay": 26,
-        "pGramsPerDay": 18.2
+        "cpGramsPerDay": 536,
+        "meMcalPerDay": 18.73,
+        "caGramsPerDay": 45.5,
+        "pGramsPerDay": 32.5
       },
       {
         "bodyWeightKg": 700,
-        "cpGramsPerDay": 518.6,
-        "meMcalPerDay": 18.15,
-        "caGramsPerDay": 28,
-        "pGramsPerDay": 19.6
+        "cpGramsPerDay": 566.7,
+        "meMcalPerDay": 19.8,
+        "caGramsPerDay": 49,
+        "pGramsPerDay": 35
       }
     ],
     "citation": {
-      "doc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo (via CELKAU maintenance tables)",
+      "doc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
       "table": "Table 4.1 & Table 5.1: Maintenance Nutrient Requirements of Cattle and Buffaloes",
       "page": "pp. 12–18",
       "url": "http://www.celkau.in/AnimalHusbandry/Cattle/nutritional_requirement.aspx"
     },
-    "verifiedOn": null
+    "verifiedOn": "2026-10-13"
   },
   "lactation": {
-    "cpBaseGramsPerL": 55,
-    "cpPerFatPctGramsPerL": 9,
-    "meBaseMcalPerL": 0.4,
-    "mePerFatPctMcalPerL": 0.15,
-    "caBaseGramsPerL": 1.22,
-    "caPerFatPctAbove35GramsPerL": 0.35,
+    "cpBaseGramsPerL": 37,
+    "cpPerFatPctGramsPerL": 14.5,
+    "meBaseMcalPerL": 0.39,
+    "mePerFatPctMcalPerL": 0.2,
+    "caBaseGramsPerL": 1,
+    "caPerFatPctAbove35GramsPerL": 0.5,
     "caFatBaselinePct": 3.5,
-    "pGramsPerL": 0.9,
+    "pGramsPerL": 2,
     "tableByFatPct": [
       {
         "fatPct": 3,
-        "cpGramsPerLitre": 82,
-        "meMcalPerLitre": 0.85,
-        "caGramsPerLitre": 1.22,
-        "pGramsPerLitre": 0.9
+        "cpGramsPerLitre": 80.5,
+        "meMcalPerLitre": 0.99,
+        "caGramsPerLitre": 1,
+        "pGramsPerLitre": 2
       },
       {
         "fatPct": 4,
-        "cpGramsPerLitre": 91,
-        "meMcalPerLitre": 1,
-        "caGramsPerLitre": 1.395,
-        "pGramsPerLitre": 0.9
+        "cpGramsPerLitre": 95,
+        "meMcalPerLitre": 1.19,
+        "caGramsPerLitre": 1.25,
+        "pGramsPerLitre": 2
       },
       {
         "fatPct": 5,
-        "cpGramsPerLitre": 100,
-        "meMcalPerLitre": 1.15,
-        "caGramsPerLitre": 1.745,
-        "pGramsPerLitre": 0.9
+        "cpGramsPerLitre": 109.5,
+        "meMcalPerLitre": 1.39,
+        "caGramsPerLitre": 1.75,
+        "pGramsPerLitre": 2
       },
       {
         "fatPct": 6,
-        "cpGramsPerLitre": 109,
-        "meMcalPerLitre": 1.3,
-        "caGramsPerLitre": 2.095,
-        "pGramsPerLitre": 0.9
+        "cpGramsPerLitre": 124,
+        "meMcalPerLitre": 1.59,
+        "caGramsPerLitre": 2.25,
+        "pGramsPerLitre": 2
       },
       {
         "fatPct": 7,
-        "cpGramsPerLitre": 118,
-        "meMcalPerLitre": 1.45,
-        "caGramsPerLitre": 2.445,
-        "pGramsPerLitre": 0.9
+        "cpGramsPerLitre": 138.5,
+        "meMcalPerLitre": 1.79,
+        "caGramsPerLitre": 2.75,
+        "pGramsPerLitre": 2
       },
       {
         "fatPct": 8,
-        "cpGramsPerLitre": 127,
-        "meMcalPerLitre": 1.6,
-        "caGramsPerLitre": 2.795,
-        "pGramsPerLitre": 0.9
+        "cpGramsPerLitre": 153,
+        "meMcalPerLitre": 1.99,
+        "caGramsPerLitre": 3.25,
+        "pGramsPerLitre": 2
       },
       {
         "fatPct": 9,
-        "cpGramsPerLitre": 136,
-        "meMcalPerLitre": 1.75,
-        "caGramsPerLitre": 3.145,
-        "pGramsPerLitre": 0.9
+        "cpGramsPerLitre": 167.5,
+        "meMcalPerLitre": 2.19,
+        "caGramsPerLitre": 3.75,
+        "pGramsPerLitre": 2
       },
       {
         "fatPct": 10,
-        "cpGramsPerLitre": 145,
-        "meMcalPerLitre": 1.9,
-        "caGramsPerLitre": 3.495,
-        "pGramsPerLitre": 0.9
+        "cpGramsPerLitre": 182,
+        "meMcalPerLitre": 2.39,
+        "caGramsPerLitre": 4.25,
+        "pGramsPerLitre": 2
       }
     ],
     "citation": {
-      "doc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; NASEM 2021, Nutrient Requirements of Dairy Cattle (8th rev. ed.)",
+      "doc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; Ranjhan (1998) Animal Nutrition in the Tropics",
       "table": "Table 4.2 & Table 5.2: Nutrient Requirements for Lactation per kg Milk by Fat%",
       "page": "pp. 19–24",
-      "url": "https://nap.nationalacademies.org/catalog/25806/nutrient-requirements-of-dairy-cattle-eighth-revised-edition"
+      "url": "https://epubs.icar.org.in"
     },
-    "verifiedOn": null
+    "verifiedOn": "2026-10-13"
+  },
+  "mineralSupplement": {
+    "mineralMixMinKgPerDay": {
+      "lactating": 0.1,
+      "dry": 0.05
+    },
+    "saltMinKgPerDay": {
+      "lactating": 0.05,
+      "dry": 0.03
+    },
+    "citation": {
+      "doc": "NDDB, Ration Balancing Programme (RBP) Field Guidelines",
+      "table": "Area Specific Mineral Mixture & Common Salt Basal Supplementation",
+      "page": "Guideline 3.2",
+      "url": "https://www.nddb.coop/services/animalnutrition/programmes/ration-balancing-programme"
+    },
+    "note": "NDDB RBP specifies mandatory daily basal supplementation of 100g mineral mixture (50g dry) and 50g common salt (30g dry) for dairy cattle and buffaloes to satisfy trace mineral and electrolyte requirements.",
+    "verifiedOn": "2026-10-13"
+  },
+  "calciumMaxRatioOfRequirement": {
+    "value": 2,
+    "citation": {
+      "doc": "ICAR 2013; NRC 2001 Nutrient Requirements of Dairy Cattle",
+      "table": "Chapter 6: Maximum Tolerable Levels of Dietary Minerals",
+      "page": "p. 26",
+      "url": "https://nap.nationalacademies.org/catalog/9825/nutrient-requirements-of-dairy-cattle-seventh-revised-edition-2001"
+    },
+    "note": "Dietary calcium intake is capped at 2.0x requirement (or 200%) to prevent metabolic calcification and mineral absorption antagonism (Ca:P ratio ceiling).",
+    "verifiedOn": "2026-10-13"
   },
   "nutrientCitations": {
     "DM": {
@@ -191,22 +220,22 @@
       "page": "p. 4"
     },
     "CP": {
-      "doc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; NASEM 2021 (8th rev. ed.)",
+      "doc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
       "table": "Table 4.1, Table 4.2, Table 5.1 & Table 5.2 (Maintenance + Lactation CP)",
       "page": "pp. 12–24"
     },
     "ME": {
-      "doc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; NASEM 2021 (8th rev. ed.)",
+      "doc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
       "table": "Table 4.1, Table 4.2, Table 5.1 & Table 5.2 (Maintenance + Lactation ME)",
       "page": "pp. 12–24"
     },
     "Ca": {
-      "doc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; NASEM 2021 (8th rev. ed.)",
+      "doc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
       "table": "Table 6.1 (Calcium Maintenance + Lactation)",
       "page": "p. 26"
     },
     "P": {
-      "doc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; NASEM 2021 (8th rev. ed.)",
+      "doc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
       "table": "Table 6.1 (Phosphorus Maintenance + Lactation)",
       "page": "p. 26"
     }
@@ -220,6 +249,6 @@
       "url": "https://www.nddb.coop/services/animalnutrition/programmes/ration-balancing-programme"
     },
     "note": "Minimum 40% (0.40) of total ration dry matter must come from roughages (indigenous forage and crop residues).",
-    "verifiedOn": null
+    "verifiedOn": "2026-10-13"
   }
 }

@@ -41,10 +41,10 @@ describe('linear nutrient requirements engine and NRC 2001 DMI ceiling (AC-2.1)'
     expect(res.requirements.dmKgPerDay).toBeCloseTo(expectedK0 + 8 * expectedKY, 8);
     expect(res.requirements.dmKgPerDay).toBeCloseTo(13.4055, 3);
 
-    expect(res.requirements.cpGramsPerDay).toBeCloseTo(3.8 * bw075 + (55 + 9 * 6.5) * 8, 8);
-    expect(res.requirements.meMcalPerDay).toBeCloseTo(0.133 * bw075 + (0.4 + 0.15 * 6.5) * 8, 8);
-    expect(res.requirements.caGramsPerDay).toBeCloseTo(0.04 * 450 + (1.22 + 0.35 * (6.5 - 3.5)) * 8, 8);
-    expect(res.requirements.pGramsPerDay).toBeCloseTo(0.028 * 450 + 0.9 * 8, 8);
+    expect(res.requirements.cpGramsPerDay).toBeCloseTo(4.15 * bw075 + (37.0 + 14.5 * 6.5) * 8, 8);
+    expect(res.requirements.meMcalPerDay).toBeCloseTo(0.145 * bw075 + (0.39 + 0.20 * 6.5) * 8, 8);
+    expect(res.requirements.caGramsPerDay).toBeCloseTo(0.07 * 450 + (1.0 + 0.5 * (6.5 - 3.5)) * 8, 8);
+    expect(res.requirements.pGramsPerDay).toBeCloseTo(0.05 * 450 + 2.0 * 8, 8);
   });
 
   it('evaluates requirements strictly linearly in milk yield Y across all nutrients', () => {
@@ -78,7 +78,7 @@ describe('linear nutrient requirements engine and NRC 2001 DMI ceiling (AC-2.1)'
       isConfirmed: true,
     };
     const cowModel = buildRequirementModel(lowFatCow);
-    expect(cowModel.Ca.perLitre).toBeCloseTo(1.22, 10);
+    expect(cowModel.Ca.perLitre).toBeCloseTo(1.0, 10);
 
     const dryCowNoFat: AnimalProfile = {
       ...lowFatCow,
@@ -87,7 +87,7 @@ describe('linear nutrient requirements engine and NRC 2001 DMI ceiling (AC-2.1)'
     };
     const dryRes = computeRequirements(dryCowNoFat);
     expect(dryRes.model?.fatPctUsed).toBe(4);
-    expect(dryRes.requirements.cpGramsPerDay).toBeCloseTo(3.8 * Math.pow(385, 0.75), 8);
+    expect(dryRes.requirements.cpGramsPerDay).toBeCloseTo(4.15 * Math.pow(385, 0.75), 8);
     expect(dryRes.citations.CP.lactationPart).toBe(0);
     expect(dryRes.citations.DM.lactationPart).toBe(0);
   });

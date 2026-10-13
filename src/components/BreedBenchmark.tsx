@@ -23,7 +23,7 @@ export function BreedBenchmark({ breed, todayMilk }: Props) {
       <dl className="benchmark-grid">
         <div>
           <dt>
-            <Bi id="label_milk_cap" />
+            <Bi id={breed.capBasis === 'cited_peak' ? 'label_milk_cap_peak' : isNonDescript(breed) ? 'label_milk_cap_national' : 'label_milk_cap_average'} />
           </dt>
           <dd>
             <Fig audit={auditBreedCap(breed, todayMilk)}>{formatLitres(breed.milkCapLPerDay, 2)}</Fig>

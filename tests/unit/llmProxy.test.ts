@@ -4,9 +4,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import handler, {
   buildExplainMessages,
   buildExtractMessages,
+  checkRateLimit,
   DEFAULT_FALLBACK_MODELS,
   DEFAULT_PRIMARY_MODEL,
+  isAllowedOrigin,
   OPENROUTER_API_URL,
+  RATE_LIMIT_MAX_REQUESTS,
+  resetRateLimits,
   resolveModelChain,
   sanitizeExtractResponse,
   type CatalogBreedInput,
@@ -112,6 +116,7 @@ describe('POST /api/llm serverless OpenRouter proxy (M2-TASK-02)', () => {
   const fetchMock = vi.fn<typeof fetch>();
 
   beforeEach(() => {
+    resetRateLimits();
     process.env = {
       ...originalEnv,
       OPENROUTER_API_KEY: 'test-or-key-123',
@@ -616,6 +621,57 @@ describe('POST /api/llm serverless OpenRouter proxy (M2-TASK-02)', () => {
     expect(devaSanitized.matchedFeeds).toEqual([
       { feedId: 'bajra_grain', priceInrPerKgAsFed: null, maxKgAsFedPerDay: null },
     ]);
+  });
+
+  it('enforces origin validation and blocks untrusted cross-origin requests', async () => {
+    // 1. Helper function checks
+    expect(isAllowedOrigin(undefined, 'sahidana.vercel.app')).toBe(true);
+    expect(isAllowedOrigin('http://localhost:5173', 'localhost:5173')).toBe(true);
+    expect(isAllowedOrigin('https://project-sahidana.vercel.app', 'project-sahidana.vercel.app')).toBe(true);
+    expect(isAllowedOrigin('https://malicious-site.example.com', 'sahidana.vercel.app')).toBe(false);
+
+    // 2. Handler enforcement: untrusted origin is rejected with INVALID_REQUEST
+    const badOriginCtx = createMockReqRes({
+      action: 'extract',
+      freeText: 'cow 400 kg',
+      catalog: SAMPLE_CATALOG,
+      breeds: SAMPLE_BREEDS,
+    });
+    (badOriginCtx.req.headers as Record<string, string>)['origin'] = 'https://unauthorized-domain.com';
+    await handler(badOriginCtx.req, badOriginCtx.res);
+    expect(badOriginCtx.getStatus()).toBe(400);
+    expect(badOriginCtx.getJson()).toMatchObject({ error: { code: 'INVALID_REQUEST' } });
+  });
+
+  it('enforces sliding-window IP rate limiting to protect free OpenRouter quota', async () => {
+    const testIp = '192.168.1.100';
+    resetRateLimits();
+
+    // First RATE_LIMIT_MAX_REQUESTS succeed
+    for (let i = 0; i < RATE_LIMIT_MAX_REQUESTS; i++) {
+      expect(checkRateLimit(testIp)).toBe(true);
+    }
+    // Next request exceeds rate limit
+    expect(checkRateLimit(testIp)).toBe(false);
+
+    // Rate limit window reset works
+    expect(checkRateLimit(testIp, Date.now() + 61_000)).toBe(true);
+
+    // Handler enforcement: 429 RATE_LIMITED returned
+    resetRateLimits();
+    for (let i = 0; i < RATE_LIMIT_MAX_REQUESTS; i++) {
+      checkRateLimit('10.0.0.1');
+    }
+    const rateLimitedCtx = createMockReqRes({
+      action: 'extract',
+      freeText: 'cow 400 kg',
+      catalog: SAMPLE_CATALOG,
+      breeds: SAMPLE_BREEDS,
+    });
+    (rateLimitedCtx.req.headers as Record<string, string>)['x-forwarded-for'] = '10.0.0.1';
+    await handler(rateLimitedCtx.req, rateLimitedCtx.res);
+    expect(rateLimitedCtx.getStatus()).toBe(429);
+    expect(rateLimitedCtx.getJson()).toMatchObject({ error: { code: 'RATE_LIMITED' } });
   });
 });
 

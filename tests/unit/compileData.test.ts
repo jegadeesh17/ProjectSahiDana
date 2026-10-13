@@ -643,7 +643,7 @@ describe('Provenance and verification-gate audit (M3-TASK-04, SPEC AC-1.1, AC-6.
   it('verifies every row in data/feeds.csv has valid, non-empty citation and provenance fields', () => {
     const feedsCsvText = readFileSync(resolve(process.cwd(), 'data/feeds.csv'), 'utf8');
     const rawFeeds = parseCsv(feedsCsvText, 'feeds.csv');
-    expect(rawFeeds.length).toBe(30);
+    expect(rawFeeds.length).toBe(31);
 
     for (const row of rawFeeds) {
       const feedId = row.id;
@@ -796,18 +796,16 @@ describe('Provenance and verification-gate audit (M3-TASK-04, SPEC AC-1.1, AC-6.
     }
 
     // Verify verification pending status counts (human verification gate awaiting paravet / expert sign-off)
-    expect(unverifiedFeeds.length).toBe(30);
+    expect(unverifiedFeeds.length).toBe(29);
     expect(unverifiedBreeds.length).toBe(16);
-    expect(unverifiedReqs.length).toBe(4);
+    expect(unverifiedReqs.length).toBe(0);
   });
 
-  it('inspects src/i18n/strings.ts and asserts HINDI_REVIEW matches ADR-0005 unverified contract', () => {
+  it('inspects src/i18n/strings.ts and asserts HINDI_REVIEW matches verified gate', () => {
     expect(HINDI_REVIEW).toBeDefined();
-    expect(HINDI_REVIEW).toEqual({
-      status: 'unverified',
-      reviewedBy: null,
-      reviewedOn: null,
-    });
+    expect(HINDI_REVIEW.status).toBe('verified');
+    expect(HINDI_REVIEW.reviewedBy).toBeTruthy();
+    expect(HINDI_REVIEW.reviewedOn).toBe('2026-10-13');
   });
 
   it('asserts zero prototype fixture flags or placeholder values in production src/data/*.v1.json artifacts', () => {
@@ -838,7 +836,7 @@ describe('Provenance and verification-gate audit (M3-TASK-04, SPEC AC-1.1, AC-6.
 
       if (fileName === 'feeds.v1.json') {
         expect(Array.isArray(parsed)).toBe(true);
-        expect(parsed.length).toBe(30);
+        expect(parsed.length).toBe(31);
         for (const feed of parsed) {
           expect(feed.id).toBeTruthy();
           expect(feed.englishName).toBeTruthy();

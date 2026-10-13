@@ -82,6 +82,50 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+export const RATE_LIMIT_WINDOW_MS = 60_000;
+export const RATE_LIMIT_MAX_REQUESTS = 20;
+
+const ipRequestMap = new Map<string, { count: number; resetAt: number }>();
+
+/** In-memory sliding-window IP rate limiter to protect free model quotas during hackathon judging. */
+export function checkRateLimit(ip: string, now: number = Date.now()): boolean {
+  const entry = ipRequestMap.get(ip);
+  if (!entry || now >= entry.resetAt) {
+    ipRequestMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return true;
+  }
+  if (entry.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return false;
+  }
+  entry.count += 1;
+  return true;
+}
+
+export function resetRateLimits(): void {
+  ipRequestMap.clear();
+}
+
+/** Validates request origin/referer to block unauthorized third-party cross-origin calls. */
+export function isAllowedOrigin(originHeader: string | undefined, hostHeader: string | undefined): boolean {
+  if (!originHeader) return true; // Direct, serverless, or non-browser request
+  try {
+    const parsed = new URL(originHeader);
+    const hostname = parsed.hostname.toLowerCase();
+    // Allow localhost / loopback
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') return true;
+    // Allow vercel.app preview and production deployments
+    if (hostname.endsWith('.vercel.app')) return true;
+    // Allow matching host header
+    if (hostHeader) {
+      const cleanHost = hostHeader.split(':')[0].toLowerCase();
+      if (hostname === cleanHost) return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 /** Converts Devanagari digits (U+0966..U+096F) to Latin digits 0..9 without embedding Devanagari literals. */
 export function normalizeDigits(input: string): string {
   let out = '';
@@ -649,6 +693,24 @@ function parseRequestBody(req: VercelRequest): Record<string, unknown> | null {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
+  // 1. Origin check: block untrusted third-party origins
+  const originHeader = (req.headers.origin as string | undefined) ?? (req.headers.referer as string | undefined);
+  const hostHeader = req.headers.host as string | undefined;
+  if (!isAllowedOrigin(originHeader, hostHeader)) {
+    sendError(res, 'INVALID_REQUEST', 'Forbidden or untrusted cross-origin request.');
+    return;
+  }
+
+  // 2. IP rate limiting: protect free OpenRouter quota during judging
+  const forwarded = req.headers['x-forwarded-for'];
+  const clientIp = typeof forwarded === 'string'
+    ? forwarded.split(',')[0].trim()
+    : (req.socket?.remoteAddress ?? 'unknown_client');
+  if (!checkRateLimit(clientIp)) {
+    sendError(res, 'RATE_LIMITED', 'Rate limit exceeded: maximum 20 requests per minute per IP.');
+    return;
+  }
+
   if (req.method !== 'POST') {
     sendError(res, 'INVALID_REQUEST', 'Method not allowed; use POST.');
     return;

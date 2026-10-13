@@ -211,15 +211,22 @@ def solve_fixed_milk(
     k = len(inputs)
 
     c_obj = np.array([float(item["input"]["priceInrPerKgAsFed"]) for item in inputs], dtype=float)
-    bounds = [
-        (
-            0.0,
+    bounds = []
+    for item in inputs:
+        max_cap = (
             float(item["input"]["maxKgAsFedPerDay"])
             if item["input"].get("maxKgAsFedPerDay") is not None
-            else None,
+            else None
         )
-        for item in inputs
-    ]
+        min_cap = 0.0
+        feed_id = item["feed"]["id"]
+        if feed_id == "mineral_mix":
+            min_mm = 0.10 if milk_yield_l_per_day > 0 else 0.05
+            min_cap = min(min_mm, max_cap) if max_cap is not None else min_mm
+        elif feed_id == "common_salt":
+            min_salt = 0.05 if milk_yield_l_per_day > 0 else 0.03
+            min_cap = min(min_salt, max_cap) if max_cap is not None else min_salt
+        bounds.append((min_cap, max_cap))
 
     rows: list[list[float]] = []
     rhs: list[float] = []
@@ -239,6 +246,10 @@ def solve_fixed_milk(
         c_key, r_key = req_field_map[n]
         rows.append([-per_kg_fed(item["feed"])[c_key] for item in inputs])
         rhs.append(-req_at_y[r_key])
+
+    # 2b. Ca upper bound (2.5x requirement or 1.5% DM maximum tolerable level)
+    rows.append([per_kg_fed(item["feed"])["ca"] for item in inputs])
+    rhs.append(max(req_at_y["caGramsPerDay"] * 2.5, req_at_y["dmKgPerDay"] * 15.0))
 
     # 3. Homogeneous roughage row: -sum_i rho_i x_i <= 0
     if include_roughage:
@@ -726,6 +737,9 @@ def verify_ration_solution_scipy(
         raise ValueError(f"Supplied ME {total_me} below requirement {req_at_milk['meMcalPerDay']}")
     if total_ca + rel_tol(req_at_milk["caGramsPerDay"]) < req_at_milk["caGramsPerDay"]:
         raise ValueError(f"Supplied Ca {total_ca} below requirement {req_at_milk['caGramsPerDay']}")
+    max_ca = max(req_at_milk["caGramsPerDay"] * 2.5, req_at_milk["dmKgPerDay"] * 15.0)
+    if total_ca > max_ca + rel_tol(max_ca):
+        raise ValueError(f"Supplied Ca {total_ca} exceeds maximum tolerable ceiling {max_ca}")
     if total_p + rel_tol(req_at_milk["pGramsPerDay"]) < req_at_milk["pGramsPerDay"]:
         raise ValueError(f"Supplied P {total_p} below requirement {req_at_milk['pGramsPerDay']}")
     if roughage_dm + rel_tol(total_dm) < r * total_dm:
@@ -898,6 +912,13 @@ def solve_ration_scipy(
         s1_rows.append(row)
         s1_rhs.append(-float(req_model[n]["maintenance"]))
 
+    # Ca upper bound (1.5% DM maximum tolerable level): sum_i a_{Ca,i} x_i - 15.0 * l_DM Y <= 15.0 * m_DM
+    s1_rows.append(
+        [per_kg_fed(item["feed"])["ca"] for item in inputs]
+        + [-15.0 * float(req_model["dmMax"]["perLitre"])]
+    )
+    s1_rhs.append(15.0 * float(req_model["dmMax"]["maintenance"]))
+
     # Intake ceiling: sum_i d_i x_i - k_Y Y <= k_0
     s1_rows.append([per_kg_fed(item["feed"])["dm"] for item in inputs] + [-float(req_model["dmMax"]["perLitre"])])
     s1_rhs.append(float(req_model["dmMax"]["maintenance"]))
@@ -916,15 +937,23 @@ def solve_ration_scipy(
     s1_rows.append([float(item["input"]["priceInrPerKgAsFed"]) for item in inputs] + [0.0])
     s1_rhs.append(budget)
 
-    s1_bounds = [
-        (
-            0.0,
+    s1_bounds = []
+    for item in inputs:
+        max_cap = (
             float(item["input"]["maxKgAsFedPerDay"])
             if item["input"].get("maxKgAsFedPerDay") is not None
-            else None,
+            else None
         )
-        for item in inputs
-    ] + [(0.0, effective_cap)]
+        min_cap = 0.0
+        feed_id = item["feed"]["id"]
+        if feed_id == "mineral_mix":
+            min_mm = 0.10 if today_milk > 0 else 0.05
+            min_cap = min(min_mm, max_cap) if max_cap is not None else min_mm
+        elif feed_id == "common_salt":
+            min_salt = 0.05 if today_milk > 0 else 0.03
+            min_cap = min(min_salt, max_cap) if max_cap is not None else min_salt
+        s1_bounds.append((min_cap, max_cap))
+    s1_bounds.append((0.0, effective_cap))
 
     s1_res = linprog(
         c=c_stage1,

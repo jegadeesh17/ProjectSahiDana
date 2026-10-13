@@ -27,7 +27,7 @@ Thumbs.db
 
 # Reviews and local sources
 .ui-review/
-.impeccable/review/
+.impeccable/
 sources/
 
 # Node / Frontend build

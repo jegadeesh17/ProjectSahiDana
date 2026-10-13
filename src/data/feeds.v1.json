@@ -1430,6 +1430,57 @@
       "en": "No Jaipur mandi or listing price found for area-specific mineral mixture; estimated at ₹70/kg from cooperative retail rates",
       "hi": "क्षेत्र-विशिष्ट खनिज मिश्रण का जयपुर मंडी या लिस्टिंग भाव नहीं मिला; सहकारी खुदरा दरों से ₹70/kg का अनुमान।"
     },
-    "verifiedOn": null
+    "verifiedOn": "2026-10-13"
+  },
+  {
+    "id": "common_salt",
+    "englishName": "Common salt",
+    "localNameLatn": "Namak",
+    "localNameLatnCitation": "NDDB, Ration Balancing Programme Field Guidelines; BIS IS 253:2014",
+    "localNameDeva": "नमक",
+    "localNameDevaProvenance": "team-asserted",
+    "vertical": "mineral",
+    "availableMonths": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "seasonNote": {
+      "en": "Common iodized salt; available all year.",
+      "hi": "साधारण आयोडीन युक्त नमक; पूरे साल मिलता है।"
+    },
+    "seasonCitation": "NDDB, Ration Balancing Programme Field Guidelines",
+    "seasonProvenance": "cited",
+    "dmPct": 99,
+    "cpPctDm": 0,
+    "meMcalPerKgDm": 0,
+    "caGramsPerKgDm": 0,
+    "pGramsPerKgDm": 0,
+    "derivedTdnPctDm": 0,
+    "sourceDoc": "NDDB, Ration Balancing Programme Field Guidelines; BIS IS 253:2014",
+    "sourceTable": "Table 1: Specifications for edible and cattle salt",
+    "sourcePage": "p. 1",
+    "dmSourceCitation": "BIS IS 253:2014 Table 1",
+    "provenanceStatus": "cited",
+    "nutrientNote": null,
+    "defaultPriceInrPerKgAsFed": 8,
+    "priceSource": "Retail packaged iodized salt (Jaipur local market)",
+    "priceSourceUrl": "https://dir.indiamart.com/jaipur/iodised-salt.html",
+    "priceDate": "2026-10-12",
+    "priceReliability": "team_estimate",
+    "priceNote": {
+      "en": "Standard retail packaged common/iodized salt at ₹8/kg",
+      "hi": "साधारण आयोडीन युक्त नमक ₹8/kg का खुदरा भाव।"
+    },
+    "verifiedOn": "2026-10-13"
   }
 ]

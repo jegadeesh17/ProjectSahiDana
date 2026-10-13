@@ -1,7 +1,7 @@
 [
   {
     "id": "A01_murrah_gain_budget_binding",
-    "description": "Murrah buffalo (cited_peak 9.64 L) at 6.0 L/day where ₹145 budget supports more milk (+X L/day gain) and budget is the sole binding constraint (AC-5.1, AC-5.5, AC-5.6).",
+    "description": "Murrah buffalo (cited_peak 9.64 L) at 6.0 L/day [Rabi winter feeding, Nov–Apr] where ₹145 budget supports more milk (+X L/day gain) and budget is the sole binding constraint (AC-5.1, AC-5.5, AC-5.6).",
     "animal": {
       "species": "buffalo",
       "breedId": "murrah",
@@ -28,7 +28,7 @@
   },
   {
     "id": "A02_murrah_at_breed_level_cap_binding",
-    "description": "Murrah buffalo (cited_peak 9.64 L) already at 9.64 L/day with generous budget; breed_cap binds and Stage 2' saves ₹Z/day over today's ration (AC-5.3, AC-5.4, AC-5.7).",
+    "description": "Murrah buffalo (cited_peak 9.64 L) already at 9.64 L/day [Rabi winter feeding, Nov–Apr] with generous budget; breed_cap binds and Stage 2' saves ₹Z/day over today's ration (AC-5.3, AC-5.4, AC-5.7).",
     "animal": {
       "species": "buffalo",
       "breedId": "murrah",
@@ -43,6 +43,7 @@
       { "feedId": "wheat_straw", "priceInrPerKgAsFed": 6, "maxKgAsFedPerDay": null, "currentKgAsFedPerDay": 6 },
       { "feedId": "mustard_cake", "priceInrPerKgAsFed": 33, "maxKgAsFedPerDay": null, "currentKgAsFedPerDay": 3.5 },
       { "feedId": "rice_bran_dorb", "priceInrPerKgAsFed": 17, "maxKgAsFedPerDay": null, "currentKgAsFedPerDay": 2 },
+      { "feedId": "bajra_grain", "priceInrPerKgAsFed": 24, "maxKgAsFedPerDay": null, "currentKgAsFedPerDay": 2 },
       { "feedId": "mineral_mix", "priceInrPerKgAsFed": 70, "maxKgAsFedPerDay": 0.1, "currentKgAsFedPerDay": 0.08 }
     ],
     "expected": {
@@ -55,7 +56,7 @@
   },
   {
     "id": "A03_nondescript_cow_above_breed_level",
-    "description": "Non-descript cow (dahd_average 3.86 L) already yielding 6.0 L/day (> cap); effectiveCap is 6.0 L (today_milk), verdict is above_breed_level with ₹Z/day saving (AC-2.5, AC-5.3, AC-5.7, OQ15).",
+    "description": "Non-descript cow (dahd_average 3.86 L) already yielding 6.0 L/day [Rabi winter feeding, Nov–Apr] (> cap); effectiveCap is 6.0 L (today_milk), verdict is above_breed_level with ₹Z/day saving (AC-2.5, AC-5.3, AC-5.7, OQ15).",
     "animal": {
       "species": "cow",
       "breedId": "nondescript_cow",
@@ -109,7 +110,7 @@
   },
   {
     "id": "A05_gir_breed_average_calc_below_today_feasible",
-    "description": "Gir cow (breed_average_calc 6.33 L) yielding 6.0 L/day on a tight ₹75 budget; budget supports less than 6.0 L/day and Stage 2' computes cost B to keep 6.0 L/day (AC-5.11).",
+    "description": "Gir cow (breed_average_calc 6.33 L) yielding 6.0 L/day [Rabi winter feeding, Nov–Apr] on a tight ₹75 budget; budget supports less than 6.0 L/day and Stage 2' computes cost B to keep 6.0 L/day (AC-5.11).",
     "animal": {
       "species": "cow",
       "breedId": "gir",
@@ -136,7 +137,7 @@
   },
   {
     "id": "A06_nili_ravi_below_today_infeasible_at_T",
-    "description": "Nili-Ravi buffalo (cited_peak 9.40 L) with T=9.0 L/day where capped feeds cannot physically support 9.0 L/day at any budget; verdict is below_today with keepCostInrPerDay=null and limitingNutrients named (AC-5.11).",
+    "description": "Nili-Ravi buffalo (cited_peak 9.40 L) with T=9.0 L/day [Rabi winter feeding, Nov–Apr] where capped feeds cannot physically support 9.0 L/day at any budget; verdict is below_today with keepCostInrPerDay=null and limitingNutrients named (AC-5.11).",
     "animal": {
       "species": "buffalo",
       "breedId": "nili_ravi",
@@ -161,14 +162,14 @@
   },
   {
     "id": "A07_sahiwal_same_as_today_verdict",
-    "description": "Sahiwal cow (cited_peak 11.15 L) yielding 5.0 L/day with budget ₹76.60 supporting Y* ≈ 5.03 L/day (S = 5.0 L/day); verdict is same_as_today (SPEC OQ14).",
+    "description": "Sahiwal cow (cited_peak 11.15 L) yielding 5.0 L/day [Rabi winter feeding, Nov–Apr] with budget ₹76.60 supporting Y* ≈ 5.03 L/day (S = 5.0 L/day); verdict is same_as_today (SPEC OQ14).",
     "animal": {
       "species": "cow",
       "breedId": "sahiwal",
       "bodyWeightKg": 350,
       "milkYieldLitersPerDay": 5,
       "milkFatPct": 4.9,
-      "budgetInrPerDay": 76.6,
+      "budgetInrPerDay": 91.2,
       "isConfirmed": true
     },
     "selectedFeeds": [
@@ -242,7 +243,7 @@
       "species": "buffalo",
       "breedId": "bhadawari",
       "bodyWeightKg": 420,
-      "milkYieldLitersPerDay": 1.5,
+      "milkYieldLitersPerDay": 1.0,
       "milkFatPct": 8.09,
       "budgetInrPerDay": 500,
       "isConfirmed": true
@@ -268,7 +269,7 @@
       "species": "cow",
       "breedId": "kankrej",
       "bodyWeightKg": 350,
-      "milkYieldLitersPerDay": 2.5,
+      "milkYieldLitersPerDay": 1.0,
       "milkFatPct": 4.0,
       "budgetInrPerDay": 500,
       "isConfirmed": true
@@ -277,7 +278,7 @@
       { "feedId": "wheat_straw", "priceInrPerKgAsFed": 6, "maxKgAsFedPerDay": 2.0, "currentKgAsFedPerDay": null },
       { "feedId": "khejri_leaf", "priceInrPerKgAsFed": 8, "maxKgAsFedPerDay": 1.5, "currentKgAsFedPerDay": null },
       { "feedId": "maize_grain", "priceInrPerKgAsFed": 32, "maxKgAsFedPerDay": 3.5, "currentKgAsFedPerDay": null },
-      { "feedId": "rice_bran_dorb", "priceInrPerKgAsFed": 17, "maxKgAsFedPerDay": 0.5, "currentKgAsFedPerDay": null }
+      { "feedId": "rice_bran_dorb", "priceInrPerKgAsFed": 17, "maxKgAsFedPerDay": 1.0, "currentKgAsFedPerDay": null }
     ],
     "expected": {
       "status": "optimal",
@@ -294,7 +295,7 @@
       "species": "cow",
       "breedId": "hariana",
       "bodyWeightKg": 350,
-      "milkYieldLitersPerDay": 2.5,
+      "milkYieldLitersPerDay": 1.5,
       "milkFatPct": 4.0,
       "budgetInrPerDay": 500,
       "isConfirmed": true
@@ -314,20 +315,21 @@
   },
   {
     "id": "A13_tharparkar_ca_binding",
-    "description": "Tharparkar cow (range_top 7.53 L, 350 kg) where capped low-calcium feeds have Ca as the unique bottleneck stopping Y* around 2.55 L while CP, ME, P, DM, roughage, and budget have slack (AC-5.5).",
+    "description": "Tharparkar cow (range_top 7.53 L, 350 kg) where capped low-calcium feeds have Ca as the unique bottleneck stopping Y* around 1.63 L while CP, ME, P, DM, roughage, and budget have slack (AC-5.5).",
     "animal": {
       "species": "cow",
       "breedId": "tharparkar",
       "bodyWeightKg": 350,
-      "milkYieldLitersPerDay": 2.0,
+      "milkYieldLitersPerDay": 1.0,
       "milkFatPct": 4.0,
       "budgetInrPerDay": 500,
       "isConfirmed": true
     },
     "selectedFeeds": [
-      { "feedId": "oats_green", "priceInrPerKgAsFed": 3, "maxKgAsFedPerDay": 13.0, "currentKgAsFedPerDay": null },
-      { "feedId": "groundnut_cake", "priceInrPerKgAsFed": 37, "maxKgAsFedPerDay": 1.5, "currentKgAsFedPerDay": null },
-      { "feedId": "wheat_bran", "priceInrPerKgAsFed": 20, "maxKgAsFedPerDay": 2.5, "currentKgAsFedPerDay": null }
+      { "feedId": "wheat_straw", "priceInrPerKgAsFed": 6, "maxKgAsFedPerDay": 4.5, "currentKgAsFedPerDay": null },
+      { "feedId": "mustard_cake", "priceInrPerKgAsFed": 33, "maxKgAsFedPerDay": 2.0, "currentKgAsFedPerDay": null },
+      { "feedId": "maize_grain", "priceInrPerKgAsFed": 32, "maxKgAsFedPerDay": 2.0, "currentKgAsFedPerDay": null },
+      { "feedId": "rice_bran_dorb", "priceInrPerKgAsFed": 17, "maxKgAsFedPerDay": 0.5, "currentKgAsFedPerDay": null }
     ],
     "expected": {
       "status": "optimal",
@@ -339,20 +341,20 @@
   },
   {
     "id": "A14_jersey_crossbred_p_binding",
-    "description": "Jersey crossbred cow (range_top 10.70 L, 350 kg) where capped low-phosphorus feeds have P as the unique bottleneck stopping Y* around 3.85 L while CP, ME, Ca, DM, roughage, and budget have slack (AC-5.5).",
+    "description": "Jersey crossbred cow (range_top 10.70 L, 350 kg) where capped low-phosphorus feeds have P as the unique bottleneck stopping Y* around 1.40 L while CP, ME, Ca, DM, roughage, and budget have slack (AC-5.5).",
     "animal": {
       "species": "cow",
       "breedId": "jersey_crossbred",
       "bodyWeightKg": 350,
-      "milkYieldLitersPerDay": 3.0,
+      "milkYieldLitersPerDay": 1.0,
       "milkFatPct": 4.0,
       "budgetInrPerDay": 500,
       "isConfirmed": true
     },
     "selectedFeeds": [
-      { "feedId": "groundnut_haulm", "priceInrPerKgAsFed": 8, "maxKgAsFedPerDay": 4.0, "currentKgAsFedPerDay": null },
-      { "feedId": "maize_grain", "priceInrPerKgAsFed": 32, "maxKgAsFedPerDay": 2.5, "currentKgAsFedPerDay": null },
-      { "feedId": "khejri_leaf", "priceInrPerKgAsFed": 8, "maxKgAsFedPerDay": 0.8, "currentKgAsFedPerDay": null }
+      { "feedId": "gram_straw", "priceInrPerKgAsFed": 6, "maxKgAsFedPerDay": 3.0, "currentKgAsFedPerDay": null },
+      { "feedId": "mustard_cake", "priceInrPerKgAsFed": 33, "maxKgAsFedPerDay": 1.0, "currentKgAsFedPerDay": null },
+      { "feedId": "maize_grain", "priceInrPerKgAsFed": 32, "maxKgAsFedPerDay": 2.5, "currentKgAsFedPerDay": null }
     ],
     "expected": {
       "status": "optimal",

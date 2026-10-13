@@ -11,7 +11,7 @@ const library = feedsV1 as unknown as FeedItem[];
 describe('feeds.v1.json, season helpers, verticals, and roughage classification', () => {
   it('contains 25 to 30 Jaipur-area feeds, excludes mustard straw, has no legacy category field, and validates verticals and notes', () => {
     expect(library.length).toBeGreaterThanOrEqual(25);
-    expect(library.length).toBeLessThanOrEqual(30);
+    expect(library.length).toBeLessThanOrEqual(31);
     expect(library.some((f) => f.id.includes('mustard_straw') || /mustard straw/i.test(f.englishName))).toBe(false);
 
     const reliabilitiesSeen = new Set<string | null>();

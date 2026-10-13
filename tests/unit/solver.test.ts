@@ -129,7 +129,14 @@ describe('two-stage ration solver (src/domain/solver.ts)', () => {
   });
 
   it('verdict is at_breed_level when S hits the cap with less than 0.1 L above T (AC-5.7)', () => {
-    const out = solveRation({ ...baseAnimal, milkYieldLitersPerDay: murrahCap, budgetInrPerDay: 220 }, richFeeds);
+    const atLevelFeeds: SelectedFeedInput[] = [
+      { feedId: 'berseem', priceInrPerKgAsFed: 4, maxKgAsFedPerDay: null, currentKgAsFedPerDay: 25 },
+      { feedId: 'wheat_straw', priceInrPerKgAsFed: 6, maxKgAsFedPerDay: null, currentKgAsFedPerDay: 5 },
+      { feedId: 'mustard_cake', priceInrPerKgAsFed: 32, maxKgAsFedPerDay: null, currentKgAsFedPerDay: 3 },
+      { feedId: 'wheat_bran', priceInrPerKgAsFed: 22, maxKgAsFedPerDay: null, currentKgAsFedPerDay: 2 },
+      { feedId: 'mineral_mix', priceInrPerKgAsFed: 90, maxKgAsFedPerDay: 0.1, currentKgAsFedPerDay: 0.1 },
+    ];
+    const out = solveRation({ ...baseAnimal, milkYieldLitersPerDay: murrahCap, budgetInrPerDay: 300 }, atLevelFeeds);
     expect(out.status).toBe('optimal');
     if (out.status !== 'optimal') return;
     expect(out.verdict.kind).toBe('at_breed_level');
@@ -627,7 +634,7 @@ describe('isolated binding constraint detection for all 8 constraints in BINDING
       { ...cowProfile, budgetInrPerDay: 500 },
       [
         sel('forage_no_cp', null, 8),
-        sel('conc_cp', 1.3, 20), // 1.3 kg * 600 g/kg = 780 g CP -> stops Y* around 4.8 L
+        sel('conc_cp', 1.38, 20), // 1.38 kg * 600 g/kg = 828 g CP -> stops Y* around 4.8 L
       ],
       syntheticLib,
     );
@@ -659,7 +666,7 @@ describe('isolated binding constraint detection for all 8 constraints in BINDING
       { ...cowProfile, budgetInrPerDay: 500 },
       [
         sel('forage_no_ca', null, 8),
-        sel('min_ca', 0.09, 20), // 0.09 kg * 250 g/kg = 22.5 g Ca -> stops Y* around 4.66 L
+        sel('min_ca', 0.135, 20), // 0.135 kg * 250 g/kg = 33.75 g Ca -> stops Y* around 4.6 L
       ],
       syntheticLib,
     );
@@ -675,7 +682,7 @@ describe('isolated binding constraint detection for all 8 constraints in BINDING
       { ...cowProfile, budgetInrPerDay: 500 },
       [
         sel('forage_no_p', null, 8),
-        sel('min_p', 0.06, 20), // 0.06 kg * 250 g/kg = 15.0 g P -> stops Y* around 4.22 L
+        sel('min_p', 0.114, 20), // 0.114 kg * 250 g/kg = 28.5 g P -> stops Y* around 4.2 L
       ],
       syntheticLib,
     );

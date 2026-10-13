@@ -101,6 +101,11 @@ function Workspace() {
   const browserOnline = useOnline();
   const online = connection === 'auto' ? browserOnline : connection === 'online';
 
+  const showDemoStrip = useMemo(() => {
+    if (typeof window === 'undefined') return true;
+    return new URLSearchParams(window.location.search).has('demo') || import.meta.env.MODE === 'test';
+  }, []);
+
   const analysisRef = useRef<HTMLElement>(null);
   const explainAbort = useRef<AbortController | null>(null);
   const scrollToResult = useRef(false);
@@ -376,19 +381,21 @@ function Workspace() {
         <Bi id="label_skip" />
       </a>
 
-      <PrototypeStatesPanel
-        open={protoOpen}
-        onOpenChange={setProtoOpen}
-        connection={connection}
-        onConnection={setConnection}
-        llm={llm}
-        onLlm={setLlm}
-        explainMode={explainMode}
-        onExplainMode={setExplainMode}
-        onExample={onExample}
-        onDemo={onDemo}
-        onReset={onReset}
-      />
+      {showDemoStrip && (
+        <PrototypeStatesPanel
+          open={protoOpen}
+          onOpenChange={setProtoOpen}
+          connection={connection}
+          onConnection={setConnection}
+          llm={llm}
+          onLlm={setLlm}
+          explainMode={explainMode}
+          onExplainMode={setExplainMode}
+          onExample={onExample}
+          onDemo={onDemo}
+          onReset={onReset}
+        />
+      )}
 
       <header className="appbar">
         <div className="appbar-brand">

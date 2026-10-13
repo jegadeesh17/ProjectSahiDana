@@ -1344,5 +1344,40 @@
     "provenanceStatus": "team-asserted",
     "sourceKey": "PROTO-FEED-mineral_mix",
     "isPrototypeFixture": true
+  },
+  {
+    "id": "common_salt",
+    "englishName": "Common salt",
+    "localNameLatn": "Namak",
+    "localNameLatnCitation": "PROTOTYPE FIXTURE: typical-value placeholder",
+    "localNameDeva": "नमक",
+    "localNameDevaProvenance": "team-asserted",
+    "vertical": "mineral",
+    "dmPct": 99,
+    "cpPctDm": 0,
+    "meMcalPerKgDm": 0,
+    "caGramsPerKgDm": 0,
+    "pGramsPerKgDm": 0,
+    "derivedTdnPctDm": 0,
+    "sourceDoc": "PROTOTYPE FIXTURE: typical-value placeholder",
+    "sourceTable": "n/a (fixture)",
+    "sourcePage": "n/a (fixture)",
+    "dmSourceCitation": "PROTOTYPE FIXTURE: second-source DM% placeholder",
+    "defaultPriceInrPerKgAsFed": 8,
+    "priceSource": "Prototype estimate",
+    "priceDate": "2026-10-12",
+    "priceReliability": "team_estimate",
+    "priceNote": {
+      "en": "Retail packaged common/iodized salt at ₹8/kg",
+      "hi": "साधारण नमक ₹8/kg"
+    },
+    "availableMonths": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    "seasonNote": {
+      "en": "Common salt; available all year.",
+      "hi": "साधारण नमक; पूरे साल मिलता है।"
+    },
+    "provenanceStatus": "team-asserted",
+    "sourceKey": "PROTO-FEED-common_salt",
+    "isPrototypeFixture": true
   }
 ]

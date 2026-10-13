@@ -98,10 +98,15 @@ export function FeedSelector({
   const { lang } = useLang();
   const [query, setQuery] = useState('');
   const [month, setMonth] = useState(initialMonth ?? currentMonth());
+  const [inSeasonOnly, setInSeasonOnly] = useState(false);
   const [details, setDetails] = useState(false);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const byId = useMemo(() => new Map(library.map((f) => [f.id, f])), [library]);
-  const groups = useMemo(() => groupFeeds(searchFeeds(query, library)), [query, library]);
+  const visibleLibrary = useMemo(() => {
+    if (!inSeasonOnly) return library;
+    return library.filter((f) => inSeason(f, month));
+  }, [library, inSeasonOnly, month]);
+  const groups = useMemo(() => groupFeeds(searchFeeds(query, visibleLibrary)), [query, visibleLibrary]);
   const selectedIds = new Set(drafts.map((d) => d.feedId));
 
   const update = (feedId: string, patch: Partial<FeedDraft>) =>
@@ -289,9 +294,22 @@ export function FeedSelector({
           <p id={`${uid}-month-hint`} className="field-hint">
             <Bi id="hint_month" />
           </p>
-          <p className="library-title">
-            <Bi id="label_library" />
-          </p>
+          <div className="flex items-center justify-between mt-3 mb-1">
+            <p className="library-title m-0">
+              <Bi id="label_library" />
+            </p>
+            <label className="flex items-center gap-1.5 text-xs cursor-pointer text-slate-600 dark:text-slate-300">
+              <input
+                type="checkbox"
+                className="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+                checked={inSeasonOnly}
+                onChange={(e) => setInSeasonOnly(e.target.checked)}
+              />
+              <span>
+                <Bi id="filter_in_season_only" />
+              </span>
+            </label>
+          </div>
           {groups.length === 0 ? (
             <p className="empty">
               <Bi id="state_no_results" />
