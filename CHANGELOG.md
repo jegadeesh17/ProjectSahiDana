@@ -13,3 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Linear nutrient requirements engine, NRC 2001 DMI ceiling, and two-stage LP solver (`M1-TASK-03`)
 - Wire liveAdapter with v1 data and browser solver into existing UI components (`M1-TASK-04`)
 - PWA offline precaching config, Vercel routing, and E2E offline vertical-slice test (`M1-TASK-05`)
+- Client-side explanation number verifier, Devanagari language gate, and authorized number collector (`M2-TASK-01`)
+- Serverless OpenRouter proxy (`api/llm.ts`) with model fallback chain and nutrient safety (`M2-TASK-02`)
+- Integrate liveAdapter with `/api/llm` and verifier retry flow, and add online AI E2E tests (`M2-TASK-03`)
+
