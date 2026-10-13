@@ -1943,7 +1943,8 @@ select.input {
   text-align: center;
 }
 .pill-btn {
-  min-height: 36px;
+  min-height: var(--target);
+  min-width: var(--target);
   border: 0;
   cursor: pointer;
 }

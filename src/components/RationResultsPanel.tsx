@@ -19,14 +19,15 @@ import {
   bindingName,
   feedLimitNames,
 } from '../domain/auditMilk';
-import { breedById, CAP_BASIS_STRING } from '../domain/breeds';
-import type { AnimalProfile, FeedItem, RationSolution, RationSolveOutcome, RequirementResult } from '../domain/types';
+import { breedById, BREEDS, CAP_BASIS_STRING } from '../domain/breeds';
+import type { AnimalProfile, BreedStandard, FeedItem, RationSolution, RationSolveOutcome, RequirementResult } from '../domain/types';
 import { auditUserInput } from '../domain/audit';
 import { formatDateShort, formatInr, formatLitres, formatNumber, formatPct } from '../i18n/format';
 import { Bi, BiRich } from '../i18n/Bi';
 import type { BiText, StringId } from '../i18n/strings';
 import { t } from '../i18n/strings';
 import { litres1 } from '../domain/verdict';
+import { getRationAdapterMode } from '../services/rationService';
 import { AnimalLine } from './AnimalLine';
 import { BudgetShortfallAlert } from './BudgetShortfallAlert';
 import type { ExplainState } from './ExplanationCard';
@@ -45,6 +46,7 @@ interface Props {
   requirement: RequirementResult | null;
   outcome: RationSolveOutcome | null;
   library: FeedItem[];
+  breeds?: BreedStandard[];
   online: boolean;
   explain: ExplainState;
   nextStep: StringId;
@@ -96,14 +98,16 @@ function Details({
   profile,
   requirement,
   library,
+  breeds = BREEDS,
 }: {
   solution: RationSolution;
   profile: Profile;
   requirement: RequirementResult;
   library: FeedItem[];
+  breeds?: BreedStandard[];
 }) {
   const byId = new Map(library.map((f) => [f.id, f]));
-  const breed = breedById(profile.breedId);
+  const breed = breedById(profile.breedId, breeds);
   const savings = auditSavings(solution);
   const today = auditTodayCost(solution);
   const limits: BiText[] = [bindingName(solution.bindingConstraint), ...feedLimitNames(solution, byId)];
@@ -178,15 +182,17 @@ function SolvedBody({
   profile,
   requirement,
   library,
+  breeds = BREEDS,
 }: {
   solution: RationSolution;
   profile: Profile;
   requirement: RequirementResult;
   library: FeedItem[];
+  breeds?: BreedStandard[];
 }) {
   const [details, setDetails] = useState(false);
   const byId = new Map(library.map((f) => [f.id, f]));
-  const breed = breedById(profile.breedId);
+  const breed = breedById(profile.breedId, breeds);
   const dry = solution.verdict.kind === 'dry_animal';
   // These two verdicts open with "This budget supports ..." themselves, so the headline would say it twice.
   const verdictLeads = solution.verdict.kind === 'below_today' || solution.verdict.kind === 'same_as_today';
@@ -308,13 +314,13 @@ function SolvedBody({
       >
         <Bi id={details ? 'action_hide_details' : 'action_show_details'} />
       </button>
-      {details && <Details solution={solution} profile={profile} requirement={requirement} library={library} />}
+      {details && <Details solution={solution} profile={profile} requirement={requirement} library={library} breeds={breeds} />}
     </div>
   );
 }
 
 export const RationResultsPanel = forwardRef<HTMLElement, Props>(function RationResultsPanel(
-  { profile, requirement, outcome, library, online, explain, nextStep, onExplain, onCopy, onAddFeed },
+  { profile, requirement, outcome, library, breeds = BREEDS, online, explain, nextStep, onExplain, onCopy, onAddFeed },
   ref,
 ) {
   const solved = outcome?.status === 'optimal' ? outcome : null;
@@ -322,7 +328,7 @@ export const RationResultsPanel = forwardRef<HTMLElement, Props>(function Ration
   let state = 'idle';
   if (solved && requirement && profile) {
     state = 'solved';
-    body = <SolvedBody solution={solved} profile={profile} requirement={requirement} library={library} />;
+    body = <SolvedBody solution={solved} profile={profile} requirement={requirement} library={library} breeds={breeds} />;
   } else if (outcome?.status === 'infeasible' && requirement) {
     state = 'infeasible';
     body = <InfeasibilityAlert report={outcome} requirement={requirement} library={library} onAddFeed={onAddFeed} />;
@@ -399,9 +405,11 @@ export const RationResultsPanel = forwardRef<HTMLElement, Props>(function Ration
           <ExplanationCard state={explain} />
         </>
       )}
-      <p className="frame-foot">
-        <Bi id="notice_prototype_fixture" />
-      </p>
+      {getRationAdapterMode() === 'mock' && (
+        <p className="frame-foot">
+          <Bi id="notice_prototype_fixture" />
+        </p>
+      )}
     </section>
   );
 });

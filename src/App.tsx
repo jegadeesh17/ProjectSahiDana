@@ -95,7 +95,7 @@ function Workspace() {
   const [connection, setConnection] = useState<ConnectionMode>('auto');
   const [llm, setLlm] = useState<MockLlmMode>('ok');
   const [explainMode, setExplainMode] = useState<MockExplainMode>('verified');
-  const [toast, setToast] = useState<{ message: string; key: number } | null>(null);
+  const [toast, setToast] = useState<{ render: () => string; key: number } | null>(null);
 
   useLang(); // re-render the whole workspace when the language changes, so plain-text labels follow it
   const browserOnline = useOnline();
@@ -125,7 +125,7 @@ function Workspace() {
     return () => window.clearTimeout(id);
   }, [toast]);
 
-  const showToast = useCallback((message: string) => setToast({ message, key: Date.now() }), []);
+  const showToast = useCallback((render: () => string) => setToast({ render, key: Date.now() }), []);
 
   const todayCost = useMemo(() => todayCostInr(feeds), [feeds]);
   const validation = useMemo(() => validateAnimal(animal, todayCost), [animal, todayCost]);
@@ -222,7 +222,7 @@ function Workspace() {
     if (!feed || feeds.some((d) => d.feedId === feedId)) return;
     const priceStr = feed.defaultPriceInrPerKgAsFed !== null ? String(feed.defaultPriceInrPerKgAsFed) : '';
     editFeeds([...feeds, { feedId, price: priceStr, cap: '', current: '' }]);
-    showToast(
+    showToast(() =>
       feed.defaultPriceInrPerKgAsFed !== null
         ? `${bi('state_added')}: ${feedLabel(feed)} (${formatInrPerKg(feed.defaultPriceInrPerKgAsFed)})`
         : `${bi('state_added')}: ${feedLabel(feed)}`,
@@ -277,7 +277,7 @@ function Workspace() {
     setFeeds([...feeds, ...additions]);
     setPrefill(null);
     setExtractorOpen(false);
-    showToast(bi('state_confirmed'));
+    showToast(() => bi('state_confirmed'));
   };
 
   const onDiscardPrefill = () => {
@@ -331,9 +331,9 @@ function Workspace() {
     if (!ctx) return;
     try {
       await navigator.clipboard.writeText(buildSummary(ctx));
-      showToast(bi('toast_copied'));
+      showToast(() => bi('toast_copied'));
     } catch {
-      showToast(bi('toast_copy_failed'));
+      showToast(() => bi('toast_copy_failed'));
     }
   };
 
@@ -392,7 +392,9 @@ function Workspace() {
 
       <header className="appbar">
         <div className="appbar-brand">
-          <p className="brand">SahiDana</p>
+          <p className="brand" data-lang-exempt="brand">
+            SahiDana
+          </p>
           <p className="tagline">
             <Bi id="brand_tagline" />
           </p>
@@ -503,6 +505,7 @@ function Workspace() {
           requirement={result?.requirement ?? liveRequirement}
           outcome={result?.outcome ?? null}
           library={library}
+          breeds={breeds}
           online={online}
           explain={explain}
           nextStep={nextStep}
@@ -514,7 +517,7 @@ function Workspace() {
 
       {toast && (
         <p key={toast.key} className="toast" role="status">
-          {toast.message}
+          {toast.render()}
         </p>
       )}
     </div>

@@ -178,7 +178,13 @@ export function FeedSelector({
                       <FeedName feed={feed} />
                     </div>
                     <SeasonMark feed={feed} month={month} />
-                    <button type="button" className="btn btn-sm btn-quiet" onClick={() => onRemove(d.feedId)} aria-label={`${bi('action_remove_feed')}: ${feedLabel(feed, lang)}`}>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-quiet"
+                      onClick={() => onRemove(d.feedId)}
+                      aria-label={`${bi('action_remove_feed')}: ${feedLabel(feed, lang)}`}
+                      data-lang-exempt={lang === 'hi' && feed.localNameDeva === null ? 'feed-no-deva' : undefined}
+                    >
                       <Bi id="action_remove_feed" />
                     </button>
                   </div>
@@ -331,6 +337,7 @@ export function FeedSelector({
                             disabled={added}
                             onClick={() => onAdd(feed.id)}
                             aria-label={`${added ? bi('state_added') : bi('action_add_feed')}: ${feedLabel(feed, lang)}`}
+                            data-lang-exempt={lang === 'hi' && feed.localNameDeva === null ? 'feed-no-deva' : undefined}
                           >
                             <Bi id={added ? 'state_added' : 'action_add_feed'} />
                           </button>

@@ -362,8 +362,8 @@ export const strings = {
     en: 'Σ (amount × {nutrient} per kg) ≥ {nutrient} requirement',
   },
   audit_constraint_dm: {
-    hi: 'Σ (मात्रा × DM%) ≤ DM सीमा (और ≥ सीमा का 85%)',
-    en: 'Σ (amount × DM%) ≤ DM limit (and ≥ 85% of the limit)',
+    hi: 'Σ (मात्रा × DM%) ≤ DM सीमा',
+    en: 'Σ (amount × DM%) ≤ DM limit',
   },
   audit_constraint_cap: { hi: 'मात्रा ≤ आपकी तय अधिकतम सीमा', en: 'amount ≤ your max kg/day cap' },
   audit_constraint_none: { hi: 'कोई अलग शर्त नहीं, कीमत × मात्रा', en: 'No separate constraint: price × amount' },

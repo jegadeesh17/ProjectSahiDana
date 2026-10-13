@@ -124,6 +124,7 @@ export function FreeTextExtractor({
               value={text}
               maxLength={MAX_CHARS + 200}
               placeholder={bi('hint_freetext')}
+              data-lang-exempt="user-text"
               aria-invalid={touched && textError !== null ? true : undefined}
               aria-describedby={`${uid}-privacy${touched && textError ? ` ${uid}-err` : ''}`}
               onChange={(e) => onTextChange(e.target.value)}
@@ -220,7 +221,7 @@ export function FreeTextExtractor({
                     });
                   return (
                     <li key={u.name} className="unmatched-row" data-resolved={u.resolution !== null ? 'true' : undefined}>
-                      <p className="unmatched-name" lang="en">
+                      <p className="unmatched-name" lang="en" data-lang-exempt="user-text">
                         “{u.name}”
                       </p>
                       {u.resolution?.kind === 'drop' ? (
@@ -246,7 +247,11 @@ export function FreeTextExtractor({
                             >
                               <option value="">{bi('option_choose_feed')}</option>
                               {choices.map((f) => (
-                                <option key={f.id} value={f.id}>
+                                <option
+                                  key={f.id}
+                                  value={f.id}
+                                  data-lang-exempt={lang === 'hi' && f.localNameDeva === null ? 'feed-no-deva' : undefined}
+                                >
                                   {feedLabel(f, lang)}
                                 </option>
                               ))}

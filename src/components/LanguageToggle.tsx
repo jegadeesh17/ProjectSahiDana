@@ -15,6 +15,7 @@ export function LanguageToggle() {
           type="button"
           className="langtoggle-btn"
           lang={option}
+          data-lang-exempt="toggle"
           aria-pressed={lang === option}
           onClick={() => setLang(option)}
         >

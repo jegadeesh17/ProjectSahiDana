@@ -1,25 +1,61 @@
 import { act, cleanup, fireEvent, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { App } from '../../src/App';
+import { ExplanationCard } from '../../src/components/ExplanationCard';
 import feedsPrototype from '../../src/data/feeds.prototype.json';
 import feedsV1 from '../../src/data/feeds.v1.json';
 import { PRESET_BUFFALO } from '../../src/domain/presets';
 import type { FeedItem } from '../../src/domain/types';
+import { LanguageProvider } from '../../src/i18n/LanguageProvider';
 import { LANG_STORAGE_KEY, setActiveLang } from '../../src/i18n/lang';
 import { setRationAdapterMode } from '../../src/services/rationService';
 
 const DEVA = /[\u0900-\u097F]/g;
+const DEVA_DIGITS = /[\u0966-\u096F]/g;
+const ALLOWED_HI_LATIN = new Set([
+  'kg',
+  'DM',
+  'CP',
+  'ME',
+  'Ca',
+  'AI',
+  'OpenRouter',
+  'DAHD',
+  'ICAR',
+  'NDDB',
+  'RCDF',
+  'CIRB',
+  'Buffalopedia',
+  'Mcal',
+  'Down',
+  'To',
+  'Earth',
+  'Kisan',
+  'Tak',
+]);
+
 const LIBRARIES: Record<'mock' | 'live', FeedItem[]> = {
   mock: feedsPrototype as unknown as FeedItem[],
   live: feedsV1 as unknown as FeedItem[],
 };
 
-/** Visible text plus the attributes a screen reader or a hover would expose. */
-function everything(root: HTMLElement): string {
-  const attrs = [...root.querySelectorAll<HTMLElement>('[aria-label],[title],[placeholder]')].flatMap((el) =>
+/** Visible text plus the attributes a screen reader or a hover would expose, after stripping [data-lang-exempt]. */
+function nonExemptText(root: HTMLElement): string {
+  const clone = root.cloneNode(true) as HTMLElement;
+  for (const el of clone.querySelectorAll('[data-lang-exempt]')) {
+    el.remove();
+  }
+  const textParts: string[] = [];
+  const walker = document.createTreeWalker(clone, NodeFilter.SHOW_TEXT);
+  let current = walker.nextNode();
+  while (current) {
+    if (current.nodeValue) textParts.push(current.nodeValue);
+    current = walker.nextNode();
+  }
+  const attrs = [...clone.querySelectorAll<HTMLElement>('[aria-label],[title],[placeholder]')].flatMap((el) =>
     ['aria-label', 'title', 'placeholder'].map((a) => el.getAttribute(a) ?? ''),
   );
-  return [root.textContent ?? '', ...attrs].join('\n');
+  return [...textParts, ...attrs].join(' ');
 }
 
 function balanceBuffalo(container: HTMLElement) {
@@ -46,22 +82,27 @@ describe.each(['mock', 'live'] as const)('one language at a time (%s adapter)', 
     setRationAdapterMode('env');
   });
 
-  it('English mode shows no Devanagari outside the toggle label, including inside Show details', () => {
+  it('English mode shows no Devanagari outside [data-lang-exempt], including inside Show details and AuditDrawer', () => {
     const { container } = render(<App />);
     balanceBuffalo(container);
     act(() => {
       fireEvent.click(container.querySelector<HTMLElement>('.details-toggle')!);
     });
-    const toggleLabel = container.querySelector('.langtoggle-btn[lang="hi"]')?.textContent ?? '';
-    expect(toggleLabel).not.toBe('');
-    const text = everything(container).split(toggleLabel).join('');
+    act(() => {
+      fireEvent.click(container.querySelector<HTMLElement>('.fig')!);
+    });
+    const text = nonExemptText(container);
     expect(text.match(DEVA) ?? []).toEqual([]);
+    expect((container.textContent ?? '').match(DEVA_DIGITS) ?? []).toEqual([]);
   });
 
-  it('Hindi mode shows Devanagari feed names in the result and the feed rows, never the English names', () => {
+  it('Hindi mode shows no unexempted Latin words outside [data-lang-exempt] and uses Devanagari feed names', () => {
     window.localStorage.setItem(LANG_STORAGE_KEY, 'hi');
     const { container } = render(<App />);
     balanceBuffalo(container);
+    act(() => {
+      fireEvent.click(container.querySelector<HTMLElement>('.details-toggle')!);
+    });
     const rows = [...container.querySelectorAll('tr[data-feed], .feedrow, .feedchip')];
     expect(rows.length).toBeGreaterThan(0);
     const picked = new Set(PRESET_BUFFALO.feeds.map((f) => f.feedId));
@@ -70,6 +111,10 @@ describe.each(['mock', 'live'] as const)('one language at a time (%s adapter)', 
       expect(text, feed.englishName).toContain(feed.localNameDeva!);
       expect(text, feed.englishName).not.toContain(feed.englishName);
     }
+    const nonExempt = nonExemptText(container);
+    const latinWords = (nonExempt.match(/[A-Za-z]{2,}/g) ?? []).filter((w) => !ALLOWED_HI_LATIN.has(w));
+    expect(latinWords).toEqual([]);
+    expect((container.textContent ?? '').match(DEVA_DIGITS) ?? []).toEqual([]);
   });
 
   it('shows the one-line how-to-use banner at the top of the workspace in the active language', () => {
@@ -88,6 +133,107 @@ describe.each(['mock', 'live'] as const)('one language at a time (%s adapter)', 
     });
     expect(banner?.textContent).toContain('कैसे इस्तेमाल करें:');
     expect(banner?.textContent).not.toContain('How to use:');
+  });
+
+  it('reactively translates an active toast when switching languages and gates .frame-foot to mock mode', () => {
+    const { container } = render(<App />);
+    balanceBuffalo(container);
+
+    // .frame-foot is present only in mock mode, hidden in live mode
+    const frameFoot = container.querySelector('.frame-foot');
+    if (mode === 'mock') {
+      expect(frameFoot).toBeTruthy();
+    } else {
+      expect(frameFoot).toBeNull();
+    }
+
+    // Trigger a toast by adding an unselected feed from the library
+    const addBtn = container.querySelector<HTMLElement>('.librow:not([data-added]) .librow-act');
+    expect(addBtn).toBeTruthy();
+    act(() => {
+      fireEvent.click(addBtn!);
+    });
+    const toast = container.querySelector('.toast');
+    expect(toast?.textContent).toContain('Added:');
+
+    // Switch to Hindi while the toast is still visible
+    const hiToggle = container.querySelector<HTMLElement>('.langtoggle-btn[lang="hi"]');
+    act(() => {
+      fireEvent.click(hiToggle!);
+    });
+    expect(toast?.textContent).toContain('जुड़ी:');
+    expect(toast?.textContent).not.toContain('Added:');
+  });
+
+  it('converts entered Devanagari numerals to Latin digits on the fly (AC-L1.3) and validates correctly', () => {
+    const { container } = render(<App />);
+    const weightInput = container.querySelector<HTMLInputElement>('input[id*="weight"]')!;
+    expect(weightInput).toBeTruthy();
+
+    act(() => {
+      fireEvent.change(weightInput, { target: { value: '४५०' } });
+    });
+    expect(weightInput.value).toBe('450');
+
+    act(() => {
+      fireEvent.blur(weightInput);
+    });
+    const errorMsg = container.querySelector('.field-error');
+    expect(errorMsg).toBeNull();
+  });
+
+  it('preserves strict language isolation on infeasible and budget shortfall states', () => {
+    const { container } = render(<App />);
+    const strawBtn = container.querySelector<HTMLElement>('[data-preset="straw"]');
+    act(() => {
+      fireEvent.click(strawBtn!);
+    });
+    expect(container.querySelector('#analysis[data-state="infeasible"]')).toBeTruthy();
+
+    // Check English mode
+    let text = nonExemptText(container);
+    expect(text.match(DEVA) ?? []).toEqual([]);
+
+    // Switch to Hindi
+    const hiToggle = container.querySelector<HTMLElement>('.langtoggle-btn[lang="hi"]');
+    act(() => {
+      fireEvent.click(hiToggle!);
+    });
+    expect(container.querySelector('#analysis[data-state="infeasible"]')).toBeTruthy();
+    text = nonExemptText(container);
+    const latinWords = (text.match(/[A-Za-z]{2,}/g) ?? []).filter((w) => !ALLOWED_HI_LATIN.has(w));
+    expect(latinWords).toEqual([]);
+    expect((container.textContent ?? '').match(DEVA_DIGITS) ?? []).toEqual([]);
+  });
+});
+
+describe('ExplanationCard fallback & exemption', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  it('falls back to notice_explain_unavailable when untraced_numbers has an empty flaggedNumbers list', () => {
+    const { container } = render(
+      <LanguageProvider>
+        <ExplanationCard
+          state={{
+            kind: 'done',
+            result: {
+              status: 'deterministic_fallback',
+              errorCode: null,
+              reason: 'untraced_numbers',
+              flaggedNumbers: [],
+              template: [{ hi: 'टेम्पलेट पंक्ति', en: 'Template line' }],
+              badge: { id: 'badge_template_fallback' },
+            },
+          }}
+        />
+      </LanguageProvider>,
+    );
+
+    const fallback = container.querySelector('[data-testid="fallback-notice"]');
+    expect(fallback?.textContent).toContain('The live AI explanation could not be reached.');
+    expect(fallback?.textContent).not.toContain('still had an untraced number ()');
   });
 });
 

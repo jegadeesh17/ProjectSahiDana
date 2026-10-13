@@ -203,7 +203,7 @@
             "src/components/RationResultsPanel.tsx"
           ],
           "acceptance_criteria": "SPEC AC-L1.1, AC-L1.2, AC-L1.3, AC-L1.4, AC-L1.6, AC-L1.7, AC-E3.1: npx playwright test tests/e2e/language.spec.ts passes in headless Chromium, verifying zero Devanagari leakage in English mode, zero unexempted Latin words in Hindi mode, Latin digits across all states, reload persistence online/offline, and offline Noto Sans Devanagari font readiness.",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "M3-TASK-04",

@@ -43,7 +43,7 @@ export function ExplanationCard({ state }: { state: ExplainState }) {
             <Bi id="notice_explain_flagged" params={{ numbers: flagged }} />
           </p>
         )}
-        <p className="explain-text" lang="en">
+        <p className="explain-text" lang="en" data-lang-exempt="llm-explanation">
           {result.explanationText}
         </p>
         <p className="badge" data-testid="badge">
@@ -65,7 +65,7 @@ export function ExplanationCard({ state }: { state: ExplainState }) {
         <StatusPill id="stamp_template" tone="neutral" />
       </div>
       <div className="alert alert-note" data-testid="fallback-notice">
-        {result.reason === 'untraced_numbers' ? (
+        {result.reason === 'untraced_numbers' && result.flaggedNumbers.length > 0 ? (
           <p>
             <Bi id="notice_explain_untraced" params={{ numbers: flagged }} />
           </p>

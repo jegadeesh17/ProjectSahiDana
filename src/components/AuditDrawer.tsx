@@ -18,6 +18,7 @@ export function useAudit(): AuditContextValue {
 export function AuditProvider({ children }: { children: ReactNode }) {
   const [meta, setMeta] = useState<AuditMeta | null>(null);
   const returnFocus = useRef<HTMLElement | null>(null);
+  const prevMeta = useRef<AuditMeta | null>(null);
 
   const open = useCallback((next: AuditMeta) => {
     returnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -28,6 +29,13 @@ export function AuditProvider({ children }: { children: ReactNode }) {
     setMeta(null);
     returnFocus.current?.focus();
   }, []);
+
+  useEffect(() => {
+    if (prevMeta.current && !meta && returnFocus.current?.isConnected) {
+      returnFocus.current.focus();
+    }
+    prevMeta.current = meta;
+  }, [meta]);
 
   const value = useMemo(() => ({ open }), [open]);
   return (
@@ -133,17 +141,17 @@ function FinePrintSheet({ meta, onClose }: { meta: AuditMeta; onClose: () => voi
           {meta.citation && (
             <>
               <Row labelId="audit_source">
-                <span lang="en">{meta.citation.doc}</span>
+                <span lang="en" data-lang-exempt="citation">{meta.citation.doc}</span>
               </Row>
               <Row labelId="audit_table">
-                <span lang="en">{meta.citation.table}</span>
+                <span lang="en" data-lang-exempt="citation">{meta.citation.table}</span>
               </Row>
               <Row labelId="audit_page">
-                <span lang="en">{meta.citation.page}</span>
+                <span lang="en" data-lang-exempt="citation">{meta.citation.page}</span>
               </Row>
               {meta.citation.formula && (
                 <Row labelId="audit_formula">
-                  <span className="fp-math num">{meta.citation.formula}</span>
+                  <span className="fp-math num" data-lang-exempt="citation">{meta.citation.formula}</span>
                 </Row>
               )}
               <Row labelId="audit_status">
@@ -154,7 +162,7 @@ function FinePrintSheet({ meta, onClose }: { meta: AuditMeta; onClose: () => voi
 
           {meta.extraRows?.map((row, i) => (
             <Row key={i} text={row.label}>
-              {typeof row.value === 'string' ? <span lang="en">{row.value}</span> : <Bi text={row.value} />}
+              {typeof row.value === 'string' ? <span lang="en" data-lang-exempt="citation">{row.value}</span> : <Bi text={row.value} />}
             </Row>
           ))}
 
@@ -179,7 +187,7 @@ function FinePrintSheet({ meta, onClose }: { meta: AuditMeta; onClose: () => voi
                 <Bi text={meta.solverConstraint.activeConstraint} />
               </Row>
               <Row labelId="audit_breakdown">
-                <span className="fp-math num">{meta.solverConstraint.breakdown}</span>
+                <span className="fp-math num" data-lang-exempt="formula">{meta.solverConstraint.breakdown}</span>
               </Row>
             </>
           )}
@@ -206,7 +214,7 @@ function FinePrintSheet({ meta, onClose }: { meta: AuditMeta; onClose: () => voi
 
           {meta.sourceKey && (
             <Row labelId="audit_fixture_key">
-              <span className="fp-math num">{meta.sourceKey}</span>
+              <span className="fp-math num" data-lang-exempt="source-key">{meta.sourceKey}</span>
             </Row>
           )}
         </dl>

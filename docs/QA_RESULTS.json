@@ -78,5 +78,14 @@
     "exit_code": 0,
     "summary": "14 unit test files passed (161 tests) and 45 pytest tests passed in eval/test_extraction_eval.py (30 descriptions across 10 EN/HI/Hinglish triples: 100.0% full-record and field-level accuracy, 100% cross-language parity, 100% nutrient/breed safety)",
     "failure_output": ""
+  },
+  {
+    "task_id": "M3-TASK-03",
+    "attempt": 1,
+    "command": "npm test && npx playwright test tests/e2e/language.spec.ts",
+    "exit_code": 0,
+    "summary": "14 unit test files passed (168 tests, including 13 tests in tests/unit/oneLanguage.test.tsx) and 8 Playwright E2E tests passed in tests/e2e/language.spec.ts (strict EN/HI language isolation across 10 screens/modals, WCAG 2.2 AA contrast >= 4.5:1, 44x44px touch targets, focus restoration, reduced motion, cross-lingual search parity, breed/season/price note active language, Latin digits, and offline Noto Sans Devanagari font check)",
+    "failure_output": ""
   }
 ]
+
