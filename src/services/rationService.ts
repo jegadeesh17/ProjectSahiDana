@@ -7,18 +7,19 @@ export type RationAdapterMode = 'mock' | 'live';
 
 let modeOverride: RationAdapterMode | 'env' = 'env';
 
-function isEnvLive(): boolean {
+function isEnvMock(): boolean {
   const viteVal = import.meta.env.VITE_USE_MOCK_ADAPTER;
   const procVal =
     typeof process !== 'undefined' && typeof process.env !== 'undefined'
       ? process.env.VITE_USE_MOCK_ADAPTER
       : undefined;
-  return viteVal === 'false' || procVal === 'false';
+  const raw = viteVal ?? procVal ?? 'false';
+  return String(raw).trim().toLowerCase() === 'true';
 }
 
 export function getRationAdapterMode(): RationAdapterMode {
   if (modeOverride !== 'env') return modeOverride;
-  return isEnvLive() ? 'live' : 'mock';
+  return isEnvMock() ? 'mock' : 'live';
 }
 
 export function setRationAdapterMode(mode: RationAdapterMode | 'env'): void {

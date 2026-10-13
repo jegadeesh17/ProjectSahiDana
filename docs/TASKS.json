@@ -149,7 +149,7 @@
             "tests/e2e/ration-journey.spec.ts"
           ],
           "acceptance_criteria": "SPEC AC-2.2, AC-2.3, AC-7.1, AC-E4.1, AC-E4.2, AC-E5.1, AC-E6.1, AC-L1.5, AC-L1.6: npx vitest run tests/unit/adapter.test.ts and npx playwright test tests/e2e/ration-journey.spec.ts verify OpenRouter privacy notice visibility, English and Hinglish extraction into the unconfirmed prefilled state, mandatory confirmation before balancing, unmatched feed mapping/dropping, 'All N numbers verified' badge rendering, one-time regeneration when an untraced number is injected, and deterministic template fallback on HTTP 429 or upstream failure.",
-          "status": "pending"
+          "status": "completed"
         }
       ]
     },

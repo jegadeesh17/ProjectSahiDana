@@ -253,3 +253,209 @@ test.describe('SahiDana M1 offline vertical-slice journey', () => {
   });
 });
 
+test.describe('SahiDana M2 online AI extraction & verified explanation journey', () => {
+  test('shows OpenRouter privacy notice, extracts English and Hinglish descriptions into unconfirmed prefilled state, resolves unmatched feeds by mapping/dropping, and enforces mandatory confirmation before balancing (AC-2.2, AC-2.3, AC-E5.1, AC-L1.5)', async ({
+    page,
+  }) => {
+    const extractRequests: Record<string, unknown>[] = [];
+    await page.route('**/api/llm', async (route) => {
+      const body = route.request().postDataJSON() as Record<string, unknown>;
+      if (body.action === 'extract') {
+        extractRequests.push(body);
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            action: 'extract',
+            modelUsed: 'meta-llama/llama-3.3-70b-instruct:free',
+            animal: {
+              species: 'buffalo',
+              bodyWeightKg: 450,
+              milkYieldLitersPerDay: 8,
+              milkFatPct: 6.5,
+            },
+            breedId: 'murrah',
+            budgetInrPerDay: 250,
+            matchedFeeds: [
+              { feedId: 'wheat_straw', priceInrPerKgAsFed: null, maxKgAsFedPerDay: null },
+              { feedId: 'mustard_cake', priceInrPerKgAsFed: null, maxKgAsFedPerDay: null },
+            ],
+            unmatchedFeeds: ['magic probiotic mix', 'mystery herbal tonic'],
+          }),
+        });
+        return;
+      }
+      await route.fallback();
+    });
+
+    await page.goto('/');
+
+    // 1. Open free-text extractor and verify OpenRouter privacy notice (AC-2.2)
+    await page.locator('.extractor button.disclosure').click();
+    const privacyNotice = page.locator('.extractor-body .notice');
+    await expect(privacyNotice).toBeVisible();
+    await expect(privacyNotice).toContainText('OpenRouter');
+    await expect(privacyNotice).toContainText('Free models may log prompts');
+
+    // 2. Enter English description first, verify unconfirmed prefill, and discard (AC-2.3, AC-L1.5)
+    const textarea = page.locator('.extractor-body textarea');
+    await textarea.fill(
+      '450 kg Murrah buffalo giving 8 litres milk with 6.5% fat, wheat straw, mustard cake, magic probiotic mix and mystery herbal tonic, budget 250',
+    );
+    await page.getByRole('button', { name: 'Fill from description' }).click();
+    expect(extractRequests.length).toBe(1);
+    await expect(page.locator('.review')).toBeVisible();
+    await page.getByRole('button', { name: 'Discard prefilled values' }).click();
+    await expect(page.locator('.review')).toHaveCount(0);
+
+    // 3. Enter Hinglish description and tap Fill from description (AC-2.3, AC-L1.5)
+    await expect(textarea).toBeVisible();
+    await textarea.fill(
+      '450 kilo ki Murrah bhains 8 litre doodh deti hai, 6.5% fat, gehun ka bhusa, sarson khali, magic probiotic mix aur mystery herbal tonic, 250 rupaye roz',
+    );
+    await page.getByRole('button', { name: 'Fill from description' }).click();
+
+    expect(extractRequests.length).toBe(2);
+    expect(extractRequests[1].action).toBe('extract');
+
+    // 4. Verify form is populated in unconfirmed prefilled state and Balance ration is blocked until confirmed (AC-2.3)
+    const reviewPanel = page.locator('.review');
+    await expect(reviewPanel).toBeVisible();
+    await expect(reviewPanel).toContainText('Unconfirmed');
+    await expect(page.getByLabel('Breed', { exact: true })).toHaveValue('murrah');
+    await expect(page.getByRole('textbox', { name: 'Body weight' })).toHaveValue('450');
+    await expect(page.getByRole('textbox', { name: 'Milk yield' })).toHaveValue('8');
+    await expect(page.getByRole('textbox', { name: 'Milk fat' })).toHaveValue('6.5');
+    await expect(page.getByRole('textbox', { name: 'Daily budget' })).toHaveValue('250');
+
+    const balanceBtn = page.getByRole('button', { name: 'Balance ration' });
+    await expect(balanceBtn).toBeDisabled();
+    await expect(page.locator('#balance-reason')).toContainText('confirm the prefilled values');
+
+    // 5. Verify unmatched feeds section requires mapping or dropping before Confirm is enabled (AC-E5.1)
+    const unmatchedGroup = page.getByTestId('unmatched');
+    await expect(unmatchedGroup).toBeVisible();
+    await expect(unmatchedGroup).toContainText('magic probiotic mix');
+    await expect(unmatchedGroup).toContainText('mystery herbal tonic');
+
+    const confirmBtn = page.getByRole('button', { name: 'Values are right, confirm' });
+    await expect(confirmBtn).toBeDisabled();
+
+    // Map 'magic probiotic mix' -> 'wheat_bran' and drop 'mystery herbal tonic'
+    const unmatchedRows = unmatchedGroup.locator('.unmatched-row');
+    await expect(unmatchedRows).toHaveCount(2);
+    await unmatchedRows.nth(0).locator('select').selectOption('wheat_bran');
+    await unmatchedRows.nth(1).getByRole('button', { name: 'Drop' }).click();
+
+    await expect(confirmBtn).toBeEnabled();
+    await confirmBtn.click();
+
+    // 6. After confirmation, prefill review closes, mapped feed is added, and Balance ration is enabled (AC-2.3, AC-E5.1)
+    await expect(reviewPanel).toHaveCount(0);
+    await expect(page.locator('.feedrow')).toHaveCount(3);
+    await expect(balanceBtn).toBeEnabled();
+
+    await balanceBtn.click();
+    await expect(page.locator('#analysis')).toHaveAttribute('data-state', 'solved');
+  });
+
+  test('verifies LLM explanation numbers, triggers single regeneration on untraced number, and keeps LLM body English in Hindi mode (AC-7.1, AC-E6.1, AC-L1.6)', async ({
+    page,
+  }) => {
+    const explainRequests: Record<string, unknown>[] = [];
+    await page.route('**/api/llm', async (route) => {
+      const body = route.request().postDataJSON() as Record<string, unknown>;
+      if (body.action === 'explain') {
+        explainRequests.push(body);
+        if (explainRequests.length === 1) {
+          // Attempt 1 injects an untraced number 777.77
+          await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+              action: 'explain',
+              modelUsed: 'meta-llama/llama-3.3-70b-instruct:free',
+              explanationText:
+                'Your 450 kg Murrah buffalo gives 8 L of milk a day. A budget of ₹299.50 supports 9.6 L a day with 777.77 kg of extra supplement.',
+            }),
+          });
+          return;
+        }
+        // Attempt 2 returns only authorized numbers
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            action: 'explain',
+            modelUsed: 'meta-llama/llama-3.3-70b-instruct:free',
+            explanationText:
+              'Your 450 kg Murrah buffalo gives 8 L of milk a day at 6.5% fat. A budget of ₹299.50 per day supports 9.6 L of milk a day, up to the breed cap of 9.64 L.',
+          }),
+        });
+        return;
+      }
+      await route.fallback();
+    });
+
+    await page.goto('/');
+    await page.locator('[data-preset="buffalo"]').click();
+    await expect(page.locator('#analysis')).toHaveAttribute('data-state', 'solved');
+
+    await page.getByRole('button', { name: 'Explain' }).click();
+
+    const explainSection = page.locator('section.explain[data-state="explain-verified"]');
+    await expect(explainSection).toBeVisible();
+    expect(explainRequests.length).toBe(2);
+    expect(explainRequests[0].attempt).toBe(1);
+    expect(explainRequests[1].attempt).toBe(2);
+    expect(explainRequests[1].flaggedNumbers).toContain('777.77');
+
+    await expect(page.getByTestId('flagged-notice')).toContainText('777.77');
+    await expect(page.getByTestId('badge')).toContainText('All 6 numbers verified');
+    await expect(explainSection.locator('.explain-text')).toHaveAttribute('lang', 'en');
+
+    // Switch to Hindi mode: badge updates to Hindi with Latin digits, LLM explanation stays English (AC-L1.6)
+    await page.locator('.langtoggle-btn[lang="hi"]').click();
+    await expect(explainSection.locator('.explain-text')).toHaveAttribute('lang', 'en');
+    await expect(explainSection.locator('.explain-text')).toContainText('Your 450 kg Murrah buffalo');
+    await expect(page.getByTestId('badge')).toContainText('6');
+  });
+
+  test('handles HTTP 429 on extraction without blocking manual form and falls back to deterministic template on HTTP 429 during explanation (AC-E4.1, AC-E4.2)', async ({
+    page,
+  }) => {
+    await page.route('**/api/llm', async (route) => {
+      await route.fulfill({
+        status: 429,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          error: { code: 'RATE_LIMITED', message: 'Rate limited by OpenRouter' },
+        }),
+      });
+    });
+
+    await page.goto('/');
+
+    // 1. Extraction failure shows error alert while manual entry stays usable (AC-E4.1)
+    await page.locator('.extractor button.disclosure').click();
+    await page.locator('.extractor-body textarea').fill('450 kg Murrah buffalo giving 8 L milk');
+    await page.getByRole('button', { name: 'Fill from description' }).click();
+
+    const extractorAlert = page.locator('.extractor-body [role="alert"]');
+    await expect(extractorAlert).toBeVisible();
+
+    // Manual preset / entry still works
+    await page.locator('[data-preset="buffalo"]').click();
+    await expect(page.locator('#analysis')).toHaveAttribute('data-state', 'solved');
+
+    // 2. Explanation failure falls back to deterministic citation-backed template (AC-E4.2)
+    await page.getByRole('button', { name: 'Explain' }).click();
+    const fallbackSection = page.locator('section.explain[data-state="explain-fallback"]');
+    await expect(fallbackSection).toBeVisible();
+    await expect(page.getByTestId('fallback-notice')).toBeVisible();
+    await expect(fallbackSection.locator('.template li').first()).toBeVisible();
+    await expect(page.getByTestId('badge')).toBeVisible();
+  });
+});
+
+

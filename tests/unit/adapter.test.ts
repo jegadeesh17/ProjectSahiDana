@@ -1,6 +1,6 @@
 import { act, cleanup, fireEvent, render } from '@testing-library/react';
 import { createElement } from 'react';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../../src/App';
 import { FeedChip, FeedName } from '../../src/components/FeedName';
 import { auditRoughageMin, auditRoughageShare } from '../../src/domain/audit';
@@ -55,6 +55,7 @@ describe('rationService & RationAppAdapter contract (mockAdapter and liveAdapter
   });
 
   afterEach(() => {
+    vi.restoreAllMocks();
     cleanup();
     window.localStorage.clear();
     setActiveLang('en');
@@ -65,9 +66,31 @@ describe('rationService & RationAppAdapter contract (mockAdapter and liveAdapter
     mockControls.behavior.latencyMs = 900;
   });
 
-  it('switches between mockAdapter and liveAdapter via mode and selectAdapter', async () => {
+  it('defaults to liveAdapter for production builds unless VITE_USE_MOCK_ADAPTER is explicitly true, and allows mode overrides', async () => {
     expect(selectAdapter(true)).toBe(mockAdapter);
     expect(selectAdapter(false)).toBe(liveAdapter);
+
+    // Default when modeOverride === 'env' and VITE_USE_MOCK_ADAPTER is unset (undefined) or 'false'
+    const prevVite = import.meta.env.VITE_USE_MOCK_ADAPTER;
+    const prevProc = process.env.VITE_USE_MOCK_ADAPTER;
+    try {
+      delete (import.meta.env as Record<string, unknown>).VITE_USE_MOCK_ADAPTER;
+      delete process.env.VITE_USE_MOCK_ADAPTER;
+      expect(getRationAdapterMode()).toBe('live');
+
+      process.env.VITE_USE_MOCK_ADAPTER = 'true';
+      expect(getRationAdapterMode()).toBe('mock');
+
+      process.env.VITE_USE_MOCK_ADAPTER = 'false';
+      expect(getRationAdapterMode()).toBe('live');
+    } finally {
+      (import.meta.env as Record<string, unknown>).VITE_USE_MOCK_ADAPTER = prevVite;
+      if (prevProc === undefined) {
+        delete process.env.VITE_USE_MOCK_ADAPTER;
+      } else {
+        process.env.VITE_USE_MOCK_ADAPTER = prevProc;
+      }
+    }
 
     setRationAdapterMode('mock');
     expect(getRationAdapterMode()).toBe('mock');
@@ -137,6 +160,43 @@ describe('rationService & RationAppAdapter contract (mockAdapter and liveAdapter
       });
 
       it('extractFromText and explainRation fulfill the async contract', async () => {
+        if (mode === 'live') {
+          vi.spyOn(globalThis, 'fetch').mockImplementation(async (_url, init) => {
+            const body = JSON.parse(String(init?.body ?? '{}'));
+            if (body.action === 'extract') {
+              return new Response(
+                JSON.stringify({
+                  action: 'extract',
+                  modelUsed: 'meta-llama/llama-3.3-70b-instruct:free',
+                  animal: {
+                    species: 'buffalo',
+                    bodyWeightKg: 450,
+                    milkYieldLitersPerDay: 8,
+                    milkFatPct: 6.5,
+                  },
+                  breedId: 'murrah',
+                  budgetInrPerDay: 180,
+                  matchedFeeds: [
+                    { feedId: 'wheat_straw', priceInrPerKgAsFed: null, maxKgAsFedPerDay: null },
+                    { feedId: 'mustard_cake', priceInrPerKgAsFed: null, maxKgAsFedPerDay: null },
+                  ],
+                  unmatchedFeeds: [],
+                }),
+                { status: 200, headers: { 'Content-Type': 'application/json' } },
+              );
+            }
+            return new Response(
+              JSON.stringify({
+                action: 'explain',
+                modelUsed: 'meta-llama/llama-3.3-70b-instruct:free',
+                explanationText:
+                  'Your 450 kg Murrah buffalo gives 8 L of milk a day at 6.5% fat. A budget of ₹220.00 per day supports 9.6 L of milk a day, below the breed cap of 9.64 L.',
+              }),
+              { status: 200, headers: { 'Content-Type': 'application/json' } },
+            );
+          });
+        }
+
         const extracted = await adapter.extractFromText(
           '450 kg Murrah buffalo giving 8 litre milk at 6.5% fat with wheat straw and mustard cake, budget 180',
         );
@@ -210,6 +270,222 @@ describe('rationService & RationAppAdapter contract (mockAdapter and liveAdapter
   }
 });
 
+describe('liveAdapter /api/llm integration, breed validation, and verifier retry flow (M2-TASK-03)', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('extractFromText posts toLatinDigits(freeText), v1 catalog, and v1 breeds to /api/llm and drops cross-species breedId (AC-2.3, AC-E5.1, AC-L1.5)', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          action: 'extract',
+          modelUsed: 'meta-llama/llama-3.3-70b-instruct:free',
+          animal: {
+            species: 'buffalo',
+            bodyWeightKg: 450,
+            milkYieldLitersPerDay: 8,
+            milkFatPct: 6.5,
+          },
+          // Cross-species breed ('sahiwal' is a cow breed, whereas species is 'buffalo')
+          breedId: 'sahiwal',
+          budgetInrPerDay: 250,
+          matchedFeeds: [
+            { feedId: 'wheat_straw', priceInrPerKgAsFed: 999, maxKgAsFedPerDay: null },
+          ],
+          unmatchedFeeds: ['magic probiotic mix'],
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+
+    // Input includes Devanagari digits ४५० (450) and ८ (8)
+    const devanagariDigitInput =
+      '\u096A\u096B\u0966 kilo ki bhains \u096E litre doodh deti hai, 6.5% fat, gehun ka bhusa aur magic probiotic mix';
+    const res = await liveAdapter.extractFromText(devanagariDigitInput);
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchSpy.mock.calls[0];
+    expect(url).toBe('/api/llm');
+    expect(init?.method).toBe('POST');
+    const sentBody = JSON.parse(String(init?.body));
+    expect(sentBody.action).toBe('extract');
+    expect(sentBody.freeText).toContain('450 kilo ki bhains 8 litre doodh');
+    expect(Array.isArray(sentBody.catalog)).toBe(true);
+    expect(sentBody.catalog.length).toBe(LIVE_FEEDS.length);
+    // Nutrient safety: catalog entries sent to /api/llm contain only id and names
+    expect(sentBody.catalog[0]).not.toHaveProperty('cpPctDm');
+    expect(Array.isArray(sentBody.breeds)).toBe(true);
+    expect(sentBody.breeds.length).toBe(LIVE_BREEDS.length);
+
+    // AC-2.3: cross-species breedId ('sahiwal' for 'buffalo') must be dropped to null
+    expect(res.breedId).toBeNull();
+    expect(res.budgetInrPerDay).toBe(250);
+    expect(res.unmatchedFeeds).toEqual(['magic probiotic mix']);
+    // AC-E5.1: LLM-injected priceInrPerKgAsFed is never trusted
+    expect(res.matchedFeeds[0].priceInrPerKgAsFed).toBeNull();
+  });
+
+  it('extractFromText throws LlmError with mapped code when /api/llm returns HTTP 429, 502, 504, or 400 (AC-E4.1)', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({ error: { code: 'RATE_LIMITED', message: 'Rate limited' } }),
+        { status: 429, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+    await expect(liveAdapter.extractFromText('450 kg Murrah buffalo')).rejects.toMatchObject({
+      code: 'RATE_LIMITED',
+    });
+
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({ error: { code: 'TIMEOUT', message: 'Timed out' } }),
+        { status: 504, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+    await expect(liveAdapter.extractFromText('450 kg Murrah buffalo')).rejects.toMatchObject({
+      code: 'TIMEOUT',
+    });
+  });
+
+  it('explainRation verifies clean LLM output on attempt 1, retries once on untraced numbers (attempt 2), and falls back to template if attempt 2 fails or /api/llm errors (AC-7.1, AC-E4.2, AC-E6.1, AC-L1.6)', async () => {
+    const solved = liveAdapter.solveRation(SAMPLE_ANIMAL, SAMPLE_FEEDS);
+    expect(solved.status).toBe('optimal');
+    if (solved.status !== 'optimal') return;
+
+    const requirement = liveAdapter.computeRequirements({
+      ...SAMPLE_ANIMAL,
+      milkYieldLitersPerDay: solved.supportedMilkLPerDay,
+    });
+    const ctx = {
+      animal: SAMPLE_ANIMAL,
+      requirement,
+      solution: solved,
+      feeds: LIVE_FEEDS,
+    };
+
+    // Case 1: Attempt 1 has untraced number 777.77 -> triggers Attempt 2 with flaggedNumbers: ['777.77'] -> succeeds
+    const retrySpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            action: 'explain',
+            modelUsed: 'meta-llama/llama-3.3-70b-instruct:free',
+            explanationText:
+              'Your 450 kg Murrah buffalo gives 8 L a day. A budget of ₹220.00 supports 9.6 L/day with 777.77 g extra.',
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            action: 'explain',
+            modelUsed: 'meta-llama/llama-3.3-70b-instruct:free',
+            explanationText:
+              'Your 450 kg Murrah buffalo gives 8 L a day at 6.5% fat. A budget of ₹220.00 supports 9.6 L a day, below the breed cap of 9.64 L.',
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } },
+        ),
+      );
+
+    const retryResult = await liveAdapter.explainRation(ctx);
+    expect(retrySpy).toHaveBeenCalledTimes(2);
+    const attempt1Body = JSON.parse(String(retrySpy.mock.calls[0][1]?.body));
+    const attempt2Body = JSON.parse(String(retrySpy.mock.calls[1][1]?.body));
+    expect(attempt1Body.attempt).toBe(1);
+    expect(attempt2Body.attempt).toBe(2);
+    expect(attempt2Body.flaggedNumbers).toContain('777.77');
+    expect(retryResult.status).toBe('verified');
+    if (retryResult.status === 'verified') {
+      expect(retryResult.verifiedCount).toBe(6);
+      expect(retryResult.badge).toEqual({ id: 'badge_all_verified', params: { n: 6 } });
+      expect(retryResult.flaggedNumbers).toContain('777.77');
+    }
+
+    // Case 2: Both Attempt 1 and Attempt 2 contain untraced numbers -> falls back to deterministic template with reason 'untraced_numbers'
+    vi.restoreAllMocks();
+    const failBothSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            action: 'explain',
+            modelUsed: 'meta-llama/llama-3.3-70b-instruct:free',
+            explanationText: 'Your 450 kg buffalo needs 888.88 kg of feed.',
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            action: 'explain',
+            modelUsed: 'meta-llama/llama-3.3-70b-instruct:free',
+            explanationText: 'Your 450 kg buffalo still needs 999.99 kg of feed.',
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } },
+        ),
+      );
+
+    const fallbackUntraced = await liveAdapter.explainRation(ctx);
+    expect(failBothSpy).toHaveBeenCalledTimes(2);
+    expect(fallbackUntraced.status).toBe('deterministic_fallback');
+    if (fallbackUntraced.status === 'deterministic_fallback') {
+      expect(fallbackUntraced.reason).toBe('untraced_numbers');
+      expect(fallbackUntraced.badge).toEqual({ id: 'badge_template_fallback' });
+      expect(fallbackUntraced.flaggedNumbers).toContain('999.99');
+      expect(fallbackUntraced.template.length).toBeGreaterThan(0);
+    }
+
+    // Case 2b: Attempt 1 contains Devanagari characters (AC-L1.6 language gate failure) -> triggers Attempt 2 -> succeeds
+    vi.restoreAllMocks();
+    const devaRetrySpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            action: 'explain',
+            modelUsed: 'meta-llama/llama-3.3-70b-instruct:free',
+            explanationText: 'Your 450 kg \u092E\u0941\u0930\u094D\u0930\u093E buffalo gives 8 L a day.',
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            action: 'explain',
+            modelUsed: 'meta-llama/llama-3.3-70b-instruct:free',
+            explanationText:
+              'Your 450 kg Murrah buffalo gives 8 L a day at 6.5% fat. A budget of ₹220.00 supports 9.6 L a day.',
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } },
+        ),
+      );
+    const devaRetryResult = await liveAdapter.explainRation(ctx);
+    expect(devaRetrySpy).toHaveBeenCalledTimes(2);
+    expect(devaRetryResult.status).toBe('verified');
+
+    // Case 3: HTTP 429 on Attempt 1 -> falls back to deterministic template with reason 'llm_error' and errorCode 'RATE_LIMITED'
+    vi.restoreAllMocks();
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({ error: { code: 'RATE_LIMITED', message: 'Rate limited' } }),
+        { status: 429, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+    const fallbackError = await liveAdapter.explainRation(ctx);
+    expect(fallbackError.status).toBe('deterministic_fallback');
+    if (fallbackError.status === 'deterministic_fallback') {
+      expect(fallbackError.reason).toBe('llm_error');
+      expect(fallbackError.errorCode).toBe('RATE_LIMITED');
+      expect(fallbackError.badge).toEqual({ id: 'badge_template_fallback' });
+    }
+  });
+});
+
 describe('UI wiring for v1 feed verticals, unpriced feeds, and cited roughage minimum', () => {
   beforeEach(() => {
     Element.prototype.scrollIntoView = () => undefined;
@@ -222,6 +498,7 @@ describe('UI wiring for v1 feed verticals, unpriced feeds, and cited roughage mi
   });
 
   afterEach(() => {
+    vi.restoreAllMocks();
     cleanup();
     window.localStorage.clear();
     setActiveLang('en');
@@ -320,6 +597,12 @@ describe('UI wiring for v1 feed verticals, unpriced feeds, and cited roughage mi
   });
 
   it('rejects invalid free-text extraction inputs with LlmError INVALID_REQUEST and disables Balance ration on invalid form/price inputs (AC-E1.1, AC-E1.2, AC-4.3)', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({ error: { code: 'INVALID_REQUEST', message: 'Invalid extraction input' } }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
     await expect(liveAdapter.extractFromText('just some random words without animal or weight')).rejects.toMatchObject({
       code: 'INVALID_REQUEST',
     });
@@ -412,4 +695,5 @@ describe('UI wiring for v1 feed verticals, unpriced feeds, and cited roughage mi
     expect(copiedText).toContain('₹');
   });
 });
+
 
