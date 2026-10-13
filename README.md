@@ -97,7 +97,7 @@ SahiDana is an offline-first, auditable Progressive Web Application (PWA) design
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/YourOrg/ProjectSahiDana.git
+   git clone https://github.com/jegadeesh17/ProjectSahiDana.git
    cd ProjectSahiDana
    ```
 

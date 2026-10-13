@@ -12,12 +12,13 @@
 - [x] Phase 3.1: M1 built, verified and committed per task, reviewed (code, and UI for ui projects), UAT accepted, CHANGELOG updated
 - [x] Phase 3.2: M2 built, verified and committed per task, reviewed (code, and UI for ui projects), UAT accepted, CHANGELOG updated
 - [x] Phase 3.3: M3 built, verified and committed per task, reviewed (code, and UI for ui projects), UAT accepted, CHANGELOG updated
-- [ ] Phase 4: Final test run, README, and handover
+- [x] Phase 4: Final test run, README, and handover
 
-## Resume here (saved 2026-10-13)
+## Project Complete (Handover 2026-10-13)
 
-- **Current step:** Phase 4 (Final test run, README, and handover) — M3-TASK-04 implemented.
-- **Completed:** Phases 0–2.4, Milestone 1 (`M1-TASK-01` to `M1-TASK-05`), Milestone 2 (`M2-TASK-01` to `M2-TASK-03`), and Milestone 3 (`M3-TASK-01` to `M3-TASK-04`: benchmark animal suite, SciPy HiGHS LP cross-check, 30-description multilingual extraction eval, Playwright E2E language/font verification, provenance and verification gates audit, and root README.md).
+- **Status:** All phases and milestones (Phases 0–4, M1–M3) complete, verified, and accepted.
+- **Verification:** Full test suite (`npm run test:full && python -m pytest -q eval/`) exits 0 with 174 unit tests, 13 Playwright E2E tests, and 68 Python evaluation tests.
+- **Deliverables:** D.01 Two-stage LP optimizer, D.02 Jaipur regional feed library & breed table, D.03 Offline field-paravet PWA.
 
 
 
