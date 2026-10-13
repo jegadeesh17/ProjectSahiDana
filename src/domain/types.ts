@@ -150,7 +150,34 @@ export interface AuditCitation {
   sourceKey: string;
 }
 
+export interface LinearTerm {
+  maintenance: number;
+  perLitre: number;
+}
+
+export interface RequirementModel {
+  CP: LinearTerm;
+  ME: LinearTerm;
+  Ca: LinearTerm;
+  P: LinearTerm;
+  dmMax: LinearTerm;
+  dmi: {
+    weekOfLactation: 20;
+    lagFactor: number;
+    bw075: number;
+    fcmPerLitre: number;
+  };
+  roughage: {
+    minShareOfDm: number;
+    citation: AuditCitation;
+  };
+  fatPctUsed: number;
+  citations: Record<NutrientKey, AuditCitation>;
+}
+
 export interface RequirementResult {
+  model?: RequirementModel;
+  atMilkLPerDay?: number;
   requirements: NutrientVector;
   citations: Record<NutrientKey, AuditCitation>;
 }
@@ -168,6 +195,7 @@ export interface RationFeedLine {
 /** What limits the supported milk. When several are tight the first in this order is named (OQ6). */
 /** Something that can stop a ration: a nutrient, or the minimum roughage share of dry matter. */
 export type LimitingKey = NutrientKey | 'roughage';
+export type LimitingConstraint = LimitingKey;
 
 export type BindingConstraint = 'budget' | 'breed_cap' | 'intake' | 'roughage' | 'CP' | 'ME' | 'Ca' | 'P';
 
@@ -193,8 +221,10 @@ export type Verdict =
       todayMilkLPerDay: number;
       /** B: stage-2 cost at today's milk; null when no ration from these feeds can support it. */
       keepCostInrPerDay: number | null;
+      costToKeepTodayInrPerDay?: number | null;
       /** Named only when keepCostInrPerDay is null. */
       limitingNutrients: LimitingKey[];
+      limitingAtToday?: LimitingKey[];
     }
   | { kind: 'same_as_today' }
   | { kind: 'dry_animal' }
@@ -205,18 +235,24 @@ export type SolvedVerdict = Exclude<Verdict, { kind: 'budget_below_maintenance' 
 export interface FatComparison {
   todayFatPct: number;
   breedFatPct: number | null;
+  breedFatPctLow?: number | null;
   breedFatPctHigh: number | null;
 }
 
 export interface RationSolution {
   status: 'optimal';
+  breedId?: string;
   /** S: the most milk the selected feeds can support within the budget, never above the breed cap. Exact; display rounds to 0.1. */
   supportedMilkLPerDay: number;
+  /** Y*: unrounded Stage 1 optimum milk in L/day (0 for a dry animal). */
+  supportedMilkExactLPerDay?: number;
   /** The breed's cited cap. */
   milkCapLPerDay: number;
+  capBasis?: CapBasis;
   /** The cap the solver used: the larger of the breed cap and today's milk (OQ15). */
   effectiveCapLPerDay: number;
-  /** The first tight constraint in the order budget, breed cap, intake, nutrient. */
+  effectiveCapSource?: 'breed' | 'today_milk';
+  /** The first tight constraint in the order budget, breed cap, intake, roughage, nutrient. */
   bindingConstraint: BindingConstraint;
   /** Every tight constraint (extension, for the full audit). */
   tightConstraints: BindingConstraint[];
@@ -230,17 +266,22 @@ export interface RationSolution {
   /** M: the cheapest ration cost at 0 L/day (extension, for the audit). */
   maintenanceCostInrPerDay: number;
   budgetInrPerDay: number;
+  referenceCostInrPerDay?: number;
+  underBudgetInr?: number;
   feeds: RationFeedLine[];
   totalKgAsFed: number;
   totalCostInr: number;
+  requirementsAtS?: NutrientVector;
   supplied: NutrientVector;
   /** Percent of the requirement supplied; for DM it is the percent of the ceiling used. */
   coveragePct: Record<NutrientKey, number>;
   /** Constraints that are active at the optimum (within 1%). */
   bindingConstraints: NutrientKey[];
-  /** Roughage (indigenous forage plus crop residue) as a percent of the ration's dry matter. */
+  /** Roughage (indigenous forage plus crop residue) as a share [0, 1] and percent [0, 100] of the ration's dry matter. */
+  roughageMinShare?: number;
+  roughageShareAchieved?: number;
   roughageSharePct: number;
-  /** PROTOTYPE FIXTURE: the minimum share the LP enforces. The cited value comes in M1. */
+  /** Minimum roughage share as a percent of total DM. */
   roughageMinSharePct: number;
   currentCostInr: number | null;
   savingsInr: number | null;
@@ -275,13 +316,17 @@ export interface InfeasibilityReport {
 export interface BudgetShortfallReport {
   status: 'budget_below_maintenance';
   verdict: Extract<Verdict, { kind: 'budget_below_maintenance' }>;
+  budgetInrPerDay?: number;
   /** An unselected library feed that, added at its default price, brings maintenance within the budget; null when none does. */
   fixFeedId: string | null;
   /** Maintenance cost with that feed added. */
   maintenanceWithFixInrPerDay: number | null;
+  fixFeed?: { feedId: string; maintenanceCostInrPerDay: number } | null;
   checkedOn: string;
   sourceKey: string;
 }
+
+export type BudgetBelowMaintenanceReport = BudgetShortfallReport;
 
 export type RationSolveOutcome = RationSolution | InfeasibilityReport | BudgetShortfallReport;
 

@@ -364,17 +364,21 @@ export function solveRation(animal: AnimalProfile, inputs: SelectedFeedInput[]):
   if (dry) {
     verdict = { kind: 'dry_animal' };
   } else {
-    const diff = round1(S - T);
-    if (diff >= 0.1) verdict = { kind: 'gain', gainLPerDay: diff };
-    else if (diff <= -0.1) {
+    const diff = floor1(S - T);
+    if (yStar < T - 1e-6) {
       const named = atT ? [] : limitingAt(animal, inputs, T).map((l) => l.nutrient);
+      const limits: LimitingKey[] = atT ? [] : named.length > 0 ? named : ['DM'];
       verdict = {
         kind: 'below_today',
         todayMilkLPerDay: T,
         keepCostInrPerDay: atT ? atT.cost : null,
-        limitingNutrients: atT ? [] : named.length > 0 ? named : ['DM'],
+        costToKeepTodayInrPerDay: atT ? atT.cost : null,
+        limitingNutrients: limits,
+        limitingAtToday: limits,
       };
-    } else if (T > breedCap + 1e-9) verdict = { kind: 'above_breed_level', savingInrPerDay: saving() };
+    } else if (T > breedCap + 1e-6) verdict = { kind: 'above_breed_level', savingInrPerDay: saving() };
+    else if (Math.abs(T - breedCap) <= 1e-6) verdict = { kind: 'at_breed_level', savingInrPerDay: saving() };
+    else if (diff >= 0.1 - 1e-9) verdict = { kind: 'gain', gainLPerDay: round1(diff) };
     else if (yStar >= breedCap - 1e-6) verdict = { kind: 'at_breed_level', savingInrPerDay: saving() };
     else verdict = { kind: 'same_as_today' };
   }
@@ -421,6 +425,7 @@ export function solveRation(animal: AnimalProfile, inputs: SelectedFeedInput[]):
   return {
     status: 'optimal',
     supportedMilkLPerDay: S,
+    supportedMilkExactLPerDay: yStar,
     milkCapLPerDay: breedCap,
     effectiveCapLPerDay: cap,
     bindingConstraint,
@@ -429,7 +434,14 @@ export function solveRation(animal: AnimalProfile, inputs: SelectedFeedInput[]):
     verdict,
     costAtTodayMilkInrPerDay: atT ? atT.cost : null,
     fatComparison:
-      T > 0 ? { todayFatPct: animal.milkFatPct, breedFatPct: breed.fatPct, breedFatPctHigh: breed.fatPctHigh } : null,
+      T > 0
+        ? {
+            todayFatPct: animal.milkFatPct,
+            breedFatPct: breed.fatPct,
+            breedFatPctLow: breed.fatPctLow ?? breed.fatPct,
+            breedFatPctHigh: breed.fatPctHigh,
+          }
+        : null,
     maintenanceCostInrPerDay: maintenance.cost,
     budgetInrPerDay: budget,
     feeds: lines,
@@ -450,7 +462,7 @@ export function solveRation(animal: AnimalProfile, inputs: SelectedFeedInput[]):
 
 /**
  * A constraint is tight when relaxing it by 1% raises Y* (or it is exactly met).
- * Order: budget, breed cap, intake, nutrients, roughage minimum.
+ * Order: budget, breed cap, intake, roughage minimum, nutrients.
  */
 function tightConstraints(model: Model, budget: number, cap: number, yStar: number, x: number[]): BindingConstraint[] {
   const raises = (mods: Mods) => {
@@ -462,8 +474,8 @@ function tightConstraints(model: Model, budget: number, cap: number, yStar: numb
   if (spent >= budget * (1 - 1e-6) || raises({ budget: 1.01 })) out.push('budget');
   if (yStar >= cap - 1e-6 || raises({ cap: 1.01 })) out.push('breed_cap');
   if (raises({ intake: 1.01 })) out.push('intake');
-  for (const k of MIN_NUTRIENTS) if (raises({ need: { [k]: 0.99 } })) out.push(k);
   if (raises({ roughage: 0.9 })) out.push('roughage');
+  for (const k of MIN_NUTRIENTS) if (raises({ need: { [k]: 0.99 } })) out.push(k);
   return out;
 }
 

@@ -63,7 +63,7 @@
             "tests/unit/solver.test.ts"
           ],
           "acceptance_criteria": "SPEC AC-2.1, AC-5.1, AC-5.2, AC-5.3, AC-5.4, AC-5.5, AC-5.6, AC-5.7, AC-5.8, AC-5.9, AC-5.10, AC-5.11, AC-5.12, AC-5.13, AC-E2.1, AC-E2.2, AC-E7.1: npx vitest run tests/unit/requirements.test.ts tests/unit/solver.test.ts tests/unit/verdict.test.ts verifies closed-form k0 and kY against NRC 2001 Eq. 1-1, Stage 1 and Stage 2 optimality, S <= Y* <= max(cap, T), one test case per binding constraint in BINDING_ORDER ('budget', 'breed_cap', 'intake', 'roughage', 'CP', 'ME', 'Ca', 'P') with only that constraint tight, roughage DM >= r * total DM within 1e-6, all verdict branches using unrounded Y* vs T, roughage-only and nutrient infeasibility diagnosis, and below-maintenance fix suggestions excluding unpriced feeds.",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "M1-TASK-04",

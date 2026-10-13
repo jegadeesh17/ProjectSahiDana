@@ -4,7 +4,109 @@ import { formatInr, formatLitres, naturalDecimals } from '../i18n/format';
 import type { Lang } from '../i18n/lang';
 import type { BiText, StringId } from '../i18n/strings';
 import { t } from '../i18n/strings';
-import type { LimitingKey, Verdict } from './types';
+import type { BreedStandard, FatComparison, LimitingKey, SolvedVerdict, Verdict } from './types';
+
+/** Round Stage 1 optimum Y* down to 0.1 L with 1e-7 float-noise cushion (ARCHITECTURE.md section 5). */
+export function roundSupportedMilkDown(yStar: number): number {
+  if (!Number.isFinite(yStar) || yStar <= 0) return 0;
+  return Math.floor(yStar * 10 + 1e-7) / 10;
+}
+
+export interface SelectVerdictInput {
+  todayMilkLPerDay: number;
+  breedCapLPerDay: number;
+  yStar: number;
+  supportedMilkLPerDay?: number;
+  referenceCostInrPerDay: number;
+  costAtTodayMilkInrPerDay: number | null;
+  limitingAtToday?: LimitingKey[];
+}
+
+/**
+ * Pure verdict selector (ARCHITECTURE.md section 7, SPEC AC-5.6, AC-5.7, AC-5.11, AC-5.13, OQ14, OQ15).
+ * Shortfall and breed-level comparisons use the unrounded Y* against T with 1e-6 tolerance, never S.
+ */
+export function selectVerdict(input: SelectVerdictInput): SolvedVerdict {
+  const {
+    todayMilkLPerDay,
+    breedCapLPerDay,
+    yStar,
+    referenceCostInrPerDay,
+    costAtTodayMilkInrPerDay,
+    limitingAtToday = [],
+  } = input;
+  const s =
+    input.supportedMilkLPerDay !== undefined
+      ? input.supportedMilkLPerDay
+      : roundSupportedMilkDown(yStar);
+
+  // 1. Dry animal (T = 0) -> dry_animal (AC-5.13)
+  if (todayMilkLPerDay <= 0) {
+    return { kind: 'dry_animal' };
+  }
+
+  // 2. Shortfall: unrounded Y* < T - 1e-6 -> below_today (AC-5.11)
+  if (yStar < todayMilkLPerDay - 1e-6) {
+    const limits = costAtTodayMilkInrPerDay === null ? [...limitingAtToday] : [];
+    return {
+      kind: 'below_today',
+      todayMilkLPerDay,
+      keepCostInrPerDay: costAtTodayMilkInrPerDay,
+      costToKeepTodayInrPerDay: costAtTodayMilkInrPerDay,
+      limitingNutrients: limits,
+      limitingAtToday: limits,
+    };
+  }
+
+  const savingInrPerDay =
+    costAtTodayMilkInrPerDay !== null && referenceCostInrPerDay - costAtTodayMilkInrPerDay > 1e-6
+      ? referenceCostInrPerDay - costAtTodayMilkInrPerDay
+      : null;
+
+  // 3. Above breed level: T > breedCap + 1e-6 and Y* >= T - 1e-6 (AC-5.7, OQ15)
+  if (todayMilkLPerDay > breedCapLPerDay + 1e-6) {
+    return {
+      kind: 'above_breed_level',
+      savingInrPerDay,
+    };
+  }
+
+  // 4. At breed level: T = breedCap within 1e-6 and Y* >= T - 1e-6 (AC-5.7)
+  if (Math.abs(todayMilkLPerDay - breedCapLPerDay) <= 1e-6) {
+    return {
+      kind: 'at_breed_level',
+      savingInrPerDay,
+    };
+  }
+
+  // 5. Room for improvement: S - T >= 0.1 L/day, with X = S - T rounded down to 0.1 (AC-5.6)
+  const gainLPerDay = Math.floor((s - todayMilkLPerDay) * 10 + 1e-7) / 10;
+  if (gainLPerDay >= 0.1 - 1e-9) {
+    return {
+      kind: 'gain',
+      gainLPerDay: Math.round(gainLPerDay * 10) / 10,
+    };
+  }
+
+  // 6. Otherwise: T < breedCap, Y* >= T - 1e-6, and S - T < 0.1 -> same_as_today (SPEC OQ14)
+  return { kind: 'same_as_today' };
+}
+
+/** Build the factual fat % comparison against the breed standard (null when today's milk is 0; AC-5.9, AC-5.10). */
+export function buildFatComparison(
+  todayMilkLPerDay: number,
+  todayFatPct: number,
+  breed: Pick<BreedStandard, 'fatPct' | 'fatPctLow' | 'fatPctHigh'>,
+): FatComparison | null {
+  if (todayMilkLPerDay <= 0) return null;
+  const low = breed.fatPctLow !== undefined ? breed.fatPctLow : breed.fatPct;
+  return {
+    todayFatPct,
+    breedFatPct: low ?? null,
+    breedFatPctLow: low ?? null,
+    breedFatPctHigh: breed.fatPctHigh ?? null,
+  };
+}
 
 /** Supported milk and gains: one decimal ("6.2 L"). */
 export const litres1 = (v: number) => formatLitres(v, 1);

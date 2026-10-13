@@ -1,257 +1,739 @@
 import { describe, expect, it } from 'vitest';
-import breedsJson from '../../src/data/breeds.prototype.json';
-import feedsJson from '../../src/data/feeds.prototype.json';
-import { BREEDS, breedsFor, capFromCitedFigures, isNonDescript } from '../../src/domain/breeds';
-import { groupFeeds, inSeason } from '../../src/domain/feedGroups';
-import { DEMO_CASES } from '../../src/domain/presets';
-import type { DemoKey } from '../../src/domain/presets';
-import type { FeedItem, RationSolveOutcome } from '../../src/domain/types';
-import { FEED_VERTICALS } from '../../src/domain/types';
-import { budgetFieldText, budgetIsDefault, todayCostInr, validateAnimal, validateBudget, validateFeed } from '../../src/domain/validation';
-import { monthRangeText } from '../../src/i18n/months';
-import { solveRation } from '../../src/services/mockSolver';
+import feedsV1 from '../../src/data/feeds.v1.json';
+import requirementsV1 from '../../src/data/requirements.v1.json';
+import { breedById } from '../../src/domain/breeds';
+import { isRoughage } from '../../src/domain/nutrition';
+import {
+  computeRequirements,
+  solveRation,
+  SolverError,
+  verifyRationSolution,
+} from '../../src/domain/solver';
+import {
+  BINDING_ORDER,
+  NUTRIENT_KEYS,
+  type AnimalProfile,
+  type FeedItem,
+  type RationSolution,
+  type SelectedFeedInput,
+} from '../../src/domain/types';
 
-const feeds = feedsJson as unknown as FeedItem[];
+const allFeeds = feedsV1 as unknown as FeedItem[];
+const ROUGHAGE_MIN_SHARE = requirementsV1.roughageMinShareOfDm.value;
 
-function run(key: DemoKey): { outcome: RationSolveOutcome; milk: number } {
-  const demo = DEMO_CASES.find((c) => c.key === key)!;
-  const inputs = demo.preset.feeds.flatMap((d) => {
-    const { input } = validateFeed(d);
-    return input ? [input] : [];
-  });
-  const { profile, errors } = validateAnimal(demo.preset.animal, todayCostInr(demo.preset.feeds));
-  expect(errors).toEqual({});
-  return { outcome: solveRation({ ...profile!, isConfirmed: true }, inputs), milk: profile!.milkYieldLitersPerDay };
-}
+const baseAnimal: AnimalProfile = {
+  species: 'buffalo',
+  breedId: 'murrah',
+  bodyWeightKg: 450,
+  milkYieldLitersPerDay: 8,
+  milkFatPct: 6.5,
+  budgetInrPerDay: 140,
+  isConfirmed: true,
+};
 
-describe('verdict cases (SPEC AC-5.6 to 5.11, AC-E7.1, OQ15)', () => {
-  it('gain: supported milk above today by at least 0.1 L', () => {
-    const { outcome } = run('gain');
-    expect(outcome.status).toBe('optimal');
-    if (outcome.status !== 'optimal') return;
-    expect(outcome.verdict).toMatchObject({ kind: 'gain' });
-    if (outcome.verdict.kind === 'gain') expect(outcome.verdict.gainLPerDay).toBeGreaterThanOrEqual(0.1);
-  });
+const murrahCap = breedById('murrah')!.milkCapLPerDay; // 8.6 L/day
 
-  it('at breed level: today is within 0.1 L of the cap, with a saving for the same milk', () => {
-    const { outcome } = run('at_level');
-    if (outcome.status !== 'optimal') throw new Error('expected a ration');
-    expect(outcome.verdict.kind).toBe('at_breed_level');
-    if (outcome.verdict.kind === 'at_breed_level') expect(outcome.verdict.savingInrPerDay).toBeGreaterThan(0);
-  });
+const richFeeds: SelectedFeedInput[] = [
+  { feedId: 'berseem', priceInrPerKgAsFed: 4, maxKgAsFedPerDay: null, currentKgAsFedPerDay: 20 },
+  { feedId: 'wheat_straw', priceInrPerKgAsFed: 6, maxKgAsFedPerDay: null, currentKgAsFedPerDay: 4 },
+  { feedId: 'mustard_cake', priceInrPerKgAsFed: 32, maxKgAsFedPerDay: null, currentKgAsFedPerDay: 2 },
+  { feedId: 'wheat_bran', priceInrPerKgAsFed: 22, maxKgAsFedPerDay: null, currentKgAsFedPerDay: 1.5 },
+  { feedId: 'mineral_mix', priceInrPerKgAsFed: 90, maxKgAsFedPerDay: 0.1, currentKgAsFedPerDay: 0.05 },
+];
 
-  it('above breed level: today is higher than the cited cap, so today is the cap and no shortfall line appears', () => {
-    const { outcome, milk } = run('above');
-    if (outcome.status !== 'optimal') throw new Error('expected a ration');
-    expect(milk).toBeGreaterThan(outcome.milkCapLPerDay);
-    expect(outcome.effectiveCapLPerDay).toBe(milk);
-    expect(outcome.verdict.kind).toBe('above_breed_level');
-    expect(outcome.supportedMilkLPerDay).toBeLessThanOrEqual(milk);
-  });
-
-  it('below today with the cost of keeping today’s milk', () => {
-    const { outcome } = run('below_cost');
-    if (outcome.status !== 'optimal') throw new Error('expected a ration');
-    expect(outcome.verdict.kind).toBe('below_today');
-    if (outcome.verdict.kind === 'below_today') {
-      expect(outcome.verdict.keepCostInrPerDay).toBeGreaterThan(outcome.budgetInrPerDay);
+describe('two-stage ration solver (src/domain/solver.ts)', () => {
+  it('computes daily nutrient requirements with linear model and citations for all 5 NUTRIENT_KEYS (AC-2.1)', () => {
+    const res = computeRequirements(baseAnimal);
+    expect(res.requirements.dmKgPerDay).toBeGreaterThan(10);
+    expect(res.requirements.cpGramsPerDay).toBeGreaterThan(1000);
+    expect(res.requirements.meMcalPerDay).toBeGreaterThan(20);
+    expect(res.requirements.caGramsPerDay).toBeGreaterThan(30);
+    expect(res.requirements.pGramsPerDay).toBeGreaterThan(15);
+    expect(res.model).toBeDefined();
+    expect(res.atMilkLPerDay).toBe(8);
+    for (const k of NUTRIENT_KEYS) {
+      expect(res.citations[k].sourceDoc).toBeTruthy();
+      expect(res.citations[k].formulaDisplay).toBeTruthy();
     }
   });
 
-  it('below today where keeping today’s milk is impossible: names the limiting nutrient and shows no saving', () => {
-    const { outcome } = run('below_no');
-    if (outcome.status !== 'optimal') throw new Error('expected a ration');
-    expect(outcome.verdict).toMatchObject({ kind: 'below_today', keepCostInrPerDay: null, limitingNutrients: ['CP'] });
-    expect(outcome.costAtTodayMilkInrPerDay).toBeNull();
+  it('Stage 1 + Stage 2 returns an optimal ration within the budget that meets requirements at S (AC-5.1, AC-5.2)', () => {
+    const out = solveRation(baseAnimal, richFeeds);
+    expect(out.status).toBe('optimal');
+    if (out.status !== 'optimal') return;
+
+    expect(out.supportedMilkLPerDay).toBeGreaterThan(0);
+    expect(out.supportedMilkLPerDay).toBeLessThanOrEqual(out.effectiveCapLPerDay + 1e-6);
+    expect(out.totalCostInr).toBeLessThanOrEqual(baseAnimal.budgetInrPerDay + 1e-6);
+
+    const reqAtS = computeRequirements({ ...baseAnimal, milkYieldLitersPerDay: out.supportedMilkLPerDay }).requirements;
+    expect(out.supplied.dmKgPerDay).toBeLessThanOrEqual(reqAtS.dmKgPerDay + 1e-6);
+    expect(out.supplied.cpGramsPerDay + 1e-6).toBeGreaterThanOrEqual(reqAtS.cpGramsPerDay);
+    expect(out.supplied.meMcalPerDay + 1e-6).toBeGreaterThanOrEqual(reqAtS.meMcalPerDay);
+    expect(out.supplied.caGramsPerDay + 1e-6).toBeGreaterThanOrEqual(reqAtS.caGramsPerDay);
+    expect(out.supplied.pGramsPerDay + 1e-6).toBeGreaterThanOrEqual(reqAtS.pGramsPerDay);
+
+    expect(out.currentCostInr).toBeCloseTo(20 * 4 + 4 * 6 + 2 * 32 + 1.5 * 22 + 0.05 * 90, 5);
+    expect(out.savingsInr).toBeCloseTo((out.currentCostInr ?? 0) - out.totalCostInr, 5);
   });
 
-  it('same as today', () => {
-    const { outcome } = run('same');
-    if (outcome.status !== 'optimal') throw new Error('expected a ration');
-    expect(outcome.verdict.kind).toBe('same_as_today');
-    expect(outcome.bindingConstraint).toBe('budget');
+  it('caps S at the breed milkCapLPerDay when budget is high and reports breed_cap as binding (AC-5.3, AC-5.4, AC-5.5)', () => {
+    const out = solveRation({ ...baseAnimal, milkYieldLitersPerDay: 6, budgetInrPerDay: 500 }, richFeeds);
+    expect(out.status).toBe('optimal');
+    if (out.status !== 'optimal') return;
+
+    expect(out.milkCapLPerDay).toBe(murrahCap);
+    expect(out.effectiveCapLPerDay).toBe(murrahCap);
+    expect(out.supportedMilkLPerDay).toBeCloseTo(Math.floor(murrahCap * 10 + 1e-7) / 10, 5);
+    expect(out.bindingConstraint).toBe('breed_cap');
+    expect(out.tightConstraints).toContain('breed_cap');
+    expect(out.totalCostInr).toBeLessThan(300);
   });
 
-  it('budget below maintenance (AC-E7.1): no ration, a fix feed within the budget', () => {
-    const { outcome } = run('shortfall');
-    expect(outcome.status).toBe('budget_below_maintenance');
-    if (outcome.status !== 'budget_below_maintenance') return;
-    expect(outcome.verdict.maintenanceCostInrPerDay).toBeGreaterThan(outcome.verdict.budgetInrPerDay);
-    expect(outcome.fixFeedId).not.toBeNull();
-    expect(outcome.maintenanceWithFixInrPerDay!).toBeLessThanOrEqual(outcome.verdict.budgetInrPerDay);
+  it('uses today milk as the effective cap when today milk exceeds the breed cap (OQ15, AC-5.3, AC-5.7)', () => {
+    const out = solveRation({ ...baseAnimal, milkYieldLitersPerDay: 11, budgetInrPerDay: 500 }, richFeeds);
+    expect(out.status).toBe('optimal');
+    if (out.status !== 'optimal') return;
+
+    expect(out.milkCapLPerDay).toBe(murrahCap);
+    expect(out.effectiveCapLPerDay).toBe(11);
+    expect(out.effectiveCapSource).toBe('today_milk');
+    expect(out.supportedMilkLPerDay).toBe(11);
+    expect(out.bindingConstraint).toBe('breed_cap');
+    expect(out.verdict.kind).toBe('above_breed_level');
   });
 
-  it('infeasible (E2): straw alone names protein and phosphorus', () => {
-    const { outcome } = run('infeasible');
-    expect(outcome.status).toBe('infeasible');
-    if (outcome.status !== 'infeasible') return;
-    expect(outcome.limitingNutrients.map((l) => l.nutrient)).toEqual(expect.arrayContaining(['CP', 'P']));
+  it('names a binding constraint from the fixed priority order and records feedLimitIds when a feed cap binds (AC-5.5, OQ6)', () => {
+    const capped: SelectedFeedInput[] = [
+      { feedId: 'wheat_straw', priceInrPerKgAsFed: 6, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null },
+      { feedId: 'mustard_cake', priceInrPerKgAsFed: 32, maxKgAsFedPerDay: 1.8, currentKgAsFedPerDay: null },
+      { feedId: 'bajra_grain', priceInrPerKgAsFed: 23, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null },
+      { feedId: 'mineral_mix', priceInrPerKgAsFed: 90, maxKgAsFedPerDay: 0.1, currentKgAsFedPerDay: null },
+    ];
+    const out = solveRation({ ...baseAnimal, budgetInrPerDay: 400 }, capped);
+    expect(out.status).toBe('optimal');
+    if (out.status !== 'optimal') return;
+
+    expect(BINDING_ORDER).toContain(out.bindingConstraint);
+    expect(out.feedLimitIds).toContain('mustard_cake');
   });
 
-  it('infeasible because of the roughage minimum: concentrates only, and a roughage feed is suggested', () => {
-    const { outcome } = run('roughage');
-    expect(outcome.status).toBe('infeasible');
-    if (outcome.status !== 'infeasible') return;
-    expect(outcome.limitingNutrients.map((l) => l.nutrient)).toEqual(['roughage']);
-    const suggested = feeds.find((f) => f.id === outcome.suggestedFeeds[0].feedId)!;
-    expect(['indigenous_forage', 'crop_residue']).toContain(suggested.vertical);
+  it('verdict is gain when S - T >= 0.1 L/day (AC-5.6)', () => {
+    const out = solveRation({ ...baseAnimal, milkYieldLitersPerDay: 5, budgetInrPerDay: 200 }, richFeeds);
+    expect(out.status).toBe('optimal');
+    if (out.status !== 'optimal') return;
+    expect(out.verdict.kind).toBe('gain');
+    if (out.verdict.kind === 'gain') {
+      expect(out.verdict.gainLPerDay).toBeCloseTo(out.supportedMilkLPerDay - 5, 5);
+    }
   });
 
-  it('dry animal: stage 1 is skipped and the maintenance ration is shown', () => {
-    const { outcome } = run('dry');
-    if (outcome.status !== 'optimal') throw new Error('expected a ration');
-    expect(outcome.verdict.kind).toBe('dry_animal');
-    expect(outcome.supportedMilkLPerDay).toBe(0);
-    expect(outcome.totalCostInr).toBeCloseTo(outcome.maintenanceCostInrPerDay, 6);
-    expect(outcome.fatComparison).toBeNull();
+  it('verdict is at_breed_level when S hits the cap with less than 0.1 L above T (AC-5.7)', () => {
+    const out = solveRation({ ...baseAnimal, milkYieldLitersPerDay: murrahCap, budgetInrPerDay: 220 }, richFeeds);
+    expect(out.status).toBe('optimal');
+    if (out.status !== 'optimal') return;
+    expect(out.verdict.kind).toBe('at_breed_level');
+    if (out.verdict.kind === 'at_breed_level') {
+      expect(out.verdict.savingInrPerDay).not.toBeNull();
+      expect(out.verdict.savingInrPerDay!).toBeGreaterThan(0);
+    }
   });
 
-  it('non-descript cow: DAHD cap, no breed fat', () => {
-    const { outcome } = run('nondescript');
-    if (outcome.status !== 'optimal') throw new Error('expected a ration');
-    expect(outcome.milkCapLPerDay).toBe(3.86);
-    expect(outcome.fatComparison?.breedFatPct).toBeNull();
+  it('verdict is below_today with keepCostInrPerDay B when budget cannot keep today milk (AC-5.11)', () => {
+    const out = solveRation({ ...baseAnimal, milkYieldLitersPerDay: 8, budgetInrPerDay: 95 }, richFeeds);
+    expect(out.status).toBe('optimal');
+    if (out.status !== 'optimal') return;
+    expect(out.supportedMilkLPerDay).toBeLessThan(8);
+    expect(out.verdict.kind).toBe('below_today');
+    if (out.verdict.kind === 'below_today') {
+      expect(out.verdict.keepCostInrPerDay).not.toBeNull();
+      expect(out.verdict.keepCostInrPerDay!).toBeGreaterThan(95);
+      expect(out.verdict.limitingNutrients).toEqual([]);
+    }
   });
 
-  it('Kankrej: no cited fat percent', () => {
-    const { outcome } = run('kankrej');
-    if (outcome.status !== 'optimal') throw new Error('expected a ration');
-    expect(outcome.fatComparison?.breedFatPct).toBeNull();
+  it('verdict is below_today with limitingNutrients when selected feeds cannot reach today milk at any budget (AC-5.11)', () => {
+    const cappedLow: SelectedFeedInput[] = [
+      { feedId: 'berseem', priceInrPerKgAsFed: 4, maxKgAsFedPerDay: 18, currentKgAsFedPerDay: null },
+      { feedId: 'wheat_straw', priceInrPerKgAsFed: 6, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null },
+      { feedId: 'wheat_bran', priceInrPerKgAsFed: 22, maxKgAsFedPerDay: 2, currentKgAsFedPerDay: null },
+      { feedId: 'mineral_mix', priceInrPerKgAsFed: 90, maxKgAsFedPerDay: 0.1, currentKgAsFedPerDay: null },
+    ];
+    const out = solveRation({ ...baseAnimal, milkYieldLitersPerDay: 10, budgetInrPerDay: 400 }, cappedLow);
+    expect(out.status).toBe('optimal');
+    if (out.status !== 'optimal') return;
+    expect(out.verdict.kind).toBe('below_today');
+    if (out.verdict.kind === 'below_today') {
+      expect(out.verdict.keepCostInrPerDay).toBeNull();
+      expect(out.verdict.limitingNutrients.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('verdict is same_as_today when S equals T below the cap (OQ14)', () => {
+    const probe = solveRation({ ...baseAnimal, milkYieldLitersPerDay: 5, budgetInrPerDay: 200 }, richFeeds);
+    expect(probe.status).toBe('optimal');
+    if (probe.status !== 'optimal') return;
+
+    const exact5 = solveRation({ ...baseAnimal, milkYieldLitersPerDay: 5, budgetInrPerDay: 500 }, [
+      ...richFeeds.map((f) => ({ ...f, currentKgAsFedPerDay: null })),
+    ]);
+    expect(exact5.status).toBe('optimal');
+    if (exact5.status !== 'optimal') return;
+    const costAt5 = exact5.costAtTodayMilkInrPerDay!;
+
+    const out = solveRation(
+      { ...baseAnimal, milkYieldLitersPerDay: 5, budgetInrPerDay: costAt5 + 0.2 },
+      richFeeds.map((f) => ({ ...f, currentKgAsFedPerDay: null })),
+    );
+    expect(out.status).toBe('optimal');
+    if (out.status !== 'optimal') return;
+    expect(out.supportedMilkLPerDay).toBe(5);
+    expect(out.verdict.kind).toBe('same_as_today');
+  });
+
+  it('dry animal (T = 0) skips Stage 1, returns maintenance ration and dry_animal verdict (AC-5.13)', () => {
+    const out = solveRation({ ...baseAnimal, milkYieldLitersPerDay: 0, budgetInrPerDay: 140 }, richFeeds);
+    expect(out.status).toBe('optimal');
+    if (out.status !== 'optimal') return;
+    expect(out.supportedMilkLPerDay).toBe(0);
+    expect(out.verdict.kind).toBe('dry_animal');
+    expect(out.fatComparison).toBeNull();
+    expect(out.totalCostInr).toBeCloseTo(out.maintenanceCostInrPerDay, 5);
+    expect(out.costAtTodayMilkInrPerDay).toBeCloseTo(out.maintenanceCostInrPerDay, 5);
+  });
+
+  it('returns fatComparison with breed fat when today milk > 0, and null breedFatPct when breed has none (AC-5.9, AC-5.10)', () => {
+    const withFat = solveRation(baseAnimal, richFeeds);
+    expect(withFat.status).toBe('optimal');
+    if (withFat.status === 'optimal') {
+      expect(withFat.fatComparison).toEqual({
+        todayFatPct: 6.5,
+        breedFatPct: 7.34,
+        breedFatPctLow: 7.34,
+        breedFatPctHigh: null,
+      });
+    }
+
+    const kankrej: AnimalProfile = {
+      ...baseAnimal,
+      species: 'cow',
+      breedId: 'kankrej',
+      milkFatPct: 4.0,
+    };
+    const noFat = solveRation(kankrej, richFeeds);
+    expect(noFat.status).toBe('optimal');
+    if (noFat.status === 'optimal') {
+      expect(noFat.fatComparison).toEqual({
+        todayFatPct: 4.0,
+        breedFatPct: null,
+        breedFatPctLow: null,
+        breedFatPctHigh: null,
+      });
+    }
+  });
+
+  it('returns budget_below_maintenance with M and a cheaper library feed when budget < M (AC-E7.1)', () => {
+    const priceyFeeds: SelectedFeedInput[] = [
+      { feedId: 'lucerne', priceInrPerKgAsFed: 8, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null },
+      { feedId: 'groundnut_cake', priceInrPerKgAsFed: 42, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null },
+      { feedId: 'maize_grain', priceInrPerKgAsFed: 24, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null },
+      { feedId: 'mineral_mix', priceInrPerKgAsFed: 90, maxKgAsFedPerDay: 0.1, currentKgAsFedPerDay: null },
+    ];
+    const probe = solveRation({ ...baseAnimal, milkYieldLitersPerDay: 0, budgetInrPerDay: 500 }, priceyFeeds);
+    expect(probe.status).toBe('optimal');
+    if (probe.status !== 'optimal') return;
+    const M = probe.maintenanceCostInrPerDay;
+
+    const out = solveRation({ ...baseAnimal, budgetInrPerDay: M - 5 }, priceyFeeds);
+    expect(out.status).toBe('budget_below_maintenance');
+    if (out.status !== 'budget_below_maintenance') return;
+    expect(out.verdict.maintenanceCostInrPerDay).toBeCloseTo(M, 4);
+    expect(out.fixFeedId).not.toBeNull();
+    // Must never suggest an unpriced feed (like molasses)
+    const suggestedFeed = allFeeds.find((f) => f.id === out.fixFeedId);
+    expect(suggestedFeed?.defaultPriceInrPerKgAsFed).not.toBeNull();
+    expect(out.maintenanceWithFixInrPerDay!).toBeLessThanOrEqual(M - 5 + 1e-6);
+  });
+
+  it('returns fixFeedId = null when no unselected priced library feed can bring maintenance within budget (AC-E7.1)', () => {
+    const out = solveRation({ ...baseAnimal, budgetInrPerDay: 1 }, richFeeds);
+    expect(out.status).toBe('budget_below_maintenance');
+    if (out.status !== 'budget_below_maintenance') return;
+    expect(out.fixFeedId).toBeNull();
+    expect(out.maintenanceWithFixInrPerDay).toBeNull();
+    expect(out.fixFeed).toBeNull();
+  });
+
+  it('diagnoses wheat straw alone as infeasible at maintenance and suggests feeds (AC-E2.1)', () => {
+    const strawOnly: SelectedFeedInput[] = [
+      { feedId: 'wheat_straw', priceInrPerKgAsFed: 6, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null },
+    ];
+    const out = solveRation(baseAnimal, strawOnly);
+    expect(out.status).toBe('infeasible');
+    if (out.status !== 'infeasible') return;
+
+    const limKeys = out.limitingNutrients.map((l) => l.nutrient);
+    expect(limKeys).toContain('CP');
+    expect(out.suggestedFeeds.length).toBeGreaterThan(0);
+  });
+
+  it('respects per-feed maxKgAsFedPerDay caps in Stage 2', () => {
+    const capped: SelectedFeedInput[] = [
+      { feedId: 'berseem', priceInrPerKgAsFed: 4, maxKgAsFedPerDay: 10, currentKgAsFedPerDay: null },
+      { feedId: 'wheat_straw', priceInrPerKgAsFed: 6, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null },
+      { feedId: 'mustard_cake', priceInrPerKgAsFed: 32, maxKgAsFedPerDay: 2, currentKgAsFedPerDay: null },
+      { feedId: 'wheat_bran', priceInrPerKgAsFed: 22, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null },
+      { feedId: 'mineral_mix', priceInrPerKgAsFed: 90, maxKgAsFedPerDay: 0.1, currentKgAsFedPerDay: null },
+    ];
+    const out = solveRation(baseAnimal, capped);
+    expect(out.status).toBe('optimal');
+    if (out.status !== 'optimal') return;
+
+    const berseem = out.feeds.find((f) => f.feedId === 'berseem');
+    if (berseem) {
+      expect(berseem.kgAsFed).toBeLessThanOrEqual(10 + 1e-6);
+    }
+  });
+
+  it('keeps roughage dry matter at or above 40% of total dry matter (AC-5.12)', () => {
+    const cheapConcentrates: SelectedFeedInput[] = [
+      { feedId: 'wheat_straw', priceInrPerKgAsFed: 12, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null },
+      { feedId: 'wheat_bran', priceInrPerKgAsFed: 5, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null },
+      { feedId: 'mustard_cake', priceInrPerKgAsFed: 6, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null },
+      { feedId: 'maize_grain', priceInrPerKgAsFed: 5, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null },
+      { feedId: 'mineral_mix', priceInrPerKgAsFed: 90, maxKgAsFedPerDay: 0.1, currentKgAsFedPerDay: null },
+    ];
+    const out = solveRation(baseAnimal, cheapConcentrates);
+    expect(out.status).toBe('optimal');
+    if (out.status !== 'optimal') return;
+
+    expect(out.roughageMinSharePct).toBe(ROUGHAGE_MIN_SHARE * 100);
+    expect(out.roughageSharePct + 1e-6).toBeGreaterThanOrEqual(out.roughageMinSharePct);
+  });
+
+  it('rejects a selection with no roughage feeds, names roughage, and suggests the cheapest-per-kg-DM priced roughage feed (AC-E2.2)', () => {
+    const noRoughage: SelectedFeedInput[] = [
+      { feedId: 'mustard_cake', priceInrPerKgAsFed: 32, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null },
+      { feedId: 'wheat_bran', priceInrPerKgAsFed: 22, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null },
+      { feedId: 'maize_grain', priceInrPerKgAsFed: 24, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null },
+      { feedId: 'mineral_mix', priceInrPerKgAsFed: 90, maxKgAsFedPerDay: 0.1, currentKgAsFedPerDay: null },
+    ];
+    const out = solveRation(baseAnimal, noRoughage);
+    expect(out.status).toBe('infeasible');
+    if (out.status !== 'infeasible') return;
+
+    const rough = out.limitingNutrients.find((l) => l.nutrient === 'roughage');
+    expect(rough).toBeDefined();
+    expect(rough!.required).toBe(40);
+    expect(rough!.maxSupply).toBe(0);
+
+    const roughSug = out.suggestedFeeds.find((s) => s.nutrients.includes('roughage'));
+    expect(roughSug).toBeDefined();
+    const feed = allFeeds.find((f) => f.id === roughSug!.feedId)!;
+    expect(isRoughage(feed)).toBe(true);
+    expect(feed.defaultPriceInrPerKgAsFed).not.toBeNull();
+  });
+
+  it('rejects a selection where roughage is capped below 40% of minimum DM (AC-E2.2)', () => {
+    const cappedRoughage: SelectedFeedInput[] = [
+      { feedId: 'wheat_straw', priceInrPerKgAsFed: 6, maxKgAsFedPerDay: 1, currentKgAsFedPerDay: null },
+      { feedId: 'mustard_cake', priceInrPerKgAsFed: 32, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null },
+      { feedId: 'maize_grain', priceInrPerKgAsFed: 24, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null },
+      { feedId: 'mineral_mix', priceInrPerKgAsFed: 90, maxKgAsFedPerDay: 0.1, currentKgAsFedPerDay: null },
+    ];
+    const out = solveRation(baseAnimal, cappedRoughage);
+    expect(out.status).toBe('infeasible');
+    if (out.status !== 'infeasible') return;
+
+    expect(out.limitingNutrients.some((l) => l.nutrient === 'roughage')).toBe(true);
+  });
+
+  it('has no 85% DM floor: accepts nutrient-dense rations meeting all requirements and roughage >= 40% below 85% of dmMax', () => {
+    const baseTemplate = allFeeds[0];
+    const denseRoughage: FeedItem = {
+      ...baseTemplate,
+      id: 'dense_roughage',
+      vertical: 'indigenous_forage',
+      dmPct: 100,
+      cpPctDm: 25,
+      meMcalPerKgDm: 3.4,
+      caGramsPerKgDm: 8,
+      pGramsPerKgDm: 5,
+      defaultPriceInrPerKgAsFed: 10,
+    };
+    const out = solveRation(
+      { ...baseAnimal, milkYieldLitersPerDay: 0, budgetInrPerDay: 200 },
+      [{ feedId: 'dense_roughage', priceInrPerKgAsFed: 10, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null }],
+      [denseRoughage],
+    );
+    expect(out.status).toBe('optimal');
+    if (out.status !== 'optimal') return;
+    // Maintenance ME is ~13 Mcal -> ~3.82 kg DM, which is ~41% of dmMax (~9.36 kg DM), well below the old 85% floor!
+    expect(out.supplied.dmKgPerDay).toBeLessThan(0.85 * out.requirementsAtS!.dmKgPerDay);
+  });
+
+  it('throws SolverError from verifyRationSolution when a constraint is violated by more than 1e-6', () => {
+    const out = solveRation(baseAnimal, richFeeds);
+    expect(out.status).toBe('optimal');
+    if (out.status !== 'optimal') return;
+
+    const overBudget: RationSolution = {
+      ...out,
+      feeds: out.feeds.map((f, idx) => (idx === 0 ? { ...f, kgAsFed: f.kgAsFed + 5 } : f)),
+    };
+    expect(() => verifyRationSolution(overBudget, baseAnimal, richFeeds)).toThrow(SolverError);
+
+    const underNutrient: RationSolution = {
+      ...out,
+      feeds: out.feeds.map((f) => ({ ...f, kgAsFed: f.kgAsFed * 0.5 })),
+    };
+    expect(() => verifyRationSolution(underNutrient, baseAnimal, richFeeds)).toThrow(SolverError);
+
+    const negativeKg: RationSolution = {
+      ...out,
+      feeds: [{ ...out.feeds[0], kgAsFed: -0.5 }],
+    };
+    expect(() => verifyRationSolution(negativeKg, baseAnimal, richFeeds)).toThrow(SolverError);
+
+    const unknownFeedSol: RationSolution = {
+      ...out,
+      feeds: [{ ...out.feeds[0], feedId: 'non_existent_feed' }],
+    };
+    expect(() => verifyRationSolution(unknownFeedSol, baseAnimal, richFeeds)).toThrow(SolverError);
+  });
+
+  it('computes underBudgetInr and negative savingsInr ("more than today") when new ration costs more than today (AC-5.2)', () => {
+    const lowTodayRation: SelectedFeedInput[] = [
+      { feedId: 'berseem', priceInrPerKgAsFed: 4, maxKgAsFedPerDay: null, currentKgAsFedPerDay: 2 },
+      { feedId: 'wheat_straw', priceInrPerKgAsFed: 6, maxKgAsFedPerDay: null, currentKgAsFedPerDay: 2 },
+      { feedId: 'mustard_cake', priceInrPerKgAsFed: 32, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null },
+      { feedId: 'wheat_bran', priceInrPerKgAsFed: 22, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null },
+      { feedId: 'mineral_mix', priceInrPerKgAsFed: 90, maxKgAsFedPerDay: 0.1, currentKgAsFedPerDay: null },
+    ];
+    const out = solveRation({ ...baseAnimal, budgetInrPerDay: 200 }, lowTodayRation);
+    expect(out.status).toBe('optimal');
+    if (out.status !== 'optimal') return;
+
+    expect(out.underBudgetInr).toBeCloseTo(200 - out.totalCostInr, 5);
+    expect(out.currentCostInr).toBeCloseTo(2 * 4 + 2 * 6, 5); // 20 INR/day
+    expect(out.savingsInr).not.toBeNull();
+    expect(out.savingsInr!).toBeLessThan(0);
+    expect(out.savingsPct!).toBeLessThan(0);
+  });
+
+  it('diagnoses a DM intake conflict (dmConflict = true) when each nutrient is reachable alone but not jointly within dmMax (AC-E2.1)', () => {
+    const tpl = allFeeds[0];
+    // At 0 L for 450 kg buffalo: dmMax = k0 ~ 9.357 kg DM, CP req ~ 371.7 g, ME req ~ 13.01 Mcal.
+    // Feed A (roughage) has high CP (100 g/kg DM) but 0 ME; 5 kg DM supplies 500 g CP (> 371.7 g).
+    // Feed B (roughage) has high ME (2.4 Mcal/kg DM) but 0 CP; 6 kg DM supplies 14.4 Mcal ME (> 13.01 Mcal).
+    // Together, meeting both requires 3.72 kg DM of A + 5.42 kg DM of B + Ca/P > 9.357 kg DM ceiling!
+    const feedCpOnly: FeedItem = {
+      ...tpl,
+      id: 'roughage_cp_only',
+      vertical: 'indigenous_forage',
+      dmPct: 100,
+      cpPctDm: 8.0, // 80 g/kg DM -> 9.357 * 80 = 748 g > 371.7 g (needs 4.65 kg DM)
+      meMcalPerKgDm: 0,
+      caGramsPerKgDm: 10,
+      pGramsPerKgDm: 8,
+      defaultPriceInrPerKgAsFed: 5,
+    };
+    const feedMeOnly: FeedItem = {
+      ...tpl,
+      id: 'roughage_me_only',
+      vertical: 'crop_residue',
+      dmPct: 100,
+      cpPctDm: 0,
+      meMcalPerKgDm: 2.5, // 9.357 * 2.5 = 23.4 Mcal > 13.01 Mcal (needs 5.21 kg DM)
+      caGramsPerKgDm: 10,
+      pGramsPerKgDm: 8,
+      defaultPriceInrPerKgAsFed: 5,
+    };
+    // 4.65 + 5.21 = 9.86 kg DM > 9.357 kg DM ceiling -> each nutrient is feasible alone, roughage is 100%, but joint LP is infeasible!
+    const out = solveRation(
+      { ...baseAnimal, milkYieldLitersPerDay: 0, budgetInrPerDay: 200 },
+      [
+        { feedId: 'roughage_cp_only', priceInrPerKgAsFed: 5, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null },
+        { feedId: 'roughage_me_only', priceInrPerKgAsFed: 5, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null },
+      ],
+      [feedCpOnly, feedMeOnly, ...allFeeds],
+    );
+    expect(out.status).toBe('infeasible');
+    if (out.status !== 'infeasible') return;
+    expect(out.limitingNutrients).toEqual([]);
+    expect(out.dmConflict).toBe(true);
+    expect(out.suggestedFeeds.length).toBeGreaterThan(0);
+  });
+
+  it('never suggests an unpriced library feed in budget_below_maintenance even if it is nutrient-dense (AC-E7.1)', () => {
+    const tpl = allFeeds[0];
+    const unpricedSuperFeed: FeedItem = {
+      ...tpl,
+      id: 'unpriced_super_forage',
+      vertical: 'indigenous_forage',
+      dmPct: 100,
+      cpPctDm: 30,
+      meMcalPerKgDm: 3.5,
+      caGramsPerKgDm: 15,
+      pGramsPerKgDm: 10,
+      defaultPriceInrPerKgAsFed: null,
+      priceSource: null,
+      priceDate: null,
+      priceReliability: null,
+    };
+    const costlyRoughage: FeedItem = {
+      ...tpl,
+      id: 'costly_forage',
+      vertical: 'indigenous_forage',
+      dmPct: 100,
+      cpPctDm: 15,
+      meMcalPerKgDm: 2.5,
+      caGramsPerKgDm: 8,
+      pGramsPerKgDm: 5,
+      defaultPriceInrPerKgAsFed: 20,
+    };
+    const out = solveRation(
+      { ...baseAnimal, milkYieldLitersPerDay: 0, budgetInrPerDay: 50 },
+      [{ feedId: 'costly_forage', priceInrPerKgAsFed: 20, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null }],
+      [costlyRoughage, unpricedSuperFeed],
+    );
+    expect(out.status).toBe('budget_below_maintenance');
+    if (out.status !== 'budget_below_maintenance') return;
+    expect(out.fixFeedId).toBeNull();
+    expect(out.fixFeed).toBeNull();
+  });
+
+  it('handles invalid feed inputs (empty list, unknown feedId, negative price, non-positive cap) safely as infeasible', () => {
+    expect(solveRation(baseAnimal, []).status).toBe('infeasible');
+    const badInputs: SelectedFeedInput[] = [
+      { feedId: 'does_not_exist', priceInrPerKgAsFed: 10, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null },
+      { feedId: 'berseem', priceInrPerKgAsFed: -5, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null },
+      { feedId: 'wheat_straw', priceInrPerKgAsFed: 6, maxKgAsFedPerDay: 0, currentKgAsFedPerDay: null },
+    ];
+    expect(solveRation(baseAnimal, badInputs).status).toBe('infeasible');
   });
 });
 
-describe('the cap is never exceeded', () => {
-  it('S stays at or below the effective cap in every demo, and is a multiple of 0.1 L', () => {
-    for (const demo of DEMO_CASES) {
-      const { outcome } = run(demo.key);
-      if (outcome.status !== 'optimal') continue;
-      expect(outcome.supportedMilkLPerDay, demo.key).toBeLessThanOrEqual(outcome.effectiveCapLPerDay + 1e-9);
-      expect(Math.abs(outcome.supportedMilkLPerDay * 10 - Math.round(outcome.supportedMilkLPerDay * 10)), demo.key).toBeLessThan(1e-6);
-    }
+describe('isolated binding constraint detection for all 8 constraints in BINDING_ORDER (AC-5.5, ARCHITECTURE.md section 5)', () => {
+  const tpl = allFeeds[0];
+  const makeFeed = (
+    id: string,
+    vertical: FeedItem['vertical'],
+    cpPctDm: number,
+    meMcalPerKgDm: number,
+    caGramsPerKgDm: number,
+    pGramsPerKgDm: number,
+    price = 10,
+  ): FeedItem => ({
+    ...tpl,
+    id,
+    englishName: id,
+    vertical,
+    dmPct: 100,
+    cpPctDm,
+    meMcalPerKgDm,
+    caGramsPerKgDm,
+    pGramsPerKgDm,
+    defaultPriceInrPerKgAsFed: price,
   });
 
-  it('with a generous budget, every breed stops at its own cap', () => {
-    const rich = ['wheat_straw', 'maize_green', 'bajra_grain', 'wheat_bran', 'mustard_cake', 'mineral_mix'].map((feedId) => {
-      const feed = feeds.find((f) => f.id === feedId)!;
-      return {
-        feedId,
-        priceInrPerKgAsFed: feed.defaultPriceInrPerKgAsFed ?? 0,
-        maxKgAsFedPerDay: null,
-        currentKgAsFedPerDay: null,
-      };
+  const cowProfile: AnimalProfile = {
+    species: 'cow',
+    breedId: 'gir', // milkCapLPerDay = 8.66
+    bodyWeightKg: 400,
+    milkYieldLitersPerDay: 4,
+    milkFatPct: 4.0,
+    budgetInrPerDay: 500,
+    isConfirmed: true,
+  };
+
+  const syntheticLib: FeedItem[] = [
+    makeFeed('forage_balanced', 'indigenous_forage', 18, 2.8, 6, 4, 10),
+    makeFeed('forage_low_me', 'indigenous_forage', 22, 1.65, 8, 5, 8),
+    makeFeed('forage_zero', 'crop_residue', 0, 0, 0, 0, 5),
+    makeFeed('forage_no_cp', 'indigenous_forage', 0, 3.0, 8, 5, 8),
+    makeFeed('forage_no_me', 'indigenous_forage', 22, 0, 8, 5, 8),
+    makeFeed('forage_no_ca', 'indigenous_forage', 22, 3.0, 0, 5, 8),
+    makeFeed('forage_no_p', 'indigenous_forage', 22, 3.0, 8, 0, 8),
+    makeFeed('conc_cp', 'agro_byproduct', 60, 0, 0, 0, 20),
+    makeFeed('conc_me', 'agro_byproduct', 0, 5.0, 0, 0, 20),
+    makeFeed('min_ca', 'mineral', 0, 0, 250, 0, 20),
+    makeFeed('min_p', 'mineral', 0, 0, 0, 250, 20),
+  ];
+
+  const sel = (feedId: string, maxKgAsFedPerDay: number | null = null, price = 10): SelectedFeedInput => ({
+    feedId,
+    priceInrPerKgAsFed: price,
+    maxKgAsFedPerDay,
+    currentKgAsFedPerDay: null,
+  });
+
+  it('1. budget is the sole tight constraint when budget limits Y* below breed_cap and DM ceiling', () => {
+    const out = solveRation(
+      { ...cowProfile, budgetInrPerDay: 65 },
+      [sel('forage_balanced', null, 10)],
+      syntheticLib,
+    );
+    expect(out.status).toBe('optimal');
+    if (out.status !== 'optimal') return;
+    expect(out.bindingConstraint).toBe('budget');
+    expect(out.tightConstraints).toEqual(['budget']);
+  });
+
+  it('2. breed_cap is the sole tight constraint when budget and feed capacity have slack at effectiveCap', () => {
+    const out = solveRation(
+      { ...cowProfile, budgetInrPerDay: 500 },
+      [sel('forage_balanced', null, 10)],
+      syntheticLib,
+    );
+    expect(out.status).toBe('optimal');
+    if (out.status !== 'optimal') return;
+    expect(out.bindingConstraint).toBe('breed_cap');
+    expect(out.tightConstraints).toEqual(['breed_cap']);
+  });
+
+  it('3. intake is the sole tight constraint when NRC 2001 DM ceiling stops Y*', () => {
+    const out = solveRation(
+      { ...cowProfile, budgetInrPerDay: 500 },
+      [sel('forage_low_me', null, 8)],
+      syntheticLib,
+    );
+    expect(out.status).toBe('optimal');
+    if (out.status !== 'optimal') return;
+    expect(out.bindingConstraint).toBe('intake');
+    expect(out.tightConstraints).toEqual(['intake']);
+  });
+
+  it('4. roughage is the sole tight constraint when capped roughage forces roughageShare == 40% below dmMax', () => {
+    const out = solveRation(
+      { ...cowProfile, budgetInrPerDay: 500 },
+      [
+        sel('forage_zero', 3.0, 5),
+        sel('conc_cp', null, 20),
+        sel('conc_me', null, 20),
+        sel('min_ca', null, 20),
+        sel('min_p', null, 20),
+      ],
+      syntheticLib,
+    );
+    expect(out.status).toBe('optimal');
+    if (out.status !== 'optimal') return;
+    expect(out.bindingConstraint).toBe('roughage');
+    expect(out.tightConstraints).toEqual(['roughage']);
+  });
+
+  it('5. CP is the sole tight constraint when CP supplier is capped while roughage, DM, and budget have slack', () => {
+    const out = solveRation(
+      { ...cowProfile, budgetInrPerDay: 500 },
+      [
+        sel('forage_no_cp', null, 8),
+        sel('conc_cp', 1.3, 20), // 1.3 kg * 600 g/kg = 780 g CP -> stops Y* around 4.8 L
+      ],
+      syntheticLib,
+    );
+    expect(out.status).toBe('optimal');
+    if (out.status !== 'optimal') return;
+    expect(out.bindingConstraint).toBe('CP');
+    expect(out.tightConstraints).toEqual(['CP']);
+    expect(out.feedLimitIds).toContain('conc_cp');
+  });
+
+  it('6. ME is the sole tight constraint when ME supplier is capped while roughage, DM, and budget have slack', () => {
+    const out = solveRation(
+      { ...cowProfile, budgetInrPerDay: 500 },
+      [
+        sel('forage_no_me', null, 8),
+        sel('conc_me', 3.4, 20), // 3.4 kg * 5.0 Mcal/kg = 17.0 Mcal ME -> stops Y* around 5.1 L
+      ],
+      syntheticLib,
+    );
+    expect(out.status).toBe('optimal');
+    if (out.status !== 'optimal') return;
+    expect(out.bindingConstraint).toBe('ME');
+    expect(out.tightConstraints).toEqual(['ME']);
+    expect(out.feedLimitIds).toContain('conc_me');
+  });
+
+  it('7. Ca is the sole tight constraint when Ca supplier is capped while roughage, DM, and budget have slack', () => {
+    const out = solveRation(
+      { ...cowProfile, budgetInrPerDay: 500 },
+      [
+        sel('forage_no_ca', null, 8),
+        sel('min_ca', 0.09, 20), // 0.09 kg * 250 g/kg = 22.5 g Ca -> stops Y* around 4.66 L
+      ],
+      syntheticLib,
+    );
+    expect(out.status).toBe('optimal');
+    if (out.status !== 'optimal') return;
+    expect(out.bindingConstraint).toBe('Ca');
+    expect(out.tightConstraints).toEqual(['Ca']);
+    expect(out.feedLimitIds).toContain('min_ca');
+  });
+
+  it('8. P is the sole tight constraint when P supplier is capped while roughage, DM, and budget have slack', () => {
+    const out = solveRation(
+      { ...cowProfile, budgetInrPerDay: 500 },
+      [
+        sel('forage_no_p', null, 8),
+        sel('min_p', 0.06, 20), // 0.06 kg * 250 g/kg = 15.0 g P -> stops Y* around 4.22 L
+      ],
+      syntheticLib,
+    );
+    expect(out.status).toBe('optimal');
+    if (out.status !== 'optimal') return;
+    expect(out.bindingConstraint).toBe('P');
+    expect(out.tightConstraints).toEqual(['P']);
+    expect(out.feedLimitIds).toContain('min_p');
+  });
+});
+
+describe('preset sanity across all 4 quick-pick animals', () => {
+  const presets: Array<{ name: string; animal: AnimalProfile; feeds: SelectedFeedInput[] }> = [
+    {
+      name: 'milking buffalo (8 L)',
+      animal: baseAnimal,
+      feeds: richFeeds,
+    },
+    {
+      name: 'high-yielding cow (12 L)',
+      animal: {
+        species: 'cow',
+        breedId: 'hf_crossbred',
+        bodyWeightKg: 420,
+        milkYieldLitersPerDay: 12,
+        milkFatPct: 4.0,
+        budgetInrPerDay: 220,
+        isConfirmed: true,
+      },
+      feeds: richFeeds,
+    },
+    {
+      name: 'low-yielding cow (4 L)',
+      animal: {
+        species: 'cow',
+        breedId: 'gir',
+        bodyWeightKg: 360,
+        milkYieldLitersPerDay: 4,
+        milkFatPct: 4.5,
+        budgetInrPerDay: 110,
+        isConfirmed: true,
+      },
+      feeds: richFeeds,
+    },
+    {
+      name: 'dry buffalo (0 L)',
+      animal: { ...baseAnimal, milkYieldLitersPerDay: 0, budgetInrPerDay: 90 },
+      feeds: richFeeds,
+    },
+  ];
+
+  for (const p of presets) {
+    it(`solves ${p.name} within budget and meets all requirements at S`, () => {
+      const out = solveRation(p.animal, p.feeds);
+      expect(out.status).toBe('optimal');
+      if (out.status !== 'optimal') return;
+      expect(out.totalCostInr).toBeLessThanOrEqual(p.animal.budgetInrPerDay + 1e-6);
+      expect(out.roughageSharePct + 1e-6).toBeGreaterThanOrEqual(out.roughageMinSharePct);
     });
-    for (const breed of BREEDS) {
-      const outcome = solveRation(
-        {
-          species: breed.species,
-          breedId: breed.id,
-          bodyWeightKg: 500,
-          milkYieldLitersPerDay: 1,
-          milkFatPct: 5,
-          budgetInrPerDay: 5000,
-          isConfirmed: true,
-        },
-        rich,
-      );
-      if (outcome.status !== 'optimal') continue;
-      expect(outcome.supportedMilkLPerDay, breed.id).toBeLessThanOrEqual(breed.milkCapLPerDay + 1e-9);
-    }
-  });
-});
-
-describe('breed table', () => {
-  it('every stored cap equals the cap re-derived from the cited figures', () => {
-    for (const breed of BREEDS) {
-      expect(Math.abs(capFromCitedFigures(breed).value - breed.milkCapLPerDay), breed.id).toBeLessThan(0.005);
-    }
-  });
-
-  it('the cited peak is the cap where one exists (Murrah 9.64, Nili-Ravi 9.4, Sahiwal 11.15, Bhadawari 6.93)', () => {
-    const cap = (id: string) => BREEDS.find((b) => b.id === id)!.milkCapLPerDay;
-    expect(cap('murrah')).toBe(9.64);
-    expect(cap('nili_ravi')).toBe(9.4);
-    expect(cap('sahiwal')).toBe(11.15);
-    expect(cap('bhadawari')).toBe(6.93);
-    for (const breed of BREEDS.filter((b) => b.peakDailyYieldKg !== null)) expect(breed.capBasis).toBe('cited_peak');
-  });
-
-  it('keeps the earlier rules for breeds with no cited peak', () => {
-    const cap = (id: string) => BREEDS.find((b) => b.id === id)!.milkCapLPerDay;
-    expect(cap('rathi')).toBe(8.36);
-    expect(cap('gir')).toBe(6.33);
-    expect(cap('nondescript_cow')).toBe(3.86);
-    expect(cap('nondescript_buffalo')).toBe(4.73);
-  });
-
-  it('offers one non-descript row per species, listed last', () => {
-    for (const species of ['cow', 'buffalo'] as const) {
-      const list = breedsFor(species);
-      expect(list.filter(isNonDescript)).toHaveLength(1);
-      expect(isNonDescript(list[list.length - 1])).toBe(true);
-    }
-  });
-
-  it('every breed has a Hindi name in the data file and every note is an {en, hi} pair', () => {
-    for (const breed of breedsJson as unknown as { id: string; localNameDeva: string | null }[]) expect(breed.localNameDeva, breed.id).toBeTruthy();
-    for (const feed of feeds) {
-      expect(feed.seasonNote.en.length, feed.id).toBeGreaterThan(0);
-      expect(feed.seasonNote.hi.length, feed.id).toBeGreaterThan(0);
-      if (feed.priceNote !== null) {
-        expect(feed.priceNote.en.length, feed.id).toBeGreaterThan(0);
-        expect(feed.priceNote.hi.length, feed.id).toBeGreaterThan(0);
-      }
-    }
-  });
-});
-
-describe('budget (AC-4.2, AC-4.3)', () => {
-  const drafts = [{ feedId: 'wheat_straw', price: '6', cap: '', current: '5' }];
-  const animal = { species: 'buffalo' as const, breedId: 'murrah', weight: '450', milk: '5', fat: '6.5', budget: '', budgetEdited: false };
-
-  it('defaults to today’s ration cost and says so', () => {
-    const cost = todayCostInr(drafts);
-    expect(cost).toBe(30);
-    expect(budgetFieldText(animal, cost)).toBe('30');
-    expect(budgetIsDefault(animal, cost)).toBe(true);
-    expect(validateAnimal(animal, cost).profile?.budgetInrPerDay).toBe(30);
-  });
-
-  it('keeps the user’s own value once edited, even when today’s ration changes', () => {
-    const edited = { ...animal, budget: '120', budgetEdited: true };
-    expect(budgetFieldText(edited, 30)).toBe('120');
-    expect(budgetIsDefault(edited, 30)).toBe(false);
-  });
-
-  it('is required when no ration is entered, and must be positive', () => {
-    expect(validateAnimal(animal, null).errors.budget?.id).toBe('error_budget_required');
-    expect(validateBudget('0').error?.id).toBe('error_budget_invalid');
-    expect(validateBudget('-5').error?.id).toBe('error_budget_invalid');
-    expect(validateBudget('abc').error?.id).toBe('error_budget_invalid');
-    expect(validateBudget('150').value).toBe(150);
-  });
-
-  it('requires a breed that matches the species', () => {
-    expect(validateAnimal({ ...animal, breedId: '' }, 30).errors.breed?.id).toBe('error_breed_required');
-    expect(validateAnimal({ ...animal, breedId: 'gir' }, 30).errors.breed?.id).toBe('error_breed_required');
-  });
-});
-
-describe('feed grouping and season (AC-3.3, AC-3.4)', () => {
-  it('puts every feed in exactly one of the four groups, in a fixed order', () => {
-    const groups = groupFeeds(feeds);
-    expect(groups.map((g) => g.vertical)).toEqual([...FEED_VERTICALS]);
-    expect(groups.flatMap((g) => g.feeds.map((f) => f.id)).sort()).toEqual(feeds.map((f) => f.id).sort());
-  });
-
-  it('marks a feed in season by its months', () => {
-    const berseem = feeds.find((f) => f.id === 'berseem')!;
-    expect(inSeason(berseem, 12)).toBe(true);
-    expect(inSeason(berseem, 7)).toBe(false);
-    expect(inSeason(feeds.find((f) => f.id === 'wheat_straw')!, 7)).toBe(true);
-  });
-
-  it('writes month runs, wrapping over the year end, and nothing for all year', () => {
-    expect(monthRangeText([11, 12, 1, 2, 3, 4], 'en')).toBe('Nov–Apr');
-    expect(monthRangeText([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], 'en')).toBeNull();
-  });
+  }
 });
