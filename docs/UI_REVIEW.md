@@ -1,0 +1,33 @@
+# UI Review
+
+## Milestone M1 UI Review
+Verdict: APPROVED
+Screenshots: .ui-review/M1/home-desktop.png, .ui-review/M1/home-desktop-1440.png, .ui-review/M1/home-mobile.png, .ui-review/M1/solved-desktop.png, .ui-review/M1/solved-mobile.png, .ui-review/M1/audit-drawer-desktop.png, .ui-review/M1/audit-drawer-mobile.png, .ui-review/M1/solved-hindi-desktop.png, .ui-review/M1/solved-hindi-mobile.png, .ui-review/M1/infeasible-desktop.png, .ui-review/M1/infeasible-mobile.png
+
+### Critical defects (must fix; any defect means REJECTED)
+- None.
+
+### Summary of M1 Verification (`1280x800` / `1440x900` desktop & `390x844` mobile)
+1. **Design System & Token Fidelity (`DESIGN.md` — "The Calm Health Card"):**
+   - All colour, typography, spacing, radius, elevation, and motion tokens are defined once in `:root` of `src/index.css`. Pattern scan confirmed **0 hard-coded hex/rgb/hsl colours** outside `src/index.css`, **0 gradients/glass/blur**, **0 emoji icons**, **0 placeholder/lorem copy**, and **0 removed focus outlines**.
+   - Self-hosted `Noto Sans` and `Noto Sans Devanagari` (weights `400` and `600` only) render cleanly with `tabular-nums` on all numeric figures, `2.5rem` (`40px`, `-0.02em` tracking) on the supported-milk headline and fine-print sheet figure, and `1.55` line-height on `:lang(hi)` so Devanagari matras are never clipped.
+   - The red rule is strictly respected: `--c-danger` / `--c-danger-tint` appear only on `InfeasibilityAlert` and form validation errors; `BudgetShortfallAlert` (budget below maintenance) uses `--c-warn-tint` / `--c-warn-ink`.
+   - Feed vertical chips (`FeedChip` in `src/components/FeedName.tsx`) use `VERTICAL_CLASS[feed.vertical]` and `vertical_${feed.vertical}` with screen-reader text and titles.
+2. **Screen States & M1 Vertical Slice Completeness (`docs/SPEC.md` & `docs/TASKS.json`):**
+   - **How-to-use banner:** Renders across the full width at the top of `<main>` (`grid-column: 1 / -1` on desktop) in the active language (`data-testid="how-to-use"`).
+   - **Live v1 data & two-stage LP solver (`VITE_USE_MOCK_ADAPTER=false`):** All 30 cited feeds from `src/data/feeds.v1.json` render under the 4 sticky vertical group headers (`Indigenous forage`, `Crop residues`, `Agro-byproducts`, `Mineral`) with the Jaipur seasonality month selector and reliability labels (`mandi`, `trade report`, `indicative`, `team estimate`). Breeds filter by species from `src/data/breeds.v1.json` and display `BreedBenchmark` (`9.64 L per day · cited peak daily yield` and `7.34%` fat for Murrah; `14.64 L per day · lactation average (no peak cited)` and `not cited` fat for HF crossbred).
+   - **Solved state & Show details (`solved-desktop.png`, `solved-mobile.png`):** Displays `"This budget supports 9.6 L per day"`, `VerdictCard` (`+1.6 L/day possible`, caveat line, factual fat comparison), the as-fed ration table, budget/today cost notes, and the `Show details` / `Hide details` disclosure with Stage 1 & Stage 2 breakdown, maintenance cost (`₹59.95`), roughage share (`84%` vs cited `minimum 40% · ICAR 2013, Nutrient Requirements of Cattle and Buffalo; NDDB Ration Balancing Programme (p. 28)`), and the 5 nutrient coverage bars (`DM`, `CP`, `ME`, `Ca`, `P`).
+   - **Tap-to-audit sheet (`audit-drawer-desktop.png`, `audit-drawer-mobile.png`):** Tapping `9.6 L` opens the rounded bottom sheet (`role="dialog"`, `aria-modal="true"`) showing `Solver output`, `Limited by, feed limit: Maize fodder (green)`, Stage 1 objective/constraints, `S = 9.60 L; cap 9.64 L; cost ₹178.14 ≤ ₹299.50`, binding constraint checkmark pill, and `SOLVER-LP-V1`. `Escape`, scrim click, and `Close` dismiss the drawer and restore focus to the tapped figure.
+   - **Infeasible state (`infeasible-desktop.png`, `infeasible-mobile.png`):** Shows no partial ration; names limiting nutrients (`CP`, `P`) with tappable required vs max-supply figures and 1-tap `Add` suggestions (`Guar meal`, `Mineral mixture`).
+   - **One-language-per-screen (`solved-hindi-desktop.png`, `solved-hindi-mobile.png`):** Switching the app-bar toggle to `हिंदी` updates all labels, verdicts, feed names, breed names, and audit drawer rows to Hindi while keeping all numerals in Latin digits (`0`–`9`) with `kg`, `L`, `₹`, `%`.
+3. **Responsive Layout & Accessibility (WCAG 2.2 AA):**
+   - **Zero horizontal overflow:** Verified `document.documentElement.scrollWidth <= window.innerWidth` across initial, solved, Hindi, and infeasible states at `1440x900`, `1280x800`, and `390x844`.
+   - **Desktop (`>= 1024px`) vs Mobile (`390x844`):** Desktop places inputs left (`5fr`) and `Ration analysis` right (`7fr`) with no nested scrollbar and an inline `Balance ration` button. Mobile collapses the Animal and Feeds cards after balancing into compact summary rows (`Edit` buttons) and pins `Balance ration` at the bottom.
+   - **Contrast & Reduced Motion:** All text/surface pairs exceed 4.5:1 (lowest is 4.8:1 `--c-text-2` on `--c-track`); `@media (prefers-reduced-motion: reduce)` disables all animations and smooth scrolling.
+
+### Recommendations (non-blocking)
+- **`src/components/RationResultsPanel.tsx` (lines 402–404):** The card footer `<p className="frame-foot"><Bi id="notice_prototype_fixture" /></p>` still renders `"Prototype: these figures are fixtures, not the real solver or the cited library."` even when `liveAdapter` (`VITE_USE_MOCK_ADAPTER=false`) is active and serving compiled `v1` data and the real LP solver. Consider hiding or updating this footer notice when `getRationAdapterMode() === 'live'` during the M3 polish pass (`M3-TASK-03`).
+- **`src/index.css` (line 1946, `.pill-btn`):** The tappable `"Out of season"` pill button in the feed library has `min-height: 36px` (exceeds the 24px WCAG 2.2 AA minimum, but is 8px below the 44px touch-target goal in `DESIGN.md` and `M3-TASK-03`). Increasing `.pill-btn` to `min-height: var(--target)` (`44px`) in `M3-TASK-03` will make every standalone interactive control 44px+.
+- **`src/i18n/strings.ts` (lines 365–366, `audit_constraint_dm`):** The string still reads `'Σ (amount × DM%) ≤ DM limit (and ≥ 85% of the limit)'`. Since prototype alignment #2 removed the 85% DM floor in `src/domain/solver.ts`, consider dropping `(and ≥ 85% of the limit)` in `strings.ts` during M3.
+- **`DESIGN.md` frontmatter (`rounded:`):** `impeccable detect` noted two advisory radius values in `src/index.css` (`24px` on `.sheet` at line 1572, which is documented in `DESIGN.md` prose line 147, and `1px` on the 2px-wide `.bar-mark` tick at line 1342). Adding `sheet: "24px"` to `DESIGN.md` YAML frontmatter when convenient would silence the advisory detector check.
+
