@@ -70,9 +70,13 @@
     "exit_code": 0,
     "summary": "14 unit test files passed (161 tests), browser solver dump succeeded (18 benchmark animals: 14 optimal, 2 budget_below_maintenance, 2 infeasible; 100.0% constraint satisfaction, 33.59% mean cost saved, 0 unverified explanation numbers passed), and 23 pytest tests passed in eval/test_scipy_agreement.py",
     "failure_output": ""
+  },
+  {
+    "task_id": "M3-TASK-02",
+    "attempt": 1,
+    "command": "npm test && python -m pytest -q eval/test_extraction_eval.py",
+    "exit_code": 0,
+    "summary": "14 unit test files passed (161 tests) and 45 pytest tests passed in eval/test_extraction_eval.py (30 descriptions across 10 EN/HI/Hinglish triples: 100.0% full-record and field-level accuracy, 100% cross-language parity, 100% nutrient/breed safety)",
+    "failure_output": ""
   }
 ]
-
-
-
-

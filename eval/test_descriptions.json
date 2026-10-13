@@ -1,0 +1,644 @@
+[
+  {
+    "id": "T01_en",
+    "tripleId": "T01",
+    "language": "en",
+    "freeText": "450 kg Murrah buffalo giving 8 litres milk per day with 6.5% fat, daily budget 220 rupees, feeds available are wheat straw, pearl millet grain, and mustard cake.",
+    "expected": {
+      "species": "buffalo",
+      "breedId": "murrah",
+      "bodyWeightKg": 450,
+      "milkYieldLitersPerDay": 8,
+      "milkFatPct": 6.5,
+      "budgetInrPerDay": 220,
+      "matchedFeeds": [
+        "wheat_straw",
+        "mustard_cake",
+        "bajra_grain"
+      ],
+      "unmatchedFeeds": []
+    }
+  },
+  {
+    "id": "T01_hi",
+    "tripleId": "T01",
+    "language": "hi",
+    "freeText": "450 किलो की मुर्रा भैंस रोज़ 8 लीटर दूध देती है, 6.5% फैट है, दैनिक बजट 220 रुपये है, चारे में गेहूँ का भूसा, बाजरा दाना और सरसों खली उपलब्ध है।",
+    "expected": {
+      "species": "buffalo",
+      "breedId": "murrah",
+      "bodyWeightKg": 450,
+      "milkYieldLitersPerDay": 8,
+      "milkFatPct": 6.5,
+      "budgetInrPerDay": 220,
+      "matchedFeeds": [
+        "wheat_straw",
+        "mustard_cake",
+        "bajra_grain"
+      ],
+      "unmatchedFeeds": []
+    }
+  },
+  {
+    "id": "T01_hinglish",
+    "tripleId": "T01",
+    "language": "hinglish",
+    "freeText": "450 kilo ki Murrah bhains roz 8 litre doodh deti hai, 6.5% fat hai, daily budget 220 rupaye hai, gehun ka bhusa, bajra dana aur sarson khali hai.",
+    "expected": {
+      "species": "buffalo",
+      "breedId": "murrah",
+      "bodyWeightKg": 450,
+      "milkYieldLitersPerDay": 8,
+      "milkFatPct": 6.5,
+      "budgetInrPerDay": 220,
+      "matchedFeeds": [
+        "wheat_straw",
+        "mustard_cake",
+        "bajra_grain"
+      ],
+      "unmatchedFeeds": []
+    }
+  },
+  {
+    "id": "T02_en",
+    "tripleId": "T02",
+    "language": "en",
+    "freeText": "380 kg Sahiwal cow producing 10 litres milk with 4.8% fat, budget 180 rupees per day, has green berseem, wheat straw, wheat bran, and mineral mixture.",
+    "expected": {
+      "species": "cow",
+      "breedId": "sahiwal",
+      "bodyWeightKg": 380,
+      "milkYieldLitersPerDay": 10,
+      "milkFatPct": 4.8,
+      "budgetInrPerDay": 180,
+      "matchedFeeds": [
+        "berseem",
+        "wheat_straw",
+        "wheat_bran",
+        "mineral_mix"
+      ],
+      "unmatchedFeeds": []
+    }
+  },
+  {
+    "id": "T02_hi",
+    "tripleId": "T02",
+    "language": "hi",
+    "freeText": "380 किलो की साहीवाल गाय 10 लीटर दूध देती है, 4.8% फैट, बजट 180 रुपये प्रतिदिन, पास में हरा बरसीम, गेहूँ का भूसा, चोकर और खनिज मिश्रण है।",
+    "expected": {
+      "species": "cow",
+      "breedId": "sahiwal",
+      "bodyWeightKg": 380,
+      "milkYieldLitersPerDay": 10,
+      "milkFatPct": 4.8,
+      "budgetInrPerDay": 180,
+      "matchedFeeds": [
+        "berseem",
+        "wheat_straw",
+        "wheat_bran",
+        "mineral_mix"
+      ],
+      "unmatchedFeeds": []
+    }
+  },
+  {
+    "id": "T02_hinglish",
+    "tripleId": "T02",
+    "language": "hinglish",
+    "freeText": "380 kilo ki Sahiwal gaay 10 litre doodh deti hai, 4.8% fat, budget 180 rupaye roz, hara berseem, gehun ka bhusa, chokar aur khanij mishran hai.",
+    "expected": {
+      "species": "cow",
+      "breedId": "sahiwal",
+      "bodyWeightKg": 380,
+      "milkYieldLitersPerDay": 10,
+      "milkFatPct": 4.8,
+      "budgetInrPerDay": 180,
+      "matchedFeeds": [
+        "berseem",
+        "wheat_straw",
+        "wheat_bran",
+        "mineral_mix"
+      ],
+      "unmatchedFeeds": []
+    }
+  },
+  {
+    "id": "T03_en",
+    "tripleId": "T03",
+    "language": "en",
+    "freeText": "310 kg Rathi cow yielding 6.5 litres milk at 4.0% fat, has khejri leaf, pearl millet stover, guar meal, and Saras compound cattle feed.",
+    "expected": {
+      "species": "cow",
+      "breedId": "rathi",
+      "bodyWeightKg": 310,
+      "milkYieldLitersPerDay": 6.5,
+      "milkFatPct": 4.0,
+      "budgetInrPerDay": null,
+      "matchedFeeds": [
+        "khejri_leaf",
+        "bajra_stover",
+        "guar_meal",
+        "saras_compound"
+      ],
+      "unmatchedFeeds": []
+    }
+  },
+  {
+    "id": "T03_hi",
+    "tripleId": "T03",
+    "language": "hi",
+    "freeText": "310 किलो की राठी गाय 6.5 लीटर दूध देती है, 4.0% फैट है, खाने में लूंग, बाजरे की करबी, ग्वार कोरमा और सरस पशु आहार है।",
+    "expected": {
+      "species": "cow",
+      "breedId": "rathi",
+      "bodyWeightKg": 310,
+      "milkYieldLitersPerDay": 6.5,
+      "milkFatPct": 4.0,
+      "budgetInrPerDay": null,
+      "matchedFeeds": [
+        "khejri_leaf",
+        "bajra_stover",
+        "guar_meal",
+        "saras_compound"
+      ],
+      "unmatchedFeeds": []
+    }
+  },
+  {
+    "id": "T03_hinglish",
+    "tripleId": "T03",
+    "language": "hinglish",
+    "freeText": "310 kilo ki Rathi gaay 6.5 litre doodh deti hai, 4.0% fat hai, loong, bajra karbi, guar korma aur saras pashu aahar hai.",
+    "expected": {
+      "species": "cow",
+      "breedId": "rathi",
+      "bodyWeightKg": 310,
+      "milkYieldLitersPerDay": 6.5,
+      "milkFatPct": 4.0,
+      "budgetInrPerDay": null,
+      "matchedFeeds": [
+        "khejri_leaf",
+        "bajra_stover",
+        "guar_meal",
+        "saras_compound"
+      ],
+      "unmatchedFeeds": []
+    }
+  },
+  {
+    "id": "T04_en",
+    "tripleId": "T04",
+    "language": "en",
+    "freeText": "480 kg Nili-Ravi buffalo giving 9 litres milk with 6.8% fat, budget 240 rupees per day, fed sorghum fodder, wheat straw, cottonseed cake, and magic probiotic mix.",
+    "expected": {
+      "species": "buffalo",
+      "breedId": "nili_ravi",
+      "bodyWeightKg": 480,
+      "milkYieldLitersPerDay": 9,
+      "milkFatPct": 6.8,
+      "budgetInrPerDay": 240,
+      "matchedFeeds": [
+        "jowar_green",
+        "wheat_straw",
+        "cottonseed_cake"
+      ],
+      "unmatchedFeeds": [
+        "magic probiotic mix"
+      ]
+    }
+  },
+  {
+    "id": "T04_hi",
+    "tripleId": "T04",
+    "language": "hi",
+    "freeText": "४८० किलो की नीली रावी भैंस ९ लीटर दूध देती है, ६.८% फैट, बजट २४० रुपये रोज़, ज्वार चरी, गेहूँ का भूसा, बिनौला खली और मैजिक प्रोबायोटिक मिक्स है।",
+    "expected": {
+      "species": "buffalo",
+      "breedId": "nili_ravi",
+      "bodyWeightKg": 480,
+      "milkYieldLitersPerDay": 9,
+      "milkFatPct": 6.8,
+      "budgetInrPerDay": 240,
+      "matchedFeeds": [
+        "jowar_green",
+        "wheat_straw",
+        "cottonseed_cake"
+      ],
+      "unmatchedFeeds": [
+        "magic probiotic mix"
+      ]
+    }
+  },
+  {
+    "id": "T04_hinglish",
+    "tripleId": "T04",
+    "language": "hinglish",
+    "freeText": "480 kilo ki Nili-Ravi bhains 9 litre doodh deti hai, 6.8% fat, budget 240 rupaye roz, jowar chari, gehun ka bhusa, binola khali aur magic probiotic mix hai.",
+    "expected": {
+      "species": "buffalo",
+      "breedId": "nili_ravi",
+      "bodyWeightKg": 480,
+      "milkYieldLitersPerDay": 9,
+      "milkFatPct": 6.8,
+      "budgetInrPerDay": 240,
+      "matchedFeeds": [
+        "jowar_green",
+        "wheat_straw",
+        "cottonseed_cake"
+      ],
+      "unmatchedFeeds": [
+        "magic probiotic mix"
+      ]
+    }
+  },
+  {
+    "id": "T05_en",
+    "tripleId": "T05",
+    "language": "en",
+    "freeText": "350 kg Gir cow giving 0 litres milk with 4.5% fat, daily budget 95 rupees, has marvel grass hay, groundnut haulm, pulse husk, and mineral mixture.",
+    "expected": {
+      "species": "cow",
+      "breedId": "gir",
+      "bodyWeightKg": 350,
+      "milkYieldLitersPerDay": 0,
+      "milkFatPct": 4.5,
+      "budgetInrPerDay": 95,
+      "matchedFeeds": [
+        "marvel_grass",
+        "groundnut_haulm",
+        "pulse_chuni",
+        "mineral_mix"
+      ],
+      "unmatchedFeeds": []
+    }
+  },
+  {
+    "id": "T05_hi",
+    "tripleId": "T05",
+    "language": "hi",
+    "freeText": "350 किलो की गिर गाय 0 लीटर दूध देती है, 4.5% फैट, बजट 95 रुपये प्रतिदिन, करड़ घास, मूंगफली का भूसा, दाल चुनी और खनिज मिश्रण है।",
+    "expected": {
+      "species": "cow",
+      "breedId": "gir",
+      "bodyWeightKg": 350,
+      "milkYieldLitersPerDay": 0,
+      "milkFatPct": 4.5,
+      "budgetInrPerDay": 95,
+      "matchedFeeds": [
+        "marvel_grass",
+        "groundnut_haulm",
+        "pulse_chuni",
+        "mineral_mix"
+      ],
+      "unmatchedFeeds": []
+    }
+  },
+  {
+    "id": "T05_hinglish",
+    "tripleId": "T05",
+    "language": "hinglish",
+    "freeText": "350 kilo ki Gir gaay 0 litre doodh deti hai, 4.5% fat, budget 95 rupaye roz, karad ghas, mungfali ka bhusa, chuni aur khanij mishran hai.",
+    "expected": {
+      "species": "cow",
+      "breedId": "gir",
+      "bodyWeightKg": 350,
+      "milkYieldLitersPerDay": 0,
+      "milkFatPct": 4.5,
+      "budgetInrPerDay": 95,
+      "matchedFeeds": [
+        "marvel_grass",
+        "groundnut_haulm",
+        "pulse_chuni",
+        "mineral_mix"
+      ],
+      "unmatchedFeeds": []
+    }
+  },
+  {
+    "id": "T06_en",
+    "tripleId": "T06",
+    "language": "en",
+    "freeText": "400 kg Bhadawari buffalo giving 6 litres milk with 8.0% fat, budget 175 rupees a day, has green maize fodder, guar straw, mustard cake, and de-oiled rice bran.",
+    "expected": {
+      "species": "buffalo",
+      "breedId": "bhadawari",
+      "bodyWeightKg": 400,
+      "milkYieldLitersPerDay": 6,
+      "milkFatPct": 8.0,
+      "budgetInrPerDay": 175,
+      "matchedFeeds": [
+        "maize_green",
+        "guar_straw",
+        "mustard_cake",
+        "rice_bran_dorb"
+      ],
+      "unmatchedFeeds": []
+    }
+  },
+  {
+    "id": "T06_hi",
+    "tripleId": "T06",
+    "language": "hi",
+    "freeText": "400 किलो की भदावरी भैंस 6 लीटर दूध देती है, 8.0% फैट, बजट 175 रुपये रोज़, मक्का चारा, ग्वार फलगटी, सरसों खली और डी-ऑयल्ड राइस ब्रान है।",
+    "expected": {
+      "species": "buffalo",
+      "breedId": "bhadawari",
+      "bodyWeightKg": 400,
+      "milkYieldLitersPerDay": 6,
+      "milkFatPct": 8.0,
+      "budgetInrPerDay": 175,
+      "matchedFeeds": [
+        "maize_green",
+        "guar_straw",
+        "mustard_cake",
+        "rice_bran_dorb"
+      ],
+      "unmatchedFeeds": []
+    }
+  },
+  {
+    "id": "T06_hinglish",
+    "tripleId": "T06",
+    "language": "hinglish",
+    "freeText": "400 kilo ki Bhadawari bhains 6 litre doodh deti hai, 8.0% fat, budget 175 rupaye roz, makka chara, phalgati, sarson khali aur dorb hai.",
+    "expected": {
+      "species": "buffalo",
+      "breedId": "bhadawari",
+      "bodyWeightKg": 400,
+      "milkYieldLitersPerDay": 6,
+      "milkFatPct": 8.0,
+      "budgetInrPerDay": 175,
+      "matchedFeeds": [
+        "maize_green",
+        "guar_straw",
+        "mustard_cake",
+        "rice_bran_dorb"
+      ],
+      "unmatchedFeeds": []
+    }
+  },
+  {
+    "id": "T07_en",
+    "tripleId": "T07",
+    "language": "en",
+    "freeText": "460 kg HF crossbred cow giving 14 litres milk with 3.8% fat, budget 280 rupees per day, fed cowpea fodder, green oats fodder, maize grain, groundnut cake, and herbal calcium tonic.",
+    "expected": {
+      "species": "cow",
+      "breedId": "hf_crossbred",
+      "bodyWeightKg": 460,
+      "milkYieldLitersPerDay": 14,
+      "milkFatPct": 3.8,
+      "budgetInrPerDay": 280,
+      "matchedFeeds": [
+        "cowpea_green",
+        "oats_green",
+        "groundnut_cake",
+        "maize_grain"
+      ],
+      "unmatchedFeeds": [
+        "herbal calcium tonic"
+      ]
+    }
+  },
+  {
+    "id": "T07_hi",
+    "tripleId": "T07",
+    "language": "hi",
+    "freeText": "460 किलो की एचएफ संकर गाय 14 लीटर दूध देती है, 3.8% फैट, बजट 280 रुपये रोज़, लोबिया चारा, हरी जई, मक्का दाना, मूंगफली खली और हर्बल कैल्शियम टॉनिक है।",
+    "expected": {
+      "species": "cow",
+      "breedId": "hf_crossbred",
+      "bodyWeightKg": 460,
+      "milkYieldLitersPerDay": 14,
+      "milkFatPct": 3.8,
+      "budgetInrPerDay": 280,
+      "matchedFeeds": [
+        "cowpea_green",
+        "oats_green",
+        "groundnut_cake",
+        "maize_grain"
+      ],
+      "unmatchedFeeds": [
+        "herbal calcium tonic"
+      ]
+    }
+  },
+  {
+    "id": "T07_hinglish",
+    "tripleId": "T07",
+    "language": "hinglish",
+    "freeText": "460 kilo ki HF crossbred gaay 14 litre doodh deti hai, 3.8% fat, budget 280 rupaye roz, lobia chara, hari jai, makka grain, mungfali khal aur herbal calcium tonic hai.",
+    "expected": {
+      "species": "cow",
+      "breedId": "hf_crossbred",
+      "bodyWeightKg": 460,
+      "milkYieldLitersPerDay": 14,
+      "milkFatPct": 3.8,
+      "budgetInrPerDay": 280,
+      "matchedFeeds": [
+        "cowpea_green",
+        "oats_green",
+        "groundnut_cake",
+        "maize_grain"
+      ],
+      "unmatchedFeeds": [
+        "herbal calcium tonic"
+      ]
+    }
+  },
+  {
+    "id": "T08_en",
+    "tripleId": "T08",
+    "language": "en",
+    "freeText": "300 kg Tharparkar cow giving 7 litres milk with 4.9% fat, has green pearl millet fodder, barley straw, cottonseed cake, and sugarcane molasses.",
+    "expected": {
+      "species": "cow",
+      "breedId": "tharparkar",
+      "bodyWeightKg": 300,
+      "milkYieldLitersPerDay": 7,
+      "milkFatPct": 4.9,
+      "budgetInrPerDay": null,
+      "matchedFeeds": [
+        "bajra_green",
+        "barley_straw",
+        "cottonseed_cake",
+        "molasses"
+      ],
+      "unmatchedFeeds": []
+    }
+  },
+  {
+    "id": "T08_hi",
+    "tripleId": "T08",
+    "language": "hi",
+    "freeText": "300 किलो की थारपारकर गाय 7 लीटर दूध देती है, 4.9% फैट, पास में हरा बाजरा चारा, जौ का भूसा, बिनौला खली और गन्ने का शीरा है।",
+    "expected": {
+      "species": "cow",
+      "breedId": "tharparkar",
+      "bodyWeightKg": 300,
+      "milkYieldLitersPerDay": 7,
+      "milkFatPct": 4.9,
+      "budgetInrPerDay": null,
+      "matchedFeeds": [
+        "bajra_green",
+        "barley_straw",
+        "cottonseed_cake",
+        "molasses"
+      ],
+      "unmatchedFeeds": []
+    }
+  },
+  {
+    "id": "T08_hinglish",
+    "tripleId": "T08",
+    "language": "hinglish",
+    "freeText": "300 kilo ki Tharparkar gaay 7 litre doodh deti hai, 4.9% fat, bajra chara, jau ka bhusa, binola khali aur sheera hai.",
+    "expected": {
+      "species": "cow",
+      "breedId": "tharparkar",
+      "bodyWeightKg": 300,
+      "milkYieldLitersPerDay": 7,
+      "milkFatPct": 4.9,
+      "budgetInrPerDay": null,
+      "matchedFeeds": [
+        "bajra_green",
+        "barley_straw",
+        "cottonseed_cake",
+        "molasses"
+      ],
+      "unmatchedFeeds": []
+    }
+  },
+  {
+    "id": "T09_en",
+    "tripleId": "T09",
+    "language": "en",
+    "freeText": "440 kg Mehsana buffalo giving 7.5 litres milk with 6.9% fat, budget 210 rupees per day, has cluster bean fodder, sorghum stover, mustard cake, wheat bran, and bypass fat booster.",
+    "expected": {
+      "species": "buffalo",
+      "breedId": "mehsana",
+      "bodyWeightKg": 440,
+      "milkYieldLitersPerDay": 7.5,
+      "milkFatPct": 6.9,
+      "budgetInrPerDay": 210,
+      "matchedFeeds": [
+        "guar_green",
+        "jowar_stover",
+        "mustard_cake",
+        "wheat_bran"
+      ],
+      "unmatchedFeeds": [
+        "bypass fat booster"
+      ]
+    }
+  },
+  {
+    "id": "T09_hi",
+    "tripleId": "T09",
+    "language": "hi",
+    "freeText": "440 किलो की मेहसाणा भैंस 7.5 लीटर दूध देती है, 6.9% फैट, बजट 210 रुपये रोज़, ग्वार चारा, ज्वार कड़बी, सरसों खली, चोकर और बाईपास फैट बूस्टर है।",
+    "expected": {
+      "species": "buffalo",
+      "breedId": "mehsana",
+      "bodyWeightKg": 440,
+      "milkYieldLitersPerDay": 7.5,
+      "milkFatPct": 6.9,
+      "budgetInrPerDay": 210,
+      "matchedFeeds": [
+        "guar_green",
+        "jowar_stover",
+        "mustard_cake",
+        "wheat_bran"
+      ],
+      "unmatchedFeeds": [
+        "bypass fat booster"
+      ]
+    }
+  },
+  {
+    "id": "T09_hinglish",
+    "tripleId": "T09",
+    "language": "hinglish",
+    "freeText": "440 kilo ki Mehsana bhains 7.5 litre doodh deti hai, 6.9% fat, budget 210 rupaye roz, guar chara, jowar kadbi, sarson khali, chokar aur bypass fat booster hai.",
+    "expected": {
+      "species": "buffalo",
+      "breedId": "mehsana",
+      "bodyWeightKg": 440,
+      "milkYieldLitersPerDay": 7.5,
+      "milkFatPct": 6.9,
+      "budgetInrPerDay": 210,
+      "matchedFeeds": [
+        "guar_green",
+        "jowar_stover",
+        "mustard_cake",
+        "wheat_bran"
+      ],
+      "unmatchedFeeds": [
+        "bypass fat booster"
+      ]
+    }
+  },
+  {
+    "id": "T10_en",
+    "tripleId": "T10",
+    "language": "en",
+    "freeText": "420 kg buffalo giving 5.5 litres milk with 6.2% fat, budget 160 rupees per day, has green berseem, wheat straw, pearl millet grain, and mineral mixture.",
+    "expected": {
+      "species": "buffalo",
+      "breedId": null,
+      "bodyWeightKg": 420,
+      "milkYieldLitersPerDay": 5.5,
+      "milkFatPct": 6.2,
+      "budgetInrPerDay": 160,
+      "matchedFeeds": [
+        "berseem",
+        "wheat_straw",
+        "bajra_grain",
+        "mineral_mix"
+      ],
+      "unmatchedFeeds": []
+    }
+  },
+  {
+    "id": "T10_hi",
+    "tripleId": "T10",
+    "language": "hi",
+    "freeText": "420 किलो की भैंस 5.5 लीटर दूध देती है, 6.2% फैट, बजट 160 रुपये प्रतिदिन, हरा बरसीम, गेहूँ का भूसा, बाजरा दाना और खनिज मिश्रण है।",
+    "expected": {
+      "species": "buffalo",
+      "breedId": null,
+      "bodyWeightKg": 420,
+      "milkYieldLitersPerDay": 5.5,
+      "milkFatPct": 6.2,
+      "budgetInrPerDay": 160,
+      "matchedFeeds": [
+        "berseem",
+        "wheat_straw",
+        "bajra_grain",
+        "mineral_mix"
+      ],
+      "unmatchedFeeds": []
+    }
+  },
+  {
+    "id": "T10_hinglish",
+    "tripleId": "T10",
+    "language": "hinglish",
+    "freeText": "420 kilo ki bhains 5.5 litre doodh deti hai, 6.2% fat, budget 160 rupaye roz, hara berseem, gehun ka bhusa, bajra dana aur khanij mishran hai.",
+    "expected": {
+      "species": "buffalo",
+      "breedId": null,
+      "bodyWeightKg": 420,
+      "milkYieldLitersPerDay": 5.5,
+      "milkFatPct": 6.2,
+      "budgetInrPerDay": 160,
+      "matchedFeeds": [
+        "berseem",
+        "wheat_straw",
+        "bajra_grain",
+        "mineral_mix"
+      ],
+      "unmatchedFeeds": []
+    }
+  }
+]

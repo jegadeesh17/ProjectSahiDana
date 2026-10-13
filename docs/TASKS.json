@@ -186,7 +186,7 @@
           ],
           "files_to_modify": [],
           "acceptance_criteria": "SPEC AC-2.3, AC-E5.1, AC-L1.5: python -m pytest -q eval/test_extraction_eval.py passes on all 30 labelled descriptions, confirming English/Hindi/Hinglish extraction parity, field-level accuracy reporting, and strict nutrient-safety compliance.",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "M3-TASK-03",
