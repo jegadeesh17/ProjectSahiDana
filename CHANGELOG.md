@@ -16,4 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Client-side explanation number verifier, Devanagari language gate, and authorized number collector (`M2-TASK-01`)
 - Serverless OpenRouter proxy (`api/llm.ts`) with model fallback chain and nutrient safety (`M2-TASK-02`)
 - Integrate liveAdapter with `/api/llm` and verifier retry flow, and add online AI E2E tests (`M2-TASK-03`)
+- Benchmark animal suite and independent SciPy HiGHS LP solver cross-check (`M3-TASK-01`)
+- Multilingual extraction benchmark on 30 labelled descriptions with cross-language parity and nutrient safety (`M3-TASK-02`)
+- End-to-end language isolation, self-hosted offline Devanagari font verification, and UI polish/harden pass (`M3-TASK-03`)
+- Human data and Hindi verification gate audit tests, zero prototype fixtures check, and root handover documentation (`M3-TASK-04`)
 

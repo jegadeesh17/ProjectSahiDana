@@ -62,3 +62,42 @@ Screenshots: .ui-review/M2/extractor-open-desktop.png, .ui-review/M2/extractor-o
   - `src/index.css` (line 1946, `.pill-btn`): Increase `.pill-btn` (`Out of season` pill button) from `min-height: 36px` to `min-height: var(--target)` (`44px`) in `M3-TASK-03`.
   - `src/i18n/strings.ts` (lines 365–366, `audit_constraint_dm`): Remove the legacy `(and ≥ 85% of the limit)` parenthetical to match the frozen solver formulation.
 
+## Milestone M3 UI Review
+Verdict: APPROVED
+Screenshots: .ui-review/M3/home-desktop-1440.png, .ui-review/M3/home-desktop-1280.png, .ui-review/M3/home-mobile.png, .ui-review/M3/solved-desktop-1440.png, .ui-review/M3/solved-desktop-1280.png, .ui-review/M3/solved-details-desktop.png, .ui-review/M3/solved-mobile.png, .ui-review/M3/solved-details-mobile.png, .ui-review/M3/solved-hindi-desktop.png, .ui-review/M3/solved-hindi-mobile.png, .ui-review/M3/audit-drawer-desktop.png, .ui-review/M3/audit-drawer-mobile.png, .ui-review/M3/audit-drawer-hindi-desktop.png, .ui-review/M3/audit-drawer-hindi-mobile.png, .ui-review/M3/infeasible-desktop.png, .ui-review/M3/infeasible-mobile.png, .ui-review/M3/explain-verified-desktop.png, .ui-review/M3/explain-verified-hindi-mobile.png
+
+### Critical defects (must fix; any defect means REJECTED)
+- None.
+
+### Summary of M3 UI Verification (Desktop 1440x900, 1280x800 & Mobile 390x844)
+
+1. **Language Isolation & Devanagari Font Check (SPEC AC-L1.1, AC-L1.2, AC-L1.3, AC-L1.4, AC-L1.6, AC-L1.7, AC-E3.1):**
+   - **Language Toggle & Storage Persistence:** Defaults to English, updates `<html lang>`, and persists selection across reloads in `localStorage['sahidana.lang']` (`tests/e2e/language.spec.ts` passes offline and online). Active toasts update reactively when toggling languages.
+   - **Zero Cross-Language Bleed:**
+     - **English mode:** 0 Devanagari characters outside `[data-lang-exempt]`.
+     - **Hindi mode:** 0 unexempted Latin words outside `[data-lang-exempt]`. Metric units (`kg`, `L`, `g`, `Mcal`, `₹`, `%`), nutrient abbreviations (`DM`, `CP`, `ME`, `Ca`, `P`), and cited document acronyms (`DAHD`, `ICAR`, `NDDB`, `CIRB`) are isolated and permitted.
+   - **Western Arabic Numerals (0–9 everywhere):** All numbers across form inputs, animal benchmarks, solver headline (`9.6 L`), verdict gains/savings, ration table amounts and costs, nutrient coverage percentages and grams/Mcal, and fine-print audit drawer formulas render strictly with Latin digits `0`–`9` in both English and Hindi.
+   - **Self-Hosted Offline Fonts:** `@fontsource/noto-sans-devanagari` loads from local cached woff2 assets without external network dependency (`document.fonts.check('16px "Noto Sans Devanagari"') === true`). Line-height `1.55` on `:lang(hi)` ensures no Devanagari vowel matras or conjuncts are clipped.
+   - **AI Explanation Language Gate:** Verified that in Hindi mode, the LLM explanation body remains in plain English (`lang="en"`) per SPEC AC-L1.6, while the explanation container, verified pill (`• सत्यापित`), count badge (`सभी 6 संख्याएँ सत्यापित`), and footnote notice (`AI का पाठ सिर्फ़ अंग्रेज़ी में है`) render fully in Hindi.
+
+2. **UI Polish & Harden Pass (WCAG 2.2 AA, Responsiveness, Motion & Layout):**
+   - **Touch Targets (44×44px minimum):** All interactive controls on 390×844 mobile viewports—including the `.langtoggle-btn` segments, demo preset chips, feed library `.pill-btn` ("Out of season") and `Add` buttons, input controls, `.fig` dotted buttons, `Details` disclosure toggle, and bottom drawer actions—meet or exceed 44×44px effective touch targets (`min-height: var(--target)` / 44px).
+   - **Contrast Ratio (>= 4.5:1):** Color pairs strictly adhere to `DESIGN.md`:
+     - Primary text `--c-text` (`#1f2a24`) on `--c-surface` (`#ffffff`) = 14.8:1
+     - Secondary text `--c-text-2` (`#5b6660`) on `--c-surface` = 6.0:1; on `--c-ground` (`#f6f7f5`) = 5.6:1; on `--c-track` (`#e3e8e3`) = 4.8:1
+     - Primary button text `--c-surface` on `--c-accent` (`#12804a`) = 5.0:1
+     - Accent ink `--c-accent-ink` (`#0b5a33`) on `--c-accent-tint` (`#e3f4ea`) = 7.3:1
+     - Warning ink `--c-warn-ink` (`#704708`) on `--c-warn-tint` (`#fbf3e1`) = 7.3:1
+     - Danger ink `--c-danger-ink` (`#8c3128`) on `--c-danger-tint` (`#faeceb`) = 7.1:1
+   - **Focus Restoration & Keyboard Navigation:** Opening `AuditDrawer` traps Tab/Shift+Tab focus within the dialog; dismissing via `Escape`, scrim backdrop click, or `Close` button immediately restores document focus to the triggering figure button (`tests/e2e/language.spec.ts` line 415 passed). Visible 2px accent outlines are preserved on all interactive elements.
+   - **Reduced Motion:** `@media (prefers-reduced-motion: reduce)` disables all animations and transitions on the fine-print sheet slide, result card rise, skeleton loading shimmer, and coverage bar growth (`tests/e2e/language.spec.ts` line 447 passed).
+   - **Desktop 2-Column Asymmetric Layout (>= 1024px):**
+     - Verified at `1440x900` and `1280x800`: `<main>` uses a 2-column CSS grid (`5fr` inputs left, `7fr` results right) with the "How to use" banner spanning `grid-column: 1 / -1`.
+     - The result card flows naturally with document scroll without internal/nested scrollbars (`scrollHeight === clientHeight`).
+     - "Balance ration" renders inline directly below the Daily Budget card on desktop; the pinned bottom bar is active on mobile viewports only (`display: none` at `>= 1024px`).
+   - **Pattern Scan & Refuse List:** 0 hard-coded hex/rgb colors outside `src/index.css`, 0 gradients/glow/glass, 0 emoji icons, 0 placeholder copy, and 0 missing image alt tags.
+
+### Recommendations (non-blocking)
+- **`src/components/FeedSelector.tsx` (Feed library sticky vertical headers):** At narrow mobile viewports, the sticky headers (`Indigenous forage 10 feeds`) have `position: sticky; top: 0`. They remain clean and readable, but consider adding a subtle `border-bottom: 1px solid var(--c-line)` when scrolling within the feed library container on low-DPI displays for enhanced visual separation.
+- **`src/i18n/strings.ts` (`audit_source_feeds_v1`):** In Hindi mode, dataset citations in the fine-print sheet show `'NDDB 2012'`. This is completely acceptable under the proper-noun and citation exemption in `DESIGN.md`, but adding an optional localized footnote explaining the survey publication year could offer additional clarity for rural users.
+

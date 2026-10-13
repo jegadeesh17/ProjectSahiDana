@@ -24,3 +24,15 @@ Test command: npm run test:full -> exit code 0
 - `api/llm.ts:465-478` vs `docs/ARCHITECTURE.md:573`: `ExtractionResponse` in `src/domain/types.ts`, `api/llm.ts`, and `src/App.tsx` places `breedId` at the top level of the response object (and `liveAdapter.ts:252-257` accepts both `raw.breedId` and `raw.animal.breedId`), whereas the example JSON snippet in `docs/ARCHITECTURE.md:573` nests `breedId` inside `animal`. Client and server agree on `ExtractionResponse`, so runtime behavior is unaffected.
 - `src/components/RationResultsPanel.tsx:403`: Now that `rationService.ts` defaults to `liveAdapter` (`VITE_USE_MOCK_ADAPTER` defaults to `'false'`), remove or gate the footer `notice_prototype_fixture` string during the M3 UI polish pass (`M3-TASK-03`).
 
+## Milestone M3 Review
+Verdict: APPROVED
+Test command: npm run test:full -> exit code 0
+Python eval test command: python -m pytest -q eval/ -> exit code 0
+
+### Critical defects (must fix; any defect means REJECTED)
+None.
+
+### Recommendations (non-blocking)
+- `tests/e2e/language.spec.ts:8-28`: The `ALLOWED_HI_LATIN` whitelist contains specific publication titles (`Down`, `To`, `Earth`, `Kisan`, `Tak`) cited in price notes. If future data updates introduce new external English citations in Hindi price notes, consider extracting citation tokens automatically from data sources or annotating them with an explicit citation wrapper so the whitelist does not need manual expansion.
+- `BRAINSTORM.md`: Working tree has unstaged modifications capturing early project brainstorm notes from 2026-10-12; consider committing or discarding them to keep git status clean.
+
