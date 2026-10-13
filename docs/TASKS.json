@@ -134,7 +134,7 @@
           ],
           "files_to_modify": [],
           "acceptance_criteria": "SPEC AC-2.3, AC-7.1, AC-E4.1, AC-E4.2, AC-E5.1, AC-E6.1, AC-L1.5, AC-L1.6: npx vitest run tests/unit/llmProxy.test.ts verifies primary model calls, automatic fallback retry on HTTP 429/502, structured error codes when all models fail, rejection of out-of-catalog breedId or LLM-supplied nutrient fields, and preservation of unmatched feed names.",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "M2-TASK-03",

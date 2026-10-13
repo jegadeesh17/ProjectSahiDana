@@ -17,5 +17,5 @@
     "noFallthroughCasesInSwitch": true,
     "types": ["vite/client", "vite-plugin-pwa/client", "node"]
   },
-  "include": ["src", "tests", "vite.config.ts", "tailwind.config.ts", "playwright.config.ts"]
+  "include": ["src", "api", "tests", "vite.config.ts", "tailwind.config.ts", "playwright.config.ts"]
 }
