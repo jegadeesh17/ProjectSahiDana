@@ -172,7 +172,7 @@
             "package.json"
           ],
           "acceptance_criteria": "SPEC AC-5.1, AC-5.3, AC-5.4, AC-5.5, AC-5.6, AC-5.7, AC-5.11, AC-5.12, AC-5.13, AC-E2.1, AC-E2.2, AC-E6.1, AC-E7.1: npx vite-node scripts/dump_solver_results.ts && python -m pytest -q eval/test_scipy_agreement.py passes across all 15+ benchmark animals, confirming that browser javascript-lp-solver and Python SciPy HiGHS agree within 1e-4 on M, Y*, S, Stage 2 costs, B, Z, verdict, and binding constraint, 100% of optimal rations satisfy all nutrient/DM/roughage/budget/cap constraints within 1e-6, and 0 unverified numbers pass the verifier.",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "M3-TASK-02",

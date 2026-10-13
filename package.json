@@ -9,6 +9,8 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "compile:data": "node scripts/compile_data.mjs",
+    "eval:dump": "npx vite-node scripts/dump_solver_results.ts",
+    "eval:scipy": "python -m pytest -q eval/test_scipy_agreement.py",
     "test": "vitest run --exclude \"tests/e2e/**\" --exclude \"**/*.slow.test.ts\"",
     "test:full": "npx vitest run && npx playwright test"
   },
