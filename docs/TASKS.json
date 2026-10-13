@@ -121,7 +121,7 @@
             "src/domain/verifier.ts"
           ],
           "acceptance_criteria": "SPEC AC-7.1, AC-E6.1, AC-L1.3, AC-L1.6: npx vitest run tests/unit/verifier.test.ts verifies that explanations containing only authorized numbers (including S, X, Z, B, M, cap, and coverage) return status 'verified' with exact verifiedCount, any untraced number is returned in flaggedNumbers, any Devanagari character in the LLM explanation body fails the language gate, and both English and Hindi halves of buildTemplateExplanation pass verification with 0 untraced numbers.",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "M2-TASK-02",
