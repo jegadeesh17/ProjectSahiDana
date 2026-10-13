@@ -30,6 +30,14 @@
     "exit_code": 0,
     "summary": "12 test files passed, 142 tests passed (including 16 tests in tests/unit/adapter.test.ts, 17 tests in tests/unit/resultUi.test.tsx, and 6 tests in tests/unit/oneLanguage.test.tsx)",
     "failure_output": ""
+  },
+  {
+    "task_id": "M1-TASK-05",
+    "attempt": 1,
+    "command": "npm test && npm run build && npx playwright test tests/e2e/ration-journey.spec.ts",
+    "exit_code": 0,
+    "summary": "12 unit test files passed (142 tests), production build succeeded (130.76 kB woff2 <= 300 KB budget, 16 Workbox precache entries), and 2 Playwright E2E tests passed in tests/e2e/ration-journey.spec.ts",
+    "failure_output": ""
   }
 ]
 

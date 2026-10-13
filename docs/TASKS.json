@@ -101,7 +101,7 @@
             "vercel.json"
           ],
           "acceptance_criteria": "SPEC AC-1.1, AC-6.1, AC-6.2, AC-6.3, AC-8.1, AC-E3.1, AC-L1.1: npx playwright test tests/e2e/ration-journey.spec.ts passes in headless Chromium with context.setOffline(true), and npm run build succeeds with total bundled woff2 font size <= 300 KB.",
-          "status": "pending"
+          "status": "completed"
         }
       ]
     },
