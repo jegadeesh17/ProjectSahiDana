@@ -229,7 +229,7 @@ export function FeedSelector({
                     <button
                       type="button"
                       className="linkbtn num"
-                      onClick={() => open(auditFeedPrice(feed, Number.isNaN(priceNum) ? (feed.defaultPriceInrPerKgAsFed ?? 0) : priceNum))}
+                      onClick={() => open(auditFeedPrice(feed, Number.isNaN(priceNum) ? feed.defaultPriceInrPerKgAsFed : priceNum))}
                     >
                       {feed.defaultPriceInrPerKgAsFed !== null && feed.priceDate !== null && feed.priceReliability !== null ? (
                         <>

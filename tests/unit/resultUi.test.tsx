@@ -2,6 +2,7 @@ import { act, cleanup, fireEvent, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { App } from '../../src/App';
 import { LANG_STORAGE_KEY, setActiveLang } from '../../src/i18n/lang';
+import { setRationAdapterMode } from '../../src/services/rationService';
 
 const LATIN_WORD = /[A-Za-z]{3,}/g;
 // Units, abbreviations and source names that stay in Latin script in Hindi mode.
@@ -82,15 +83,30 @@ describe('result card per verdict case', () => {
     expect(container.querySelector('.suggest-row')).toBeTruthy();
   });
 
-  it('Show details reveals the working and the roughage row, and hides them again', () => {
+  it('Show details reveals the working and the cited roughage minimum, and tapping the minimum opens the citation sheet', () => {
     const { container } = render(<App />);
     demo(container, 'gain');
     expect(container.querySelector('#result-details')).toBeNull();
     act(() => {
       fireEvent.click(container.querySelector<HTMLElement>('.details-toggle')!);
     });
-    expect(container.querySelector('#result-details')?.textContent).toContain('PROTOTYPE FIXTURE');
+    const detailsText = container.querySelector('#result-details')?.textContent ?? '';
+    expect(detailsText).toContain('ICAR 2013');
+    expect(detailsText).toContain('NDDB');
+    expect(detailsText).toContain('40%');
     expect(container.querySelectorAll('.nutrient').length).toBe(5);
+
+    const roughageMinBtn = [...container.querySelectorAll<HTMLButtonElement>('#result-details .fig')].find((b) =>
+      b.textContent?.includes('40%'),
+    )!;
+    expect(roughageMinBtn).toBeTruthy();
+    act(() => {
+      fireEvent.click(roughageMinBtn);
+    });
+    const dialog = container.querySelector('[role="dialog"]')!;
+    expect(dialog?.getAttribute('data-audit-id')).toBe('req-roughage');
+    expect(dialog?.textContent).toContain('ICAR 2013');
+    expect(dialog?.textContent).toContain('p. 28');
   });
 
   it('Hindi mode: the new result parts carry no English words', () => {
@@ -173,4 +189,28 @@ describe('breed, budget and the feed picker', () => {
     const berseemWinter = [...container.querySelectorAll('.librow')].find((r) => r.textContent?.includes('Berseem'))!;
     expect(berseemWinter.querySelector('[data-season="in"]')).toBeTruthy();
   });
+
+  it('adding an unpriced feed (molasses) leaves the price input empty until the user enters a price (AC-3.2, AC-3.6)', () => {
+    setRationAdapterMode('live');
+    try {
+      const { container } = render(<App />);
+      const addButtons = [...container.querySelectorAll<HTMLButtonElement>('.librow-act')];
+      const addMolasses = addButtons.find((btn) => btn.getAttribute('aria-label')?.toLowerCase().includes('molasses'))!;
+      expect(addMolasses).toBeTruthy();
+      act(() => {
+        fireEvent.click(addMolasses);
+      });
+      const row = container.querySelector('.feedrow')!;
+      const priceInput = row.querySelector<HTMLInputElement>('input.input.num')!;
+      expect(priceInput.value).toBe('');
+      act(() => {
+        fireEvent.change(priceInput, { target: { value: '12' } });
+        fireEvent.blur(priceInput);
+      });
+      expect(row.querySelector('[data-pill="your-price"]')).toBeTruthy();
+    } finally {
+      setRationAdapterMode('env');
+    }
+  });
 });
+

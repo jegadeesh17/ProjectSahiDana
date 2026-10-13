@@ -38,7 +38,7 @@ import { feedLabel } from './i18n/feedLabel';
 import { bi } from './i18n/strings';
 import type { StringId } from './i18n/strings';
 import type { MockExplainMode, MockLlmMode } from './services/mockAdapter';
-import { mockControls, PROTOTYPE_BREEDS, PROTOTYPE_FEEDS, rationService } from './services/rationService';
+import { getInitialBreeds, getInitialFeeds, mockControls, rationService } from './services/rationService';
 
 type Profile = Omit<AnimalProfile, 'isConfirmed'>;
 
@@ -80,8 +80,8 @@ function animalIncomplete(d: AnimalDraft): boolean {
 }
 
 function Workspace() {
-  const [library, setLibrary] = useState<FeedItem[]>(PROTOTYPE_FEEDS);
-  const [breeds, setBreeds] = useState<BreedStandard[]>(PROTOTYPE_BREEDS);
+  const [library, setLibrary] = useState<FeedItem[]>(() => getInitialFeeds());
+  const [breeds, setBreeds] = useState<BreedStandard[]>(() => getInitialBreeds());
   const [animal, setAnimal] = useState<AnimalDraft>(EMPTY_ANIMAL);
   const [feeds, setFeeds] = useState<FeedDraft[]>([]);
   const [result, setResult] = useState<SolveResult | null>(null);
@@ -245,16 +245,16 @@ function Workspace() {
     setFeeds(
       response.matchedFeeds.flatMap((m) => {
         const feed = library.find((f) => f.id === m.feedId);
-        return feed
-          ? [
-              {
-                feedId: m.feedId,
-                price: String(m.priceInrPerKgAsFed ?? feed.defaultPriceInrPerKgAsFed),
-                cap: m.maxKgAsFedPerDay === null ? '' : String(m.maxKgAsFedPerDay),
-                current: '',
-              },
-            ]
-          : [];
+        if (!feed) return [];
+        const resolvedPrice = m.priceInrPerKgAsFed ?? feed.defaultPriceInrPerKgAsFed;
+        return [
+          {
+            feedId: m.feedId,
+            price: resolvedPrice !== null ? String(resolvedPrice) : '',
+            cap: m.maxKgAsFedPerDay === null ? '' : String(m.maxKgAsFedPerDay),
+            current: '',
+          },
+        ];
       }),
     );
     setPrefill({ response, unmatched: response.unmatchedFeeds.map((name) => ({ name, resolution: null })) });
@@ -270,7 +270,9 @@ function Workspace() {
       .filter((id, i) => mapped.indexOf(id) === i && !feeds.some((d) => d.feedId === id))
       .flatMap((id) => {
         const feed = library.find((f) => f.id === id);
-        return feed ? [{ feedId: id, price: String(feed.defaultPriceInrPerKgAsFed), cap: '', current: '' }] : [];
+        if (!feed) return [];
+        const priceStr = feed.defaultPriceInrPerKgAsFed !== null ? String(feed.defaultPriceInrPerKgAsFed) : '';
+        return [{ feedId: id, price: priceStr, cap: '', current: '' }];
       });
     setFeeds([...feeds, ...additions]);
     setPrefill(null);

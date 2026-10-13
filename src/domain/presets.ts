@@ -1,6 +1,7 @@
 // The 1-tap demo presets (prototype only). Strings stay as typed form values.
 // Every verdict case of SPEC AC-5.6 to AC-5.11 and AC-E7.1 has a preset, so a reviewer can reach it in one tap.
 import type { StringId } from '../i18n/strings';
+import { getRationAdapterMode } from '../services/rationService';
 import type { AnimalDraft, FeedDraft } from './validation';
 
 export interface Preset {
@@ -55,9 +56,9 @@ export const PRESET_BUFFALO: Preset = {
   ],
 };
 
-/** Today's 9.6 L is within 0.1 L of the Murrah peak of 9.64 L: already at the breed level, and a cheaper ration is shown. */
+/** Today's 9.64 L equals the Murrah peak of 9.64 L: already at the breed level, and a cheaper ration is shown. */
 const PRESET_AT_LEVEL: Preset = {
-  animal: animal('buffalo', 'murrah', '450', '9.6', '6.5'),
+  animal: animal('buffalo', 'murrah', '450', '9.64', '6.5'),
   feeds: [
     feed('wheat_straw', '6', '8', '3'),
     feed('maize_green', '2.5', '40', '20'),
@@ -95,7 +96,7 @@ const PRESET_DRY: Preset = {
 
 /** A low budget supports less than today's 6.5 L; keeping 6.5 L needs more rupees per day. */
 const PRESET_BELOW_COST: Preset = {
-  animal: animal('buffalo', 'murrah', '450', '6.5', '6.5', '130'),
+  animal: animal('buffalo', 'murrah', '450', '6.5', '6.5', '95'),
   feeds: MURRAH_FEEDS,
 };
 
@@ -105,16 +106,24 @@ const PRESET_BELOW_NO: Preset = {
   feeds: [feed('wheat_straw', '6', ''), feed('maize_green', '2.5', '25'), feed('bajra_grain', '24', '3'), feed('mineral_mix', '70', '0.15')],
 };
 
-/** The budget is exactly what 5 L costs, so the budget supports the same as today. */
+/** The budget is what 5 L costs, so the budget supports the same 5.0 L as today. */
 const PRESET_SAME: Preset = {
-  animal: animal('buffalo', 'murrah', '450', '5', '6.5', '136.01'),
+  get animal(): AnimalDraft {
+    const isLive = getRationAdapterMode() === 'live';
+    return animal('buffalo', 'murrah', '450', '5', '6.5', isLive ? '120.76' : '136.01');
+  },
   feeds: MURRAH_FEEDS,
 };
 
-/** ₹60 is below the cost of merely maintaining the animal with these feeds. */
+/** ₹60 is below the cost of merely maintaining the animal with these dry/concentrate feeds; adding green forage fixes it. */
 const PRESET_SHORTFALL: Preset = {
   animal: animal('buffalo', 'murrah', '450', '5', '6.5', '60'),
-  feeds: MURRAH_FEEDS,
+  feeds: [
+    feed('wheat_straw', '6', '8'),
+    feed('mustard_cake', '33', '3'),
+    feed('bajra_grain', '24', '4'),
+    feed('mineral_mix', '70', '0.15'),
+  ],
 };
 
 /** E2: straw alone cannot meet protein or phosphorus, whatever the budget. */
@@ -128,7 +137,7 @@ const PRESET_NONDESCRIPT: Preset = {
   animal: animal('cow', 'nondescript_cow', '350', '2', '4'),
   feeds: [
     feed('wheat_straw', '6', '6', '5'),
-    feed('bajra_green', '3', '20', '10'),
+    feed('jowar_green', '2.5', '20', '10'),
     feed('berseem', '2.5', '15', '4'),
     feed('wheat_bran', '20', '3', '1.5'),
     feed('mustard_cake', '33', '2', '0.5'),

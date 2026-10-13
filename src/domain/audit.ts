@@ -1,4 +1,5 @@
 // Builders for AuditMeta: every figure on screen gets a record that opens the fine-print sheet.
+import requirementsV1 from '../data/requirements.v1.json';
 import { formatInr, formatInrPerKg, formatKg, formatNumber, formatPct } from '../i18n/format';
 import type { BiText } from '../i18n/strings';
 import { t } from '../i18n/strings';
@@ -204,8 +205,12 @@ export function auditSavings(solution: RationSolution): AuditMeta | null {
 }
 
 /** Feed row source: price and composition with the full citation fields, the price's reliability and the user's own edit. */
-export function auditFeedPrice(feed: FeedItem, price: number): AuditMeta {
-  const edited = feed.defaultPriceInrPerKgAsFed === null || Math.abs(price - feed.defaultPriceInrPerKgAsFed) > 1e-9;
+export function auditFeedPrice(feed: FeedItem, price: number | null): AuditMeta {
+  const hasUserPrice = price !== null && Number.isFinite(price);
+  const effectivePrice = hasUserPrice ? price : feed.defaultPriceInrPerKgAsFed;
+  const edited =
+    hasUserPrice &&
+    (feed.defaultPriceInrPerKgAsFed === null || Math.abs(price - feed.defaultPriceInrPerKgAsFed) > 1e-9);
   const extraRows: { label: BiText; value: string | BiText }[] = [];
   if (feed.priceReliability !== null) {
     extraRows.push({ label: t('audit_price_reliability'), value: t(RELIABILITY_STRING[feed.priceReliability]) });
@@ -216,8 +221,8 @@ export function auditFeedPrice(feed: FeedItem, price: number): AuditMeta {
   return {
     id: `price-${feed.id}`,
     label: t('audit_label_price', { feed: feedNameBi(feed) }),
-    formattedValue: formatInrPerKg(price),
-    numericValue: price,
+    formattedValue: effectivePrice !== null && Number.isFinite(effectivePrice) ? formatInrPerKg(effectivePrice) : '—',
+    numericValue: effectivePrice !== null && Number.isFinite(effectivePrice) ? effectivePrice : 0,
     originType: edited ? 'user_input' : 'cited_source',
     notes: edited ? [t('audit_note_user_price')] : undefined,
     extraRows: extraRows.length > 0 ? extraRows : undefined,
@@ -226,7 +231,7 @@ export function auditFeedPrice(feed: FeedItem, price: number): AuditMeta {
       table: feed.sourceTable,
       page: feed.sourcePage,
       formula: `CP ${formatNumber(feed.cpPctDm, 1)}% · ME ${formatNumber(feed.meMcalPerKgDm, 2)} Mcal/kg · Ca ${formatNumber(feed.caGramsPerKgDm, 1)} g/kg · P ${formatNumber(feed.pGramsPerKgDm, 1)} g/kg (DM basis) · DM ${formatNumber(feed.dmPct, 0)}%`,
-      provenanceStatus: 'team-asserted',
+      provenanceStatus: feed.provenanceStatus === 'cited' && !feed.priceSource ? 'cited' : 'team-asserted',
     },
     solverConstraint: null,
     sourceKey: feed.sourceKey ?? feed.id,
@@ -248,30 +253,38 @@ export function auditMaxSupply(item: InfeasibilityReport['limitingNutrients'][nu
       breakdown: `${formatLimit(n, item.maxSupply)} < ${formatLimit(n, item.required)}`,
     },
     binding: true,
-    sourceKey: 'PROTO-SOLVE-DIAGNOSIS',
+    sourceKey: 'SOLVER-DIAGNOSIS',
   };
 }
 
-/** The roughage minimum: a prototype fixture, flagged as such until the cited share arrives (M1). */
+const ROUGHAGE_CITATION = requirementsV1.roughageMinShareOfDm.citation;
+const ROUGHAGE_NOTE = requirementsV1.roughageMinShareOfDm.note;
+
+/** The cited roughage minimum share of total ration dry matter (ICAR 2013 / NDDB, AC-5.12, AC-6.1, AC-6.3, AC-E2.2). */
 export function auditRoughageMin(minPct: number): AuditMeta {
   return {
     id: 'req-roughage',
     label: t('audit_label_roughage_need'),
     formattedValue: formatPct(minPct, 0),
     numericValue: minPct,
-    originType: 'prototype_fixture',
-    citation: null,
+    originType: 'cited_source',
+    citation: {
+      doc: ROUGHAGE_CITATION.doc,
+      table: ROUGHAGE_CITATION.table,
+      page: ROUGHAGE_CITATION.page,
+      formula: `roughage DM ÷ total DM ≥ ${formatPct(minPct, 0)} (${ROUGHAGE_NOTE})`,
+      provenanceStatus: 'cited',
+    },
     solverConstraint: {
       role: t('audit_role_roughage'),
       activeConstraint: t('audit_constraint_roughage'),
       breakdown: `roughage DM ÷ total DM ≥ ${formatPct(minPct, 0)}`,
     },
-    notes: [t('note_roughage_fixture')],
-    sourceKey: 'PROTO-ROUGHAGE-MIN',
+    sourceKey: 'REQ-ROUGHAGE-MIN',
   };
 }
 
-/** The roughage share the ration actually has, against the minimum. */
+/** The roughage share the ration actually has, against the cited minimum (ICAR 2013 / NDDB). */
 export function auditRoughageShare(solution: RationSolution, feeds: FeedItem[]): AuditMeta {
   const byId = new Map(feeds.map((f) => [f.id, f]));
   const parts = solution.feeds.map((l) => {
@@ -287,16 +300,26 @@ export function auditRoughageShare(solution: RationSolution, feeds: FeedItem[]):
     formattedValue: formatPct(solution.roughageSharePct, 0),
     numericValue: solution.roughageSharePct,
     originType: 'solver_output',
-    citation: null,
+    citation: {
+      doc: ROUGHAGE_CITATION.doc,
+      table: ROUGHAGE_CITATION.table,
+      page: ROUGHAGE_CITATION.page,
+      formula: `${formatNumber(roughDm, 2)} ÷ ${formatNumber(totalDm, 2)} kg DM = ${formatPct(solution.roughageSharePct, 1)} (≥ ${formatPct(solution.roughageMinSharePct, 0)})`,
+      provenanceStatus: 'cited',
+    },
     solverConstraint: {
       role: t('audit_role_roughage'),
       activeConstraint: t('audit_constraint_roughage'),
       breakdown: `${formatNumber(roughDm, 2)} ÷ ${formatNumber(totalDm, 2)} kg DM = ${formatPct(solution.roughageSharePct, 1)}  |  ≥ ${formatPct(solution.roughageMinSharePct, 0)}`,
     },
     binding: solution.tightConstraints.includes('roughage'),
-    extraRows: [{ label: t('audit_label_roughage_need'), value: t('audit_roughage_fixture') }],
-    notes: [t('note_roughage_fixture')],
-    sourceKey: 'PROTO-ROUGHAGE-MIN',
+    extraRows: [
+      {
+        label: t('audit_label_roughage_need'),
+        value: t('label_roughage_min', { min: formatPct(solution.roughageMinSharePct, 0) }),
+      },
+    ],
+    sourceKey: solution.sourceKey,
   };
 }
 
@@ -306,3 +329,4 @@ export function auditLimitingRequirement(item: InfeasibilityReport['limitingNutr
     ? { ...auditRequirement('DM', req), formattedValue: formatNutrient('DM', item.required), numericValue: item.required }
     : auditRequirement(item.nutrient, req);
 }
+

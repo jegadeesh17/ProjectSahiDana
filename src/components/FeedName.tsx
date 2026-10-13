@@ -1,5 +1,4 @@
-import { biText, t } from '../i18n/strings';
-import { VERTICAL_STRING } from '../domain/feedGroups';
+import { biText, t, type StringId } from '../i18n/strings';
 import { VERTICAL_CLASS } from '../domain/feedNames';
 import type { FeedItem } from '../domain/types';
 import { Bi } from '../i18n/Bi';
@@ -11,11 +10,16 @@ export function FeedName({ feed }: { feed: FeedItem }) {
   const { lang } = useLang();
   const name = feedLabel(feed, lang);
   const showsDeva = lang === 'hi' && feed.localNameDeva !== null;
+  const fallbackEnInHi = lang === 'hi' && feed.localNameDeva === null;
   const teamAsserted = showsDeva && feed.localNameDevaProvenance === 'team-asserted';
   const note = biText(t('note_team_asserted_name'));
   return (
     <span className="feedname">
-      <span className="feedname-primary" lang={showsDeva ? 'hi' : 'en'}>
+      <span
+        className="feedname-primary"
+        lang={showsDeva ? 'hi' : 'en'}
+        data-lang-exempt={fallbackEnInHi ? 'feed-no-deva' : undefined}
+      >
         {name}
         {teamAsserted && (
           <sup className="ta" title={note} aria-label={note}>
@@ -29,12 +33,17 @@ export function FeedName({ feed }: { feed: FeedItem }) {
 
 /** A small soft dot: one muted hue per feed vertical, never the only carrier of meaning. */
 export function FeedChip({ feed }: { feed: FeedItem }) {
-  const labelId = VERTICAL_STRING[feed.vertical];
+  const labelId: StringId = `vertical_${feed.vertical}`;
   return (
-    <span className={`chip ${VERTICAL_CLASS[feed.vertical]}`} title={biText(t(labelId))}>
+    <span
+      className={`chip ${VERTICAL_CLASS[feed.vertical]}`}
+      data-vertical={feed.vertical}
+      title={biText(t(labelId))}
+    >
       <span className="sr-only">
         <Bi id={labelId} />
       </span>
     </span>
   );
 }
+

@@ -1,8 +1,10 @@
 import { forwardRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import requirementsV1 from '../data/requirements.v1.json';
 import {
   auditFeedCost,
   auditFeedKg,
+  auditRoughageMin,
   auditRoughageShare,
   auditSavings,
   auditTodayCost,
@@ -144,9 +146,20 @@ function Details({
         <DetailRow label={<Bi id="label_roughage_row" />}>
           <Fig audit={auditRoughageShare(solution, library)}>{formatPct(solution.roughageSharePct, 0)}</Fig>
           <span className="detail-note">
-            <Bi id="label_roughage_min" params={{ min: formatPct(solution.roughageMinSharePct, 0) }} />
+            <BiRich
+              id="label_roughage_min"
+              nodes={{
+                min: (
+                  <Fig inline audit={auditRoughageMin(solution.roughageMinSharePct)}>
+                    {formatPct(solution.roughageMinSharePct, 0)}
+                  </Fig>
+                ),
+              }}
+            />
             {' · '}
-            <Bi id="audit_roughage_fixture" />
+            <span lang="en" data-lang-exempt="citation">
+              {requirementsV1.roughageMinShareOfDm.citation.doc} ({requirementsV1.roughageMinShareOfDm.citation.page})
+            </span>
           </span>
         </DetailRow>
         {today && savings && solution.savingsInr !== null && (

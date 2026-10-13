@@ -1,13 +1,18 @@
 import { act, cleanup, fireEvent, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { App } from '../../src/App';
-import feeds from '../../src/data/feeds.prototype.json';
+import feedsPrototype from '../../src/data/feeds.prototype.json';
+import feedsV1 from '../../src/data/feeds.v1.json';
+import { PRESET_BUFFALO } from '../../src/domain/presets';
 import type { FeedItem } from '../../src/domain/types';
 import { LANG_STORAGE_KEY, setActiveLang } from '../../src/i18n/lang';
-import { PRESET_BUFFALO } from '../../src/domain/presets';
+import { setRationAdapterMode } from '../../src/services/rationService';
 
 const DEVA = /[\u0900-\u097F]/g;
-const library = feeds as unknown as FeedItem[];
+const LIBRARIES: Record<'mock' | 'live', FeedItem[]> = {
+  mock: feedsPrototype as unknown as FeedItem[],
+  live: feedsV1 as unknown as FeedItem[],
+};
 
 /** Visible text plus the attributes a screen reader or a hover would expose. */
 function everything(root: HTMLElement): string {
@@ -26,22 +31,27 @@ function balanceBuffalo(container: HTMLElement) {
   expect(container.querySelector('.solved')).toBeTruthy();
 }
 
-describe('one language at a time', () => {
+describe.each(['mock', 'live'] as const)('one language at a time (%s adapter)', (mode) => {
   beforeEach(() => {
     Element.prototype.scrollIntoView = () => undefined; // jsdom does not implement it
     window.localStorage.clear();
     setActiveLang('en');
+    setRationAdapterMode(mode);
   });
   afterEach(() => {
     cleanup();
     window.localStorage.clear();
     setActiveLang('en');
     document.documentElement.lang = 'en';
+    setRationAdapterMode('env');
   });
 
-  it('English mode shows no Devanagari outside the toggle label', () => {
+  it('English mode shows no Devanagari outside the toggle label, including inside Show details', () => {
     const { container } = render(<App />);
     balanceBuffalo(container);
+    act(() => {
+      fireEvent.click(container.querySelector<HTMLElement>('.details-toggle')!);
+    });
     const toggleLabel = container.querySelector('.langtoggle-btn[lang="hi"]')?.textContent ?? '';
     expect(toggleLabel).not.toBe('');
     const text = everything(container).split(toggleLabel).join('');
@@ -55,7 +65,7 @@ describe('one language at a time', () => {
     const rows = [...container.querySelectorAll('tr[data-feed], .feedrow, .feedchip')];
     expect(rows.length).toBeGreaterThan(0);
     const picked = new Set(PRESET_BUFFALO.feeds.map((f) => f.feedId));
-    for (const feed of library.filter((f) => picked.has(f.id) && f.localNameDeva)) {
+    for (const feed of LIBRARIES[mode].filter((f) => picked.has(f.id) && f.localNameDeva)) {
       const text = rows.map((r) => r.textContent ?? '').join('\n');
       expect(text, feed.englishName).toContain(feed.localNameDeva!);
       expect(text, feed.englishName).not.toContain(feed.englishName);
@@ -80,4 +90,5 @@ describe('one language at a time', () => {
     expect(banner?.textContent).not.toContain('How to use:');
   });
 });
+
 

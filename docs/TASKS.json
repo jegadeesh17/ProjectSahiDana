@@ -86,7 +86,7 @@
             "tests/unit/oneLanguage.test.tsx"
           ],
           "acceptance_criteria": "SPEC AC-1.1, AC-2.1, AC-2.4, AC-2.5, AC-3.1, AC-3.2, AC-3.3, AC-3.4, AC-3.5, AC-3.6, AC-4.1, AC-4.2, AC-4.3, AC-5.1, AC-5.2, AC-5.9, AC-5.10, AC-5.12, AC-6.1, AC-6.2, AC-6.3, AC-8.1, AC-E1.1, AC-E1.2, AC-L1.1, AC-L1.2, AC-L1.3, AC-L1.4, AC-L1.7: npm test passes all unit and component tests against both mockAdapter and liveAdapter, confirming vertical chip classes, empty price prefill when a feed has no default price, cited roughage minimum in Show details and the audit drawer, the Round 4 how-to-use banner, and strict one-language-per-screen rendering in English and Hindi.",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "M1-TASK-05",
