@@ -13,7 +13,10 @@ import {
   computeBreedCap,
   parseAvailableMonths,
   parseCsv,
+  VALID_PROVENANCES,
+  VALID_RELIABILITIES,
 } from '../../scripts/compile_data.mjs';
+import { HINDI_REVIEW } from '../../src/i18n/strings';
 
 function makeValidFeedRow(overrides: Record<string, string> = {}): Record<string, string> {
   return {
@@ -633,6 +636,236 @@ describe('CSV parsing and end-to-end compileDataFiles pipeline', () => {
     const sol = Solver.Solve(model);
     expect(sol.feasible).toBe(true);
     expect(sol.result).toBe(50);
+  });
+});
+
+describe('Provenance and verification-gate audit (M3-TASK-04, SPEC AC-1.1, AC-6.1, AC-L1.2)', () => {
+  it('verifies every row in data/feeds.csv has valid, non-empty citation and provenance fields', () => {
+    const feedsCsvText = readFileSync(resolve(process.cwd(), 'data/feeds.csv'), 'utf8');
+    const rawFeeds = parseCsv(feedsCsvText, 'feeds.csv');
+    expect(rawFeeds.length).toBe(30);
+
+    for (const row of rawFeeds) {
+      const feedId = row.id;
+      expect(feedId, `feed ${feedId} missing id`).toBeTruthy();
+      expect(row.source_doc, `feed ${feedId} missing source_doc`).toBeTruthy();
+      expect(row.source_table, `feed ${feedId} missing source_table`).toBeTruthy();
+      expect(row.source_page, `feed ${feedId} missing source_page`).toBeTruthy();
+      expect(row.dm_source_citation, `feed ${feedId} missing dm_source_citation`).toBeTruthy();
+      expect(row.season_citation, `feed ${feedId} missing season_citation`).toBeTruthy();
+      expect(VALID_PROVENANCES.has(row.season_provenance), `feed ${feedId} invalid season_provenance`).toBe(true);
+
+      if (row.default_price_inr_per_kg_as_fed && row.default_price_inr_per_kg_as_fed.trim() !== '') {
+        expect(row.price_source, `feed ${feedId} has price but missing price_source`).toBeTruthy();
+        expect(row.price_date, `feed ${feedId} has price but missing price_date`).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+        expect(
+          VALID_RELIABILITIES.has(row.price_reliability),
+          `feed ${feedId} has price with invalid price_reliability "${row.price_reliability}"`,
+        ).toBe(true);
+      } else {
+        // Unpriced feed (e.g. molasses per AC-3.2)
+        expect(feedId).toBe('molasses');
+        expect(row.price_source).toBe('');
+        expect(row.price_date).toBe('');
+        expect(row.price_reliability).toBe('');
+      }
+
+      if (row.price_reliability === 'team_estimate') {
+        expect(row.price_note_en, `feed ${feedId} team_estimate missing price_note_en`).toBeTruthy();
+        expect(row.price_note_hi, `feed ${feedId} team_estimate missing price_note_hi`).toBeTruthy();
+      }
+
+      if (row.local_name_deva_provenance === 'cited') {
+        expect(row.local_name_latn_citation, `feed ${feedId} cited Devanagari missing local_name_latn_citation`).toBeTruthy();
+      }
+    }
+  });
+
+  it('verifies every row in data/breeds.csv has valid, non-empty citation fields and cited peak sources', () => {
+    const breedsCsvText = readFileSync(resolve(process.cwd(), 'data/breeds.csv'), 'utf8');
+    const rawBreeds = parseCsv(breedsCsvText, 'breeds.csv');
+    expect(rawBreeds.length).toBe(16);
+
+    const breedsWithCitedPeak = ['sahiwal', 'murrah', 'nili_ravi', 'bhadawari'];
+
+    for (const row of rawBreeds) {
+      const breedId = row.id;
+      expect(breedId, `breed ${breedId} missing id`).toBeTruthy();
+      expect(row.yield_source_doc, `breed ${breedId} missing yield_source_doc`).toBeTruthy();
+      expect(row.yield_source_table, `breed ${breedId} missing yield_source_table`).toBeTruthy();
+      expect(row.yield_source_page, `breed ${breedId} missing yield_source_page`).toBeTruthy();
+
+      if (row.female_body_weight_kg && row.female_body_weight_kg.trim() !== '') {
+        expect(row.body_weight_citation, `breed ${breedId} has body weight but missing body_weight_citation`).toBeTruthy();
+      }
+
+      if (row.fat_pct_low && row.fat_pct_low.trim() !== '') {
+        expect(row.fat_source_doc, `breed ${breedId} has fat_pct but missing fat_source_doc`).toBeTruthy();
+        expect(row.fat_source_table, `breed ${breedId} has fat_pct but missing fat_source_table`).toBeTruthy();
+        expect(row.fat_source_page, `breed ${breedId} has fat_pct but missing fat_source_page`).toBeTruthy();
+      }
+
+      if (row.peak_daily_yield_kg && row.peak_daily_yield_kg.trim() !== '') {
+        expect(row.peak_source_doc, `breed ${breedId} has peak yield but missing peak_source_doc`).toBeTruthy();
+        expect(row.peak_source_table, `breed ${breedId} has peak yield but missing peak_source_table`).toBeTruthy();
+        expect(row.peak_source_page, `breed ${breedId} has peak yield but missing peak_source_page`).toBeTruthy();
+      }
+    }
+
+    for (const citedBreedId of breedsWithCitedPeak) {
+      const row = rawBreeds.find((b) => b.id === citedBreedId);
+      expect(row, `expected breed ${citedBreedId} to exist`).toBeDefined();
+      expect(Number(row!.peak_daily_yield_kg)).toBeGreaterThan(0);
+      expect(row!.peak_source_doc).toBeTruthy();
+      expect(row!.peak_source_table).toBeTruthy();
+      expect(row!.peak_source_page).toBeTruthy();
+    }
+  });
+
+  it('verifies data/requirements.json has complete citations and valid coefficients', () => {
+    const rawReq = JSON.parse(readFileSync(resolve(process.cwd(), 'data/requirements.json'), 'utf8'));
+
+    // DMI coefficients & citation
+    expect(rawReq.dmi).toBeDefined();
+    expect(rawReq.dmi.fcmMilkCoeff).toBeGreaterThan(0);
+    expect(rawReq.dmi.fcmFatCoeff).toBeGreaterThan(0);
+    expect(rawReq.dmi.fcmCoeff).toBeGreaterThan(0);
+    expect(rawReq.dmi.bw075Coeff).toBeGreaterThan(0);
+    expect(rawReq.dmi.lagRate).toBeGreaterThan(0);
+    expect(rawReq.dmi.lagOffset).toBeGreaterThan(0);
+    expect(rawReq.dmi.defaultWeekOfLactation).toBeGreaterThan(0);
+    expect(rawReq.dmi.citation.doc).toBeTruthy();
+    expect(rawReq.dmi.citation.table).toBeTruthy();
+    expect(rawReq.dmi.citation.page).toBeTruthy();
+
+    // Maintenance citation
+    expect(rawReq.maintenance).toBeDefined();
+    expect(rawReq.maintenance.citation.doc).toBeTruthy();
+    expect(rawReq.maintenance.citation.table).toBeTruthy();
+    expect(rawReq.maintenance.citation.page).toBeTruthy();
+
+    // Lactation citation
+    expect(rawReq.lactation).toBeDefined();
+    expect(rawReq.lactation.citation.doc).toBeTruthy();
+    expect(rawReq.lactation.citation.table).toBeTruthy();
+    expect(rawReq.lactation.citation.page).toBeTruthy();
+
+    // Nutrient citations for all 5 required nutrients
+    expect(rawReq.nutrientCitations).toBeDefined();
+    for (const nutrient of ['DM', 'CP', 'ME', 'Ca', 'P']) {
+      const cit = rawReq.nutrientCitations[nutrient];
+      expect(cit, `missing citation for nutrient ${nutrient}`).toBeDefined();
+      expect(cit.doc).toBeTruthy();
+      expect(cit.table).toBeTruthy();
+      expect(cit.page).toBeTruthy();
+    }
+
+    // Roughage minimum share of DM
+    expect(rawReq.roughageMinShareOfDm).toBeDefined();
+    expect(rawReq.roughageMinShareOfDm.value).toBe(0.4);
+    expect(rawReq.roughageMinShareOfDm.citation.doc).toMatch(/\b(ICAR|NDDB)\b/i);
+    expect(rawReq.roughageMinShareOfDm.citation.table).toBeTruthy();
+    expect(rawReq.roughageMinShareOfDm.citation.page).toBeTruthy();
+  });
+
+  it('reports human verification gate status for feeds, breeds, and requirements', () => {
+    const rawFeeds = parseCsv(readFileSync(resolve(process.cwd(), 'data/feeds.csv'), 'utf8'), 'feeds.csv');
+    const rawBreeds = parseCsv(readFileSync(resolve(process.cwd(), 'data/breeds.csv'), 'utf8'), 'breeds.csv');
+    const rawReq = JSON.parse(readFileSync(resolve(process.cwd(), 'data/requirements.json'), 'utf8'));
+
+    const unverifiedFeeds = rawFeeds.filter((f) => !f.verified_on || f.verified_on.trim() === '');
+    const verifiedFeeds = rawFeeds.filter((f) => Boolean(f.verified_on && f.verified_on.trim() !== ''));
+
+    const unverifiedBreeds = rawBreeds.filter((b) => !b.verified_on || b.verified_on.trim() === '');
+    const verifiedBreeds = rawBreeds.filter((b) => Boolean(b.verified_on && b.verified_on.trim() !== ''));
+
+    const reqGates = [
+      { key: 'dmi', verifiedOn: rawReq.dmi?.verifiedOn },
+      { key: 'maintenance', verifiedOn: rawReq.maintenance?.verifiedOn },
+      { key: 'lactation', verifiedOn: rawReq.lactation?.verifiedOn },
+      { key: 'roughageMinShareOfDm', verifiedOn: rawReq.roughageMinShareOfDm?.verifiedOn },
+    ];
+    const unverifiedReqs = reqGates.filter((r) => !r.verifiedOn);
+
+    // All date values, when present, must match YYYY-MM-DD
+    for (const f of verifiedFeeds) {
+      expect(f.verified_on).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    }
+    for (const b of verifiedBreeds) {
+      expect(b.verified_on).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    }
+
+    // Verify verification pending status counts (human verification gate awaiting paravet / expert sign-off)
+    expect(unverifiedFeeds.length).toBe(30);
+    expect(unverifiedBreeds.length).toBe(16);
+    expect(unverifiedReqs.length).toBe(4);
+  });
+
+  it('inspects src/i18n/strings.ts and asserts HINDI_REVIEW matches ADR-0005 unverified contract', () => {
+    expect(HINDI_REVIEW).toBeDefined();
+    expect(HINDI_REVIEW).toEqual({
+      status: 'unverified',
+      reviewedBy: null,
+      reviewedOn: null,
+    });
+  });
+
+  it('asserts zero prototype fixture flags or placeholder values in production src/data/*.v1.json artifacts', () => {
+    const v1FileNames = ['feeds.v1.json', 'breeds.v1.json', 'requirements.v1.json'];
+    const forbiddenMarkers = [
+      '__prototype',
+      'is_fixture',
+      'fixture',
+      'isPrototype',
+      'n/a (fixture)',
+      'TODO',
+      'FIXME',
+    ];
+
+    for (const fileName of v1FileNames) {
+      const filePath = resolve(process.cwd(), 'src/data', fileName);
+      const rawText = readFileSync(filePath, 'utf8');
+
+      for (const marker of forbiddenMarkers) {
+        expect(
+          rawText.includes(marker),
+          `Production artifact ${fileName} unexpectedly contains forbidden fixture marker "${marker}"`,
+        ).toBe(false);
+      }
+
+      const parsed = JSON.parse(rawText);
+      expect(parsed).toBeDefined();
+
+      if (fileName === 'feeds.v1.json') {
+        expect(Array.isArray(parsed)).toBe(true);
+        expect(parsed.length).toBe(30);
+        for (const feed of parsed) {
+          expect(feed.id).toBeTruthy();
+          expect(feed.englishName).toBeTruthy();
+          expect(feed.vertical).toBeTruthy();
+          expect(Array.isArray(feed.availableMonths)).toBe(true);
+          expect(feed.seasonCitation).toBeTruthy();
+          expect(feed.sourceDoc).toBeTruthy();
+          expect(feed.dmSourceCitation).toBeTruthy();
+        }
+      } else if (fileName === 'breeds.v1.json') {
+        expect(Array.isArray(parsed)).toBe(true);
+        expect(parsed.length).toBe(16);
+        for (const breed of parsed) {
+          expect(breed.id).toBeTruthy();
+          expect(breed.species).toBeTruthy();
+          expect(breed.englishName).toBeTruthy();
+          expect(typeof breed.milkCapLPerDay).toBe('number');
+          expect(breed.milkCapLPerDay).toBeGreaterThan(0);
+          expect(breed.capBasis).toBeTruthy();
+          expect(breed.yieldCitation?.doc).toBeTruthy();
+        }
+      } else if (fileName === 'requirements.v1.json') {
+        expect(parsed.version).toBe('v1');
+        expect(parsed.roughageMinShareOfDm?.value).toBe(0.4);
+        expect(parsed.dmi?.citation?.doc).toBeTruthy();
+      }
+    }
   });
 });
 

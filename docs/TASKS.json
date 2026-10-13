@@ -218,7 +218,7 @@
             "docs/PROJECT_STATUS.md"
           ],
           "acceptance_criteria": "SPEC AC-1.1, AC-6.1, AC-L1.2: npm run test:full and python -m pytest -q eval/ pass with zero errors, src/data/*.v1.json contains zero prototype fixture markers, and README.md provides complete setup, verification, and audit reproduction instructions.",
-          "status": "pending"
+          "status": "completed"
         }
       ]
     }
