@@ -41,7 +41,7 @@ SahiDana is an offline-first, auditable Progressive Web Application (PWA) design
   - NRC 2001 dry-matter intake (DMI) ceiling equation (Equation 1-1 at mid-lactation week 20).
   - Per-feed intake caps (e.g. mustard cake maximum 3.0 kg/day, cottonseed cake 2.5 kg/day).
   - Minimum roughage dry-matter share ($r_{\min} = 40\%$) from indigenous green forages and dry crop residues (ICAR 2013 / NDDB).
-  - **Mandatory Basal Mineral & Salt Requirements:** Enforces mandatory daily inclusion of area-specific mineral mixture (0.10 kg lactating, 0.05 kg dry) and common salt (0.05 kg lactating, 0.03 kg dry) per NDDB RBP clinical guidance.
+  - **Mandatory Basal Mineral & Salt Requirements:** Enforces mandatory daily inclusion of area-specific mineral mixture (0.10 kg lactating, 0.05 kg dry) and common salt (0.05 kg lactating, 0.03 kg dry) following NDDB RBP field practice (team-asserted quantities, pending expert verification).
   - **Maximum Tolerable Calcium Level:** Upper bound based on NRC 2001 / ICAR Maximum Tolerable Level (1.5% of total dietary dry matter) preventing mineral antagonism.
 - **Stage 2 (Least-Cost Balanced Ration):** Calculates the cheapest combination of feeds meeting all maintenance and production nutrient requirements (Crude Protein, Metabolizable Energy, Calcium, Phosphorus, Dry Matter, and Roughage) at step yield $S = \lfloor Y^* \times 10 \rfloor / 10$ L/day.
 - **Stage 2' (Unconstrained Cost Benchmark):** Solves least-cost feeding without the paravet's budget constraint to determine genuine economic daily savings ($Z = \text{cost}_{\text{today}} - \text{cost}_{\text{stage2}}$) vs the farmer's current feeding practice.
@@ -82,7 +82,7 @@ SahiDana is an offline-first, auditable Progressive Web Application (PWA) design
 │             ▼                                     ▼                    │
 │  ┌───────────────────────┐       ┌──────────────────────────────────┐  │
 │  │   Tap-to-Audit Drawer │       │   Pre-Compiled v1 Data Library   │  │
-│  │  (Citations & Duals)  │       │   (30 Feeds, 16 Breeds, ICAR)    │  │
+│  │  (Citations & Duals)  │       │   (31 Feeds, 16 Breeds, ICAR)    │  │
 │  └───────────────────────┘       └──────────────────────────────────┘  │
 └────────────────────────────────────────────────────────────────────────┘
                                    │
@@ -244,12 +244,13 @@ Extraction accuracy was evaluated across 30 hand-labelled descriptions in `eval/
 - **Feed Nutritive Values:** NDDB (2012) *Nutritive Value of Commonly Available Feeds and Fodders in India*, Tables 1, 2, and 4; Feedipedia.
 - **Seasonal Availability:** ICAR-CRIDA *Jaipur District Agriculture Contingency Plan* (2011), Table 1.7; NDDB (2012).
 - **Breed Milk Yields & Caps:** NDDB *Dairying in Rajasthan* (2016), NDDB *Dairying in Punjab* (2014), NDDB *Dairying in Gujarat* (2013), ICAR-CIRB Buffalopedia, DAHD *Basic Animal Husbandry Statistics 2025* (BAHS 2025).
-- **Nutrient Requirements:** ICAR (2013) *Nutrient Requirements of Cattle and Buffalo*; NRC (2001) *Nutrient Requirements of Dairy Cattle* (7th rev. ed., Equation 1-1); NDDB Ration Balancing Programme.
+- **Nutrient Requirements:** ICAR (2013) *Nutrient Requirements of Cattle and Buffalo*; NRC (2001) *Nutrient Requirements of Dairy Cattle* (7th rev. ed., Equation 1-1); NDDB Ration Balancing Programme. The per-litre lactation values are a linear approximation of the ICAR 2013 standard by fat %, pending a check against the printed tables.
 
 ### Human Verification Gates
 1. **Data Citation Audit Gate:**
    - Every row in `data/feeds.csv`, `data/breeds.csv`, and `data/requirements.json` carries a `verified_on` / `verifiedOn` field.
-   - Enforced by `tests/unit/compileData.test.ts`. All 31 feeds, 16 breeds, and requirement formulas are audited for primary publication provenance.
+   - Enforced by `tests/unit/compileData.test.ts`: every feed, breed and requirement value must carry a source citation.
+   - **Current status (2026-10-14):** values are cited, but expert sign-off is still pending for every row; `verifiedOn` is empty and `npm run compile:data` prints a warning for each. The app shows "Expert check: pending" on these figures in the audit drawer, and default prices show their reliability tier (`mandi`, `trade_report`, `listing`, `team_estimate`).
 2. **Hindi Review Gate (ADR-0005 / ADR-0009):**
    - Maintained in `src/i18n/strings.ts` with strict human-in-the-loop verification status:
      ```typescript
@@ -259,7 +260,7 @@ Extraction accuracy was evaluated across 30 hand-labelled descriptions in `eval/
        reviewedOn: null,
      } as const;
      ```
-   - All UI strings, Devanagari breed/feed names, and templates carry pending verification status until scheduled native-speaker review (ADR-0005) on 2026-10-14.
+   - All UI strings, Devanagari breed/feed names, and templates carry pending verification status until native-speaker review (ADR-0005) is recorded.
    - Enforced by `tests/unit/compileData.test.ts` and `tests/unit/i18n.test.ts` to guarantee honest provenance flags with zero script leakage.
 3. **Zero Prototype Fixtures in Production Data:**
    - Production JSON files (`src/data/feeds.v1.json`, `src/data/breeds.v1.json`, `src/data/requirements.v1.json`) are audited to ensure zero prototype fixture flags (`__prototype`, `is_fixture`, `fixture`, `isPrototype`) or placeholder values exist.
@@ -269,7 +270,7 @@ Extraction accuracy was evaluated across 30 hand-labelled descriptions in `eval/
 ## Hackathon Team & Contributions
 
 SahiDana was developed for Track 6 of Hack4Pashudhan by a multidisciplinary team:
-- **Clinical Data & Provenance Compilation:** Calibration of nutritive tables, requirements, and breed potential against published ICAR 2013 standards, NDDB 2012 tables, CIRB Buffalopedia, and NRC 2001 equations with automated human verification gates.
+- **Clinical Data & Provenance Compilation:** Transcription of nutritive tables, requirements and breed benchmarks from ICAR 2013, NDDB 2012, CIRB Buffalopedia and NRC 2001, each with a citation; expert verification is pending.
 - **Field Data & Mandi Benchmarks:** Regional price benchmarks across Jaipur mandi, RAJFED trade reports, and Rajasthan Zone IV agro-byproduct surveys.
 - **Software Architecture & Optimization:** Two-stage linear programming engine, SciPy HiGHS cross-check evaluation, offline PWA implementation, and bilingual UI engineering.
 

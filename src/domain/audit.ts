@@ -233,6 +233,7 @@ export function auditFeedPrice(feed: FeedItem, price: number | null): AuditMeta 
       page: feed.sourcePage,
       formula: `CP ${formatNumber(feed.cpPctDm, 1)}% · ME ${formatNumber(feed.meMcalPerKgDm, 2)} Mcal/kg · Ca ${formatNumber(feed.caGramsPerKgDm, 1)} g/kg · P ${formatNumber(feed.pGramsPerKgDm, 1)} g/kg (DM basis) · DM ${formatNumber(feed.dmPct, 0)}%`,
       provenanceStatus: feed.provenanceStatus === 'cited' && !feed.priceSource ? 'cited' : 'team-asserted',
+      verifiedOn: feed.verifiedOn,
     },
     solverConstraint: null,
     sourceKey: feed.sourceKey ?? feed.id,
@@ -308,6 +309,7 @@ export function auditRoughageShare(solution: RationSolution, feeds: FeedItem[]):
       page: ROUGHAGE_CITATION.page,
       formula: `${formatNumber(roughDm, 2)} ÷ ${formatNumber(totalDm, 2)} kg DM = ${formatPct(solution.roughageSharePct, 1)} (≥ ${formatPct(solution.roughageMinSharePct, 0)})`,
       provenanceStatus: 'cited',
+      verifiedOn: requirementsV1.roughageMinShareOfDm.verifiedOn,
     },
     solverConstraint: {
       role: t('audit_role_roughage'),

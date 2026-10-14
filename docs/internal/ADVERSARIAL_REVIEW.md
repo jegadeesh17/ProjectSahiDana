@@ -36,3 +36,12 @@ None.
 - `tests/e2e/language.spec.ts:8-28`: The `ALLOWED_HI_LATIN` whitelist contains specific publication titles (`Down`, `To`, `Earth`, `Kisan`, `Tak`) cited in price notes. If future data updates introduce new external English citations in Hindi price notes, consider extracting citation tokens automatically from data sources or annotating them with an explicit citation wrapper so the whitelist does not need manual expansion.
 - `BRAINSTORM.md`: Working tree has unstaged modifications capturing early project brainstorm notes from 2026-10-12; consider committing or discarding them to keep git status clean.
 
+
+## Change 2 (ship-ready), M1 Review 1 (2026-10-14)
+Verdict: REJECTED. Base 64f19eb. tsc 0; npm test 178/178; playwright 13/13; pytest eval/ 68 passed.
+
+Critical defects:
+1. `src/i18n/strings.ts` `audit_peak_note` still labelled the breed note "Peak note", so the Murrah drawer still called the 9.64 L cap a peak. Fix: neutral "Source note" label plus a unit test.
+2. README said feed figures show "Expert check: pending", but the feed/price audit sheet and `auditRoughageShare` passed no `verifiedOn`. Fix: pass `verifiedOn` through (`src/domain/audit.ts`); README "most rows" corrected to "every row".
+
+Non-blocking: `basis_cited_peak_explain` wording, a stale Hindi-review comment, a missing semicolon in `ration-journey.spec.ts`.

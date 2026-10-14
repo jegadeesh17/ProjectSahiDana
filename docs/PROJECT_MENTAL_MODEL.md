@@ -77,3 +77,23 @@ Prototype, meaning the thinnest working path per milestone. Exception: the solve
 - Veterinary or medical advice.
 - A native app.
 
+
+---
+
+# Change 2: Ship-ready (started 2026-10-14)
+
+- **Change:** make SahiDana ready to ship for the Hack4Pashudhan submission (deadline Thu 15 Oct 2026, 11:59 PM IST).
+- **Change type:** Fix (with a UX Feature in M2). Keep the incumbent design world in root `PRODUCT.md` and `DESIGN.md`.
+- **Posture:** Prototype, matching the project. Solver and data-honesty checks keep thorough tests.
+- **Branch:** `main` (user decision 2026-10-14: judges read `main`; no PR step).
+- **Base commit:** `64f19eb` (baseline of the 25 previously uncommitted files; `c1785ef` holds the docs/internal renames).
+- **Tracking files:** `docs/internal/TASKS.json`, `docs/internal/QA_RESULTS.json`, `docs/internal/ADVERSARIAL_REVIEW.md`, `docs/internal/FEEDBACK.md` (user decision 2026-10-14: keep `docs/` tidy for judges). Every delegation names these paths.
+- **Project facts:** `ui` yes, `deploy` yes, `sensitive-data` no, `existing-code` yes.
+- **Team retro:** `~/.se-agents/retros/ProjectSahiDana-2026-10-14.md`
+
+**Scope (user-selected 2026-10-14):**
+1. Vercel live deploy with the URL at the top of the README.
+2. Clinical honesty fixes: Murrah milk cap and its labels; unverified requirement values labelled honestly in UI and README. No invented numbers.
+3. README and claims audit: only true, verified statements.
+4. Full test and review gate, then push.
+5. UI usable and simple for farmers and paravets, clear instructions, and one unified start-to-end flow toward the goal (a balanced, least-cost ration).

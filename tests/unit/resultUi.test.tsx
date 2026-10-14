@@ -1,6 +1,11 @@
 import { act, cleanup, fireEvent, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { App } from '../../src/App';
+import { AuditProvider, useAudit } from '../../src/components/AuditDrawer';
+import feedsV1 from '../../src/data/feeds.v1.json';
+import { auditFeedPrice } from '../../src/domain/audit';
+import type { FeedItem } from '../../src/domain/types';
+import { LanguageProvider } from '../../src/i18n/LanguageProvider';
 import { LANG_STORAGE_KEY, setActiveLang } from '../../src/i18n/lang';
 import { setRationAdapterMode } from '../../src/services/rationService';
 
@@ -242,6 +247,7 @@ describe('honest labelling of unverified and benchmark figures', () => {
     expect(dialog.querySelector('[data-testid="expert-pending"]')?.textContent).toContain('Expert check: pending');
     expect(dialog.textContent).toContain('Cited figure:');
     expect(dialog.textContent).not.toContain('Cited average');
+    expect(dialog.textContent).not.toMatch(/peak/i);
   });
 
   it('shows the pending line in Hindi too, with no English leaking in', () => {
@@ -252,7 +258,48 @@ describe('honest labelling of unverified and benchmark figures', () => {
       fireEvent.click(container.querySelector<HTMLElement>('.benchmark .fig')!);
     });
     const pending = container.querySelector('[data-testid="expert-pending"]');
+    expect(container.querySelector('[role="dialog"][data-audit-id^="breed-cap-"]')?.textContent).not.toContain('चरम');
     expect(pending?.textContent).toContain('विशेषज्ञ जाँच: बाकी');
     expect(pending?.textContent).not.toMatch(/[A-Za-z]/);
+  });
+});
+
+describe('feed audit sheet', () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    setActiveLang('en');
+  });
+  afterEach(() => {
+    cleanup();
+    window.localStorage.clear();
+    setActiveLang('en');
+  });
+
+  function OpenFeed({ feed }: { feed: FeedItem }) {
+    const { open } = useAudit();
+    return <button onClick={() => open(auditFeedPrice(feed, null))}>open feed</button>;
+  }
+  const feed = (feedsV1 as unknown as FeedItem[])[0]!;
+
+  it('shows “Expert check: pending” when the feed’s verifiedOn is null, and nothing when it is set', () => {
+    const view = (f: FeedItem) =>
+      render(
+        <LanguageProvider>
+          <AuditProvider>
+            <OpenFeed feed={f} />
+          </AuditProvider>
+        </LanguageProvider>,
+      );
+    const { container, unmount } = view({ ...feed, verifiedOn: null });
+    act(() => {
+      fireEvent.click(container.querySelector('button')!);
+    });
+    expect(container.ownerDocument.querySelector('[data-testid="expert-pending"]')?.textContent).toContain('Expert check: pending');
+    unmount();
+    const second = view({ ...feed, verifiedOn: '2026-10-01' });
+    act(() => {
+      fireEvent.click(second.container.querySelector('button')!);
+    });
+    expect(second.container.ownerDocument.querySelector('[data-testid="expert-pending"]')).toBeNull();
   });
 });

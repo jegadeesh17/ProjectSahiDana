@@ -391,8 +391,8 @@ export const strings = {
   basis_breed_average_calc: { hi: 'ब्यांत का औसत (चरम दर्ज नहीं)', en: 'lactation average (no peak cited)' },
   basis_dahd_average: { hi: 'राष्ट्रीय औसत (DAHD)', en: 'national average (DAHD)' },
   basis_cited_peak_explain: {
-    hi: 'स्रोत में दर्ज नस्ल का दैनिक दूध (स्रोत-टिप्पणी में उसकी सीमा दी है); इसे ही सीमा माना गया',
-    en: 'The daily yield the source reports for the breed (its source note gives the range), used as the cap',
+    hi: 'स्रोत में दर्ज नस्ल का दैनिक दूध (स्रोत-टिप्पणी देखें); इसे ही सीमा माना गया',
+    en: 'The daily yield the source reports for the breed (see the source note), used as the cap',
   },
   basis_range_top_explain: {
     hi: 'प्रकाशित दुग्ध-उत्पादन सीमा का ऊपरी मान, दुग्ध-अवधि के दिनों से भाग दिया गया',
@@ -422,7 +422,7 @@ export const strings = {
   audit_expert_pending: { hi: 'विशेषज्ञ जाँच: बाकी', en: 'Expert check: pending' },
   audit_cap_basis: { hi: 'सीमा का आधार', en: 'How the cap is set' },
   audit_notes: { hi: 'टिप्पणी', en: 'Note' },
-  audit_peak_note: { hi: 'चरम उत्पादन पर टिप्पणी', en: 'Peak note' },
+  audit_peak_note: { hi: 'उत्पादन पर टिप्पणी', en: 'Yield note' },
   audit_source_note: { hi: 'स्रोत पर टिप्पणी', en: 'Source note' },
   action_use_today_cost: { hi: 'आज की लागत लें', en: 'Use today’s cost' },
   status_line_budget_low: { hi: 'बजट कम · गुज़ारे से नीचे · जाँच {date}', en: 'Budget below maintenance · checked {date}' },
@@ -658,7 +658,7 @@ export const strings = {
 export type StringId = keyof typeof strings;
 export type BiParams = Record<string, number | string | BiText>;
 
-/** Hindi strings stay unverified until the native-speaker review on 2026-10-14 (ADR-0005). */
+/** Hindi strings stay unverified until native-speaker review is recorded (ADR-0005). */
 export const HINDI_REVIEW = {
   status: 'unverified',
   reviewedBy: null,
