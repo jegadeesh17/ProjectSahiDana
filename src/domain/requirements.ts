@@ -13,9 +13,24 @@ import type {
 } from './types';
 
 /** A requirement is verified only when every data block behind it is; otherwise it stays null (expert check pending). */
-function verifiedOnAll(...blocks: { verifiedOn: string | null }[]): string | null {
-  return blocks.every((b) => b.verifiedOn) ? (blocks[0]?.verifiedOn ?? null) : null;
+export function verifiedOnAll(...blocks: { verifiedOn: string | null }[]): string | null {
+  const dates = blocks.map((b) => b.verifiedOn);
+  if (dates.length === 0 || dates.some((d) => !d)) return null;
+  return (dates as string[]).reduce((latest, d) => (d > latest ? d : latest));
 }
+
+/** The roughage minimum's citation: the model's own record, and the single source of its verifiedOn for the audit sheets. */
+export const ROUGHAGE_MODEL_CITATION: AuditCitation = {
+  sourceDoc: requirementsV1.roughageMinShareOfDm.citation.doc,
+  sourceTable: requirementsV1.roughageMinShareOfDm.citation.table,
+  sourcePage: requirementsV1.roughageMinShareOfDm.citation.page,
+  formulaDisplay: requirementsV1.roughageMinShareOfDm.note,
+  maintenancePart: requirementsV1.roughageMinShareOfDm.value,
+  lactationPart: 0,
+  provenanceStatus: 'cited',
+  verifiedOn: requirementsV1.roughageMinShareOfDm.verifiedOn,
+  sourceKey: 'REQ-ROUGHAGE-MIN',
+};
 
 function resolveFatPct(animal: AnimalProfile): number {
   const raw = animal.milkFatPct;
@@ -130,18 +145,6 @@ export function buildRequirementModel(animal: AnimalProfile): RequirementModel {
   const kY = dmi.fcmCoeff * lagFactor * fcmPerLitre;
   const fAbove = Math.max(0, f - lactation.caFatBaselinePct);
 
-  const roughageCit: AuditCitation = {
-    sourceDoc: roughageMinShareOfDm.citation.doc,
-    sourceTable: roughageMinShareOfDm.citation.table,
-    sourcePage: roughageMinShareOfDm.citation.page,
-    formulaDisplay: roughageMinShareOfDm.note,
-    maintenancePart: roughageMinShareOfDm.value,
-    lactationPart: 0,
-    provenanceStatus: 'cited',
-    verifiedOn: roughageMinShareOfDm.verifiedOn,
-    sourceKey: 'REQ-ROUGHAGE-MIN',
-  };
-
   const baseModel: RequirementModel = {
     CP: {
       maintenance: maintenance.cpPerKgBw075 * bw075,
@@ -171,7 +174,7 @@ export function buildRequirementModel(animal: AnimalProfile): RequirementModel {
     },
     roughage: {
       minShareOfDm: roughageMinShareOfDm.value,
-      citation: roughageCit,
+      citation: ROUGHAGE_MODEL_CITATION,
     },
     mineralSupplement: requirementsV1.mineralSupplement,
     calciumMax: requirementsV1.calciumMaxRatioOfRequirement,

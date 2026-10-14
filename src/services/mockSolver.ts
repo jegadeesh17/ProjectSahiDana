@@ -26,7 +26,8 @@ import type {
 import type { LpRow } from './miniSimplex';
 import { maximize } from './miniSimplex';
 
-export const FEEDS = feedsJson as unknown as FeedItem[];
+// The prototype fixtures carry no expert check, so every one is explicitly pending.
+export const FEEDS = (feedsJson as unknown as FeedItem[]).map((f) => ({ ...f, verifiedOn: null }));
 const FEED_BY_ID = new Map(FEEDS.map((f) => [f.id, f]));
 
 /** Fixed so screenshots and tests are deterministic. */

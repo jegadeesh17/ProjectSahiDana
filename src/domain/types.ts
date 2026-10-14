@@ -57,7 +57,8 @@ export interface FeedItem {
   seasonNote: BiText;
   seasonCitation?: string;
   seasonProvenance?: 'cited' | 'team-asserted';
-  verifiedOn?: string | null;
+  /** YYYY-MM-DD of the human expert check; null = expert check pending. */
+  verifiedOn: string | null;
   /** Prototype only: marks every fixture value so nobody mistakes it for the cited library (M1). */
   sourceKey?: string;
   isPrototypeFixture?: boolean;
@@ -114,7 +115,8 @@ export interface BreedStandard {
   sourcePage: string;
   sourceNote: string;
   provenanceStatus: 'cited' | 'team-asserted';
-  verifiedOn?: string | null;
+  /** YYYY-MM-DD of the human expert check; null = expert check pending. */
+  verifiedOn: string | null;
   /** Prototype only: PROTO-BREED-* */
   sourceKey?: string;
   verificationStatus?: string;
@@ -147,8 +149,8 @@ export interface AuditCitation {
   maintenancePart: number;
   lactationPart: number;
   provenanceStatus: 'cited' | 'team-asserted';
-  /** null = pending human expert verification; undefined = not tracked for this figure. */
-  verifiedOn?: string | null;
+  /** YYYY-MM-DD of the human expert check; null = pending human expert verification. */
+  verifiedOn: string | null;
   sourceKey: string;
 }
 
@@ -420,8 +422,8 @@ export interface AuditMeta {
     page: string;
     formula?: string;
     provenanceStatus: 'cited' | 'team-asserted';
-    /** null = expert check pending (shows a line on the sheet); undefined = not tracked. */
-    verifiedOn?: string | null;
+    /** null = expert check pending (shows a line on the sheet). */
+    verifiedOn: string | null;
   } | null;
   /** role and activeConstraint are BiText (not string) so the sheet stays bilingual; breakdown is language-neutral arithmetic. */
   solverConstraint: { role: BiText; activeConstraint: BiText; breakdown: string } | null;

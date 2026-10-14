@@ -2,10 +2,12 @@
 import requirementsV1 from '../data/requirements.v1.json';
 import { formatInr, formatInrPerKg, formatKg, formatNumber, formatPct } from '../i18n/format';
 import type { BiText } from '../i18n/strings';
+import { getActiveLang } from '../i18n/lang';
 import { t } from '../i18n/strings';
 import { RELIABILITY_STRING } from './feedGroups';
 import { feedNameBi, LIMIT_STRING_ID } from './feedNames';
 import { formatLimit, formatNutrient, perKgFed, PER_KG_FIELD, REQ_FIELD } from './nutrition';
+import { ROUGHAGE_MODEL_CITATION } from './requirements';
 import type {
   AuditMeta,
   FeedItem,
@@ -103,7 +105,18 @@ export function auditCoverage(n: NutrientKey, solution: RationSolution, req: Req
   };
 }
 
+/** The forced basal minimum of the two mineral feeds (team-asserted NDDB field practice, expert check pending). */
+function basalMinimumFor(feed: FeedItem, solution: RationSolution): { kg: number; dry: boolean } | null {
+  const { mineralMixMinKgPerDay, saltMinKgPerDay } = requirementsV1.mineralSupplement;
+  const dry = solution.verdict.kind === 'dry_animal';
+  if (feed.id === 'mineral_mix') return { kg: dry ? mineralMixMinKgPerDay.dry : mineralMixMinKgPerDay.lactating, dry };
+  if (feed.id === 'common_salt') return { kg: dry ? saltMinKgPerDay.dry : saltMinKgPerDay.lactating, dry };
+  return null;
+}
+
 export function auditFeedKg(feed: FeedItem, kg: number, atCap: boolean, solution: RationSolution): AuditMeta {
+  const basal = basalMinimumFor(feed, solution);
+  const supplement = requirementsV1.mineralSupplement;
   return {
     id: `kg-${feed.id}`,
     label: t('audit_label_feed_kg', { feed: feedNameBi(feed) }),
@@ -118,6 +131,21 @@ export function auditFeedKg(feed: FeedItem, kg: number, atCap: boolean, solution
     },
     binding: atCap,
     sourceKey: solution.sourceKey,
+    ...(basal && {
+      citation: {
+        doc: supplement.citation.doc,
+        table: supplement.citation.table,
+        page: supplement.citation.page,
+        provenanceStatus: 'team-asserted' as const,
+        verifiedOn: supplement.verifiedOn,
+      },
+      extraRows: [
+        {
+          label: t('audit_basal_min'),
+          value: t(basal.dry ? 'audit_basal_min_dry' : 'audit_basal_min_lactating', { kg: formatKg(basal.kg) }),
+        },
+      ],
+    }),
   };
 }
 
@@ -260,7 +288,6 @@ export function auditMaxSupply(item: InfeasibilityReport['limitingNutrients'][nu
 }
 
 const ROUGHAGE_CITATION = requirementsV1.roughageMinShareOfDm.citation;
-const ROUGHAGE_NOTE = requirementsV1.roughageMinShareOfDm.note;
 
 /** The cited roughage minimum share of total ration dry matter (ICAR 2013 / NDDB, AC-5.12, AC-6.1, AC-6.3, AC-E2.2). */
 export function auditRoughageMin(minPct: number): AuditMeta {
@@ -274,14 +301,14 @@ export function auditRoughageMin(minPct: number): AuditMeta {
       doc: ROUGHAGE_CITATION.doc,
       table: ROUGHAGE_CITATION.table,
       page: ROUGHAGE_CITATION.page,
-      formula: `roughage DM ÷ total DM ≥ ${formatPct(minPct, 0)} (${ROUGHAGE_NOTE})`,
+      formula: t('audit_roughage_formula', { min: formatPct(minPct, 0) })[getActiveLang()],
       provenanceStatus: 'cited',
-      verifiedOn: requirementsV1.roughageMinShareOfDm.verifiedOn,
+      verifiedOn: ROUGHAGE_MODEL_CITATION.verifiedOn,
     },
     solverConstraint: {
       role: t('audit_role_roughage'),
       activeConstraint: t('audit_constraint_roughage'),
-      breakdown: `roughage DM ÷ total DM ≥ ${formatPct(minPct, 0)}`,
+      breakdown: t('audit_roughage_ratio', { min: formatPct(minPct, 0) })[getActiveLang()],
     },
     sourceKey: 'REQ-ROUGHAGE-MIN',
   };
@@ -309,7 +336,7 @@ export function auditRoughageShare(solution: RationSolution, feeds: FeedItem[]):
       page: ROUGHAGE_CITATION.page,
       formula: `${formatNumber(roughDm, 2)} ÷ ${formatNumber(totalDm, 2)} kg DM = ${formatPct(solution.roughageSharePct, 1)} (≥ ${formatPct(solution.roughageMinSharePct, 0)})`,
       provenanceStatus: 'cited',
-      verifiedOn: requirementsV1.roughageMinShareOfDm.verifiedOn,
+      verifiedOn: ROUGHAGE_MODEL_CITATION.verifiedOn,
     },
     solverConstraint: {
       role: t('audit_role_roughage'),

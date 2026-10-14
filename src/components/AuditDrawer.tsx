@@ -156,7 +156,8 @@ function FinePrintSheet({ meta, onClose }: { meta: AuditMeta; onClose: () => voi
               )}
               <Row labelId="audit_status">
                 <Bi id={meta.citation.provenanceStatus === 'cited' ? 'label_cited' : 'label_team_asserted'} />
-                {meta.citation.verifiedOn === null && (
+                {/* Pending only for a cited figure: when the sheet shows the user's own value, the feed's expert check does not apply. */}
+                {meta.citation.verifiedOn === null && meta.originType !== 'user_input' && (
                   <span className="detail-note" data-testid="expert-pending">
                     {' · '}
                     <Bi id="audit_expert_pending" />

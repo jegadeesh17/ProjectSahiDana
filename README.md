@@ -28,9 +28,10 @@ SahiDana is an offline-first, auditable Progressive Web Application (PWA) design
 
 ## Live Demo & Quick Access
 
-- **Live app:** [https://sahidana.vercel.app](https://sahidana.vercel.app) (installable PWA; tap "Lactating buffalo" or "Straw only" under One-tap demo). The AI features ("Fill from description", "Explain") need an OpenRouter key on the server; without one, the app uses its offline template explanation.
-- **Local / Demonstration Run:** Run `npm run dev` or `npm run preview` to launch the offline PWA instantly on `http://localhost:5173`.
-- **Offline PWA:** Fully installable to Android home screen; caches application shell, fonts, and feed/breed datasets on first visit for 100% offline doorstep operation.
+- **Live app:** [https://sahidana.vercel.app](https://sahidana.vercel.app) (installable PWA). Tap **Lactating buffalo** (हिंदी: *दुधारू भैंस*) for a balanced ration, or **Straw only** (*सिर्फ़ भूसा*) for an infeasible one with the missing nutrients named, under **One-tap demo** (*एक-टैप डेमो*). The हिंदी / English toggle in the top bar switches every label.
+- **What works offline vs online:** the solver, requirements, feed library, audit drawer, demos and the template explanation work fully offline. The two AI features call `/api/llm` and need internet plus an `OPENROUTER_API_KEY` on the server: without a key, **Explain** falls back to the template explanation, and **Fill from description** shows an error, so enter the animal by hand. The free OpenRouter models can also be rate-limited under load, with the same fallbacks.
+- **Local run (for development):** `npm run dev`, then open `http://localhost:5173`. Use `npm run build && npm run preview` to test the installable offline PWA locally.
+- **Offline PWA:** installable to an Android home screen; the service worker caches the app shell, fonts and feed/breed datasets on first visit, so the solver core works at the doorstep with no network.
 - **Repository:** [https://github.com/jegadeesh17/ProjectSahiDana](https://github.com/jegadeesh17/ProjectSahiDana)
 
 ---

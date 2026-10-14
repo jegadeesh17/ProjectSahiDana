@@ -11,7 +11,7 @@ import {
   feedLimitNames,
   formatBreedFat,
 } from '../domain/auditMilk';
-import { isNonDescript } from '../domain/breeds';
+import { CAP_BASIS_LABEL } from '../domain/breeds';
 import type { AnimalProfile, BreedStandard, FeedItem, RationSolution } from '../domain/types';
 import { limitingListText, litres1, litresNatural, verdictId } from '../domain/verdict';
 import { formatInr, formatLitres, formatPct } from '../i18n/format';
@@ -67,7 +67,7 @@ export function SupportsHeadline({ solution, profile, breed, library }: Props) {
           ·
         </span>
         <span>
-          <Bi id={isNonDescript(breed) ? 'label_milk_cap_national' : 'label_milk_cap_benchmark'} />{' '}
+          <Bi id={CAP_BASIS_LABEL[breed.capBasis]} />{' '}
           <Fig inline audit={auditBreedCap(breed, todayMilk)}>
             {formatLitres(solution.milkCapLPerDay, 2)}
           </Fig>

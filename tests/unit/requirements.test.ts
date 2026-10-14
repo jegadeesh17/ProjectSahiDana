@@ -4,6 +4,7 @@ import {
   buildRequirementModel,
   computeRequirements,
   evaluateRequirementsAtMilk,
+  verifiedOnAll,
 } from '../../src/domain/requirements';
 import { NUTRIENT_KEYS, type AnimalProfile } from '../../src/domain/types';
 
@@ -151,3 +152,17 @@ describe('linear nutrient requirements engine and NRC 2001 DMI ceiling (AC-2.1)'
   });
 });
 
+
+describe('verifiedOnAll', () => {
+  it('returns the latest date when every block is verified, whatever the order', () => {
+    expect(verifiedOnAll({ verifiedOn: '2026-09-01' }, { verifiedOn: '2026-10-05' }, { verifiedOn: '2026-08-20' })).toBe('2026-10-05');
+    expect(verifiedOnAll({ verifiedOn: '2026-10-05' }, { verifiedOn: '2026-09-01' })).toBe('2026-10-05');
+    expect(verifiedOnAll({ verifiedOn: '2026-09-01' })).toBe('2026-09-01');
+  });
+
+  it('returns null when any block is unverified, and for no blocks', () => {
+    expect(verifiedOnAll({ verifiedOn: '2026-09-01' }, { verifiedOn: null })).toBeNull();
+    expect(verifiedOnAll({ verifiedOn: null })).toBeNull();
+    expect(verifiedOnAll()).toBeNull();
+  });
+});

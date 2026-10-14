@@ -1,5 +1,5 @@
 import { auditBreedCap, auditBreedFat, formatBreedFat } from '../domain/auditMilk';
-import { CAP_BASIS_STRING, isNonDescript } from '../domain/breeds';
+import { CAP_BASIS_LABEL, CAP_BASIS_STRING, isNonDescript } from '../domain/breeds';
 import type { BreedStandard } from '../domain/types';
 import { formatLitres } from '../i18n/format';
 import { Bi } from '../i18n/Bi';
@@ -23,7 +23,7 @@ export function BreedBenchmark({ breed, todayMilk }: Props) {
       <dl className="benchmark-grid">
         <div>
           <dt>
-            <Bi id={isNonDescript(breed) ? 'label_milk_cap_national' : 'label_milk_cap_benchmark'} />
+            <Bi id={CAP_BASIS_LABEL[breed.capBasis]} />
           </dt>
           <dd>
             <Fig audit={auditBreedCap(breed, todayMilk)}>{formatLitres(breed.milkCapLPerDay, 2)}</Fig>

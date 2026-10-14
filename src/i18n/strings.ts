@@ -379,16 +379,25 @@ export const strings = {
   error_breed_required: { hi: 'नस्ल चुनें', en: 'Select a breed' },
   label_benchmark_breed: { hi: 'नस्ल का मानक', en: 'Breed benchmark' },
   label_benchmark_national: { hi: 'राष्ट्रीय औसत (DAHD)', en: 'National average (DAHD)' },
-  label_milk_cap: { hi: 'नस्ल का औसत दूध', en: 'Reported breed average' },
   label_milk_cap_benchmark: { hi: 'प्रकाशित नस्ल-मानक दूध', en: 'Cited breed benchmark' },
+  label_milk_cap_calculated: {
+    hi: 'नस्ल-मानक दूध (प्रकाशित आँकड़ों से गणना)',
+    en: 'Breed benchmark (calculated from cited figures)',
+  },
   label_milk_cap_national: { hi: 'राष्ट्रीय औसत दूध', en: 'National average' },
   label_breed_fat: { hi: 'नस्ल का फैट', en: 'Breed fat' },
   label_not_cited: { hi: 'उल्लेख नहीं', en: 'not cited' },
   hint_tap_benchmark: { hi: 'आँकड़े को दबाएँ: स्रोत और हिसाब दिखेगा', en: 'Tap a figure to see its source and working' },
   basis_cited_peak: { hi: 'स्रोत में दर्ज दैनिक उत्पादन', en: 'cited daily yield, as reported' },
-  basis_range_top: { hi: 'ब्यांत का औसत (चरम दर्ज नहीं)', en: 'lactation average (no peak cited)' },
-  basis_breed_average: { hi: 'ब्यांत का औसत (चरम दर्ज नहीं)', en: 'lactation average (no peak cited)' },
-  basis_breed_average_calc: { hi: 'ब्यांत का औसत (चरम दर्ज नहीं)', en: 'lactation average (no peak cited)' },
+  basis_range_top: {
+    hi: 'प्रकाशित उत्पादन सीमा का ऊपरी मान ÷ सबसे छोटी दुग्ध-अवधि',
+    en: 'top of cited yield range ÷ shortest lactation',
+  },
+  basis_breed_average: { hi: 'प्रकाशित औसत दैनिक दूध', en: 'cited average daily yield' },
+  basis_breed_average_calc: {
+    hi: 'प्रकाशित दुग्ध-उत्पादन ÷ दुग्ध-अवधि के दिन',
+    en: 'cited lactation yield ÷ lactation days',
+  },
   basis_dahd_average: { hi: 'राष्ट्रीय औसत (DAHD)', en: 'national average (DAHD)' },
   basis_cited_peak_explain: {
     hi: 'स्रोत में दर्ज नस्ल का दैनिक दूध (स्रोत-टिप्पणी देखें); इसे ही सीमा माना गया',
@@ -421,6 +430,15 @@ export const strings = {
   audit_cap_working_cited: { hi: 'प्रकाशित मान: {cap} L/दिन', en: 'Cited figure: {cap} L/day' },
   audit_expert_pending: { hi: 'विशेषज्ञ जाँच: बाकी', en: 'Expert check: pending' },
   audit_cap_basis: { hi: 'सीमा का आधार', en: 'How the cap is set' },
+  audit_basal_min: { hi: 'न्यूनतम बुनियादी मात्रा', en: 'Basal minimum' },
+  audit_basal_min_lactating: {
+    hi: 'दुधारू पशु के लिए रोज़ कम से कम {kg}; हर राशन में रखा जाता है',
+    en: 'At least {kg} a day for an animal in milk; kept in every ration',
+  },
+  audit_basal_min_dry: {
+    hi: 'सूखे पशु के लिए रोज़ कम से कम {kg}; हर राशन में रखा जाता है',
+    en: 'At least {kg} a day for a dry animal; kept in every ration',
+  },
   audit_notes: { hi: 'टिप्पणी', en: 'Note' },
   audit_peak_note: { hi: 'उत्पादन पर टिप्पणी', en: 'Yield note' },
   audit_source_note: { hi: 'स्रोत पर टिप्पणी', en: 'Source note' },
@@ -632,6 +650,11 @@ export const strings = {
     hi: 'देशी चारा + फ़सल अवशेष का शुष्क पदार्थ ≥ कुल शुष्क पदार्थ का न्यूनतम हिस्सा',
     en: 'Dry matter of indigenous forage + crop residue ≥ minimum share of total dry matter',
   },
+  audit_roughage_formula: {
+    hi: 'राशन के शुष्क पदार्थ का कम से कम {min} रेशेदार चारे से',
+    en: 'at least {min} of ration dry matter from roughage',
+  },
+  audit_roughage_ratio: { hi: 'रेशेदार चारे का DM ÷ कुल DM ≥ {min}', en: 'roughage DM ÷ total DM ≥ {min}' },
   audit_roughage_fixture: { hi: 'प्रोटोटाइप का नमूना मान', en: 'PROTOTYPE FIXTURE' },
   note_roughage_fixture: {
     hi: 'न्यूनतम हिस्सा प्रोटोटाइप का नमूना मान है। ICAR/NDDB का प्रमाणित मान M1 में आएगा।',

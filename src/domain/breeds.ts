@@ -40,6 +40,18 @@ export const CAP_BASIS_EXPLAIN = {
   dahd_average: 'basis_dahd_average_explain',
 } as const satisfies Record<CapBasis, string>;
 
+/**
+ * The label string for the milk cap of a breed, by how the cap was obtained. A cap the app divides itself
+ * (range_top, breed_average_calc) is a calculation from cited figures, never a cited figure.
+ */
+export const CAP_BASIS_LABEL = {
+  cited_peak: 'label_milk_cap_benchmark',
+  range_top: 'label_milk_cap_calculated',
+  breed_average: 'label_milk_cap_benchmark',
+  breed_average_calc: 'label_milk_cap_calculated',
+  dahd_average: 'label_milk_cap_national',
+} as const satisfies Record<CapBasis, string>;
+
 export interface CapDivision {
   basis: CapBasis;
   /** kg per lactation (null for a peak or an average quoted directly). */

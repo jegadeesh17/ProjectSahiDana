@@ -210,3 +210,13 @@ Tagline: **"Sahi dana, har number ka hisaab."** (Right feed, every number accoun
 - the side-by-side bilingual UI.
 
 **Full detail:** `docs/FEEDBACK.md` Round 3, `docs/DATA_SOURCES.md`.
+
+---
+
+## 10. Decision log: ship-ready change (2026-10-14)
+
+- **Hindi review:** the native-speaker review planned for Wed 14 Oct (§6 item 8, §7) has not happened. Hindi strings stay marked unverified (`HINDI_REVIEW` in `src/i18n/strings.ts`) until a review is recorded.
+- **Breed milk cap labels:** the app no longer calls any cap a "peak". `cited_peak` breeds show "Cited breed benchmark"; `range_top` and `breed_average_calc` breeds show "Breed benchmark (calculated from cited figures)"; non-descript breeds keep "National average". Numbers are unchanged; Murrah's 9.64 L is the upper value of reported study means and still needs checking against CIRB.
+- **Verification status:** every feed, breed and requirement row has `verifiedOn` empty. The audit drawer shows "Expert check: pending" on these figures, including the forced mineral mixture and salt minimums (team-asserted).
+- **Deploy:** live at https://sahidana.vercel.app (Vercel project `sahidana`). No OpenRouter key on the server yet, so Explain uses the template and Fill from description is unavailable there.
+- **Known gap:** the offline font E2E test runs on the dev server, which has no service worker, so it does not prove offline font self-hosting. Testing a production build is deferred.

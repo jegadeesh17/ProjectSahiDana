@@ -68,6 +68,7 @@ export function computeRequirements(animal: AnimalProfile): RequirementResult {
     maintenancePart: m,
     lactationPart: l,
     provenanceStatus: 'team-asserted' as const,
+    verifiedOn: null,
     sourceKey: `PROTO-REQ-${key}`,
   });
   const n = (v: number, d: 0 | 1 | 2) => formatNumber(v, d);
