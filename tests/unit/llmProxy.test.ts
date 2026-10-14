@@ -7,12 +7,16 @@ import handler, {
   checkRateLimit,
   DEFAULT_FALLBACK_MODELS,
   DEFAULT_PRIMARY_MODEL,
+  DEFAULT_TIMEOUT_MS,
   isAllowedOrigin,
   OPENROUTER_API_URL,
   RATE_LIMIT_MAX_REQUESTS,
+  remainingAttemptTimeoutMs,
   resetRateLimits,
   resolveModelChain,
+  resolveTimeoutMs,
   sanitizeExtractResponse,
+  TOTAL_BUDGET_MS,
   type CatalogBreedInput,
   type CatalogFeedInput,
 } from '../../api/llm';
@@ -139,10 +143,15 @@ describe('POST /api/llm serverless OpenRouter proxy (M2-TASK-02)', () => {
   });
 
   it('resolves default primary and fallback models and deduplicates custom model chains', () => {
-    expect(resolveModelChain({})).toEqual([
-      DEFAULT_PRIMARY_MODEL,
-      ...DEFAULT_FALLBACK_MODELS,
-    ]);
+    expect(DEFAULT_PRIMARY_MODEL).toBe('openrouter/free');
+    expect(DEFAULT_FALLBACK_MODELS).toEqual(['openrouter/free']);
+    // The default fallback equals the primary, so deduplication leaves a single entry.
+    expect(resolveModelChain({})).toEqual(['openrouter/free']);
+
+    // Every default model id is free: the free router or an id ending in ':free'.
+    for (const id of [DEFAULT_PRIMARY_MODEL, ...DEFAULT_FALLBACK_MODELS]) {
+      expect(id === 'openrouter/free' || id.endsWith(':free')).toBe(true);
+    }
 
     expect(
       resolveModelChain({
@@ -195,7 +204,9 @@ describe('POST /api/llm serverless OpenRouter proxy (M2-TASK-02)', () => {
     const sentBody = JSON.parse(String(init?.body)) as {
       model: string;
       messages: { role: string; content: string }[];
+      reasoning?: unknown;
     };
+    expect(sentBody.reasoning).toEqual({ effort: 'low', exclude: true });
     expect(sentBody.model).toBe(DEFAULT_PRIMARY_MODEL);
     // Prompt includes Hinglish mappings and normalized Latin digits "450"
     expect(sentBody.messages[0].content).toContain('bhains');
@@ -441,6 +452,91 @@ describe('POST /api/llm serverless OpenRouter proxy (M2-TASK-02)', () => {
     expect(ctxTimeout.getJson()).toMatchObject({
       error: { code: 'TIMEOUT' },
     });
+  });
+
+  it('parses OPENROUTER_TIMEOUT_MS as a positive integer and ignores invalid values', () => {
+    expect(DEFAULT_TIMEOUT_MS).toBe(45_000);
+    expect(resolveTimeoutMs({})).toBe(45_000);
+    expect(resolveTimeoutMs({ OPENROUTER_TIMEOUT_MS: '' })).toBe(45_000);
+    expect(resolveTimeoutMs({ OPENROUTER_TIMEOUT_MS: '30000' })).toBe(30_000);
+    expect(resolveTimeoutMs({ OPENROUTER_TIMEOUT_MS: ' 20000 ' })).toBe(20_000);
+    for (const bad of ['0', '-5', '1.5', 'abc', '10s', '1e3', 'NaN']) {
+      expect(resolveTimeoutMs({ OPENROUTER_TIMEOUT_MS: bad })).toBe(45_000);
+    }
+  });
+
+  it('caps each model call at min(timeout, remaining total budget) and returns 0 once exhausted', () => {
+    expect(TOTAL_BUDGET_MS).toBe(55_000);
+    expect(remainingAttemptTimeoutMs(0, 45_000, 0)).toBe(45_000);
+    expect(remainingAttemptTimeoutMs(0, 45_000, 20_000)).toBe(35_000);
+    expect(remainingAttemptTimeoutMs(0, 45_000, 54_999)).toBe(1);
+    expect(remainingAttemptTimeoutMs(0, 45_000, 55_000)).toBe(0);
+    expect(remainingAttemptTimeoutMs(0, 45_000, 70_000)).toBe(0);
+  });
+
+  it('passes the OPENROUTER_TIMEOUT_MS value (or the 45 s default) to the per-model abort timer', async () => {
+    const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout');
+    try {
+      fetchMock.mockResolvedValue(new Response('Bad gateway', { status: 502 }));
+      const body = {
+        action: 'extract',
+        freeText: '450 kg buffalo giving 8 L milk',
+        catalog: SAMPLE_CATALOG,
+        breeds: SAMPLE_BREEDS,
+      };
+
+      const defaultCtx = createMockReqRes(body);
+      await handler(defaultCtx.req, defaultCtx.res);
+      expect(setTimeoutSpy.mock.calls.map((c) => c[1])).toContain(45_000);
+
+      setTimeoutSpy.mockClear();
+      process.env.OPENROUTER_TIMEOUT_MS = '12000';
+      fetchMock.mockResolvedValue(new Response('Bad gateway', { status: 502 }));
+      const customCtx = createMockReqRes(body);
+      await handler(customCtx.req, customCtx.res);
+      expect(setTimeoutSpy.mock.calls.map((c) => c[1])).toContain(12_000);
+    } finally {
+      setTimeoutSpy.mockRestore();
+    }
+  });
+
+  it('stops trying further models and returns TIMEOUT (504) when the total time budget is exhausted', async () => {
+    process.env.OPENROUTER_MODEL = 'slow-1:free';
+    process.env.OPENROUTER_FALLBACK_MODELS = 'slow-2:free,slow-3:free';
+
+    let nowMs = 1_000_000;
+    const nowSpy = vi.spyOn(Date, 'now').mockImplementation(() => nowMs);
+    const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout');
+    try {
+      // First model burns 40 s then fails; second gets only the remaining 15 s and burns it; third must never run.
+      fetchMock.mockImplementationOnce(async () => {
+        nowMs += 40_000;
+        return new Response('Bad gateway', { status: 502 });
+      });
+      fetchMock.mockImplementationOnce(async () => {
+        nowMs += 15_000;
+        return new Response('Bad gateway', { status: 502 });
+      });
+      fetchMock.mockImplementation(async () => new Response('Should not be called', { status: 502 }));
+
+      const ctx = createMockReqRes({
+        action: 'extract',
+        freeText: '450 kg buffalo giving 8 L milk',
+        catalog: SAMPLE_CATALOG,
+        breeds: SAMPLE_BREEDS,
+      });
+      await handler(ctx.req, ctx.res);
+
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      const delays = setTimeoutSpy.mock.calls.map((c) => c[1]);
+      expect(delays).toContain(45_000);
+      expect(delays).toContain(15_000);
+      expect(ctx.getStatus()).toBe(504);
+      expect(ctx.getJson()).toMatchObject({ error: { code: 'TIMEOUT' } });
+    } finally {
+      setTimeoutSpy.mockRestore();
+      nowSpy.mockRestore();
+    }
   });
 
   it('validates requests and returns INVALID_REQUEST (400) for malformed inputs', async () => {

@@ -29,7 +29,7 @@ SahiDana is an offline-first, auditable Progressive Web Application (PWA) design
 ## Live Demo & Quick Access
 
 - **Live app:** [https://sahidana.vercel.app](https://sahidana.vercel.app) (installable PWA). Tap **Lactating buffalo** (हिंदी: *दुधारू भैंस*) for a balanced ration, or **Straw only** (*सिर्फ़ भूसा*) for an infeasible one with the missing nutrients named, under **One-tap demo** (*एक-टैप डेमो*). The हिंदी / English toggle in the top bar switches every label.
-- **What works offline vs online:** the solver, requirements, feed library, audit drawer, demos and the template explanation work fully offline. The two AI features call `/api/llm` and need internet plus an `OPENROUTER_API_KEY` on the server: without a key, **Explain** falls back to the template explanation, and **Fill from description** shows an error, so enter the animal by hand. The free OpenRouter models can also be rate-limited under load, with the same fallbacks.
+- **What works offline vs online:** the solver, requirements, feed library, audit drawer, demos and the template explanation work fully offline. The two AI features call `/api/llm` and need internet plus an `OPENROUTER_API_KEY` on the server: without a key, **Explain** falls back to the template explanation, and **Fill from description** shows an error, so enter the animal by hand. The AI uses only OpenRouter's free router (`openrouter/free`, no paid models): it typically answers in 10-25 s, and Hindi descriptions sometimes time out (45 s limit), in which case the app shows "AI service temporarily unavailable" and manual entry still works.
 - **Local run (for development):** `npm run dev`, then open `http://localhost:5173`. Use `npm run build && npm run preview` to test the installable offline PWA locally.
 - **Offline PWA:** installable to an Android home screen; the service worker caches the app shell, fonts and feed/breed datasets on first visit, so the solver core works at the doorstep with no network.
 - **Repository:** [https://github.com/jegadeesh17/ProjectSahiDana](https://github.com/jegadeesh17/ProjectSahiDana)
@@ -203,8 +203,8 @@ Environment variables can be configured in `.env` (refer to `.env.example`):
 | Variable | Description | Default | Required? |
 |---|---|---|---|
 | `OPENROUTER_API_KEY` | Server-side API key for OpenRouter LLM proxy (`/api/llm`). | `""` (offline template fallback) | Optional (for online free-text extraction) |
-| `OPENROUTER_MODEL` | Primary LLM model identifier for extraction and explanations. | `meta-llama/llama-3.3-70b-instruct:free` | Optional |
-| `OPENROUTER_FALLBACK_MODELS` | Comma-separated list of fallback models tried on HTTP 429 rate limit or 5xx errors. | `google/gemma-3-27b-it:free,qwen/qwen-2.5-72b-instruct:free` | Optional |
+| `OPENROUTER_MODEL` | Primary LLM model identifier for extraction and explanations. | `openrouter/free` | Optional |
+| `OPENROUTER_FALLBACK_MODELS` | Comma-separated list of fallback models tried on HTTP 429 rate limit or 5xx errors. | `openrouter/free` | Optional |
 | `VITE_USE_MOCK_ADAPTER` | Set to `true` to force fixture/mock adapter mode; leave empty or `false` for live in-browser solver. | `false` | Optional |
 | `VERCEL_TOKEN` | Optional Vercel personal access token for automated deployments. | `""` | Optional |
 

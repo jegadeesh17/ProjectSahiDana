@@ -9,12 +9,11 @@ import type {
 } from '../src/domain/types';
 
 export const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-export const DEFAULT_PRIMARY_MODEL = 'meta-llama/llama-3.3-70b-instruct:free';
-export const DEFAULT_FALLBACK_MODELS: readonly string[] = [
-  'google/gemma-3-27b-it:free',
-  'qwen/qwen-2.5-72b-instruct:free',
-];
-export const DEFAULT_TIMEOUT_MS = 15_000;
+export const DEFAULT_PRIMARY_MODEL = 'openrouter/free';
+export const DEFAULT_FALLBACK_MODELS: readonly string[] = ['openrouter/free'];
+export const DEFAULT_TIMEOUT_MS = 45_000;
+/** Total wall-clock budget for the whole fallback chain (Vercel maxDuration is 60 s). */
+export const TOTAL_BUDGET_MS = 55_000;
 export const MAX_FREE_TEXT_LENGTH = 1000;
 
 export interface CatalogFeedInput {
@@ -147,8 +146,8 @@ export function normalizeDigits(input: string): string {
 
 /**
  * Resolves the ordered, deduplicated OpenRouter model chain from server environment variables.
- * Primary model defaults to `meta-llama/llama-3.3-70b-instruct:free`;
- * fallback list defaults to `google/gemma-3-27b-it:free,qwen/qwen-2.5-72b-instruct:free` when unset or empty.
+ * Primary model defaults to `openrouter/free` (OpenRouter's free-only router);
+ * fallback list defaults to `openrouter/free` when unset or empty (deduplicated, so the default chain is one entry).
  */
 export function resolveModelChain(
   env: Record<string, string | undefined> = process.env,
@@ -174,6 +173,33 @@ export function resolveModelChain(
     }
   }
   return chain;
+}
+
+/**
+ * Resolves the per-model timeout from `OPENROUTER_TIMEOUT_MS` (positive integer ms);
+ * unset, empty or invalid values fall back to DEFAULT_TIMEOUT_MS.
+ */
+export function resolveTimeoutMs(
+  env: Record<string, string | undefined> = process.env,
+): number {
+  const raw = (env.OPENROUTER_TIMEOUT_MS ?? '').trim();
+  if (!/^\d+$/.test(raw)) return DEFAULT_TIMEOUT_MS;
+  const parsed = Number(raw);
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : DEFAULT_TIMEOUT_MS;
+}
+
+/**
+ * Timeout for the next model call: min(per-model timeout, remaining total budget).
+ * Returns 0 when the total budget is exhausted.
+ */
+export function remainingAttemptTimeoutMs(
+  startedAtMs: number,
+  perModelTimeoutMs: number,
+  nowMs: number = Date.now(),
+  totalBudgetMs: number = TOTAL_BUDGET_MS,
+): number {
+  const remaining = totalBudgetMs - (nowMs - startedAtMs);
+  return remaining <= 0 ? 0 : Math.min(perModelTimeoutMs, remaining);
 }
 
 function sendError(res: VercelResponse, code: LlmErrorCode, message: string): void {
@@ -597,6 +623,7 @@ async function callOpenRouterModel(
         messages,
         temperature: 0.1,
         response_format: { type: 'json_object' },
+        reasoning: { effort: 'low', exclude: true },
       }),
       signal: controller.signal,
     });
@@ -763,8 +790,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       message: 'All OpenRouter models failed.',
     };
 
+    const perModelTimeoutMs = resolveTimeoutMs(process.env);
+    const startedAtMs = Date.now();
     for (const model of models) {
-      const callResult = await callOpenRouterModel(model, messages, apiKey, DEFAULT_TIMEOUT_MS);
+      const attemptTimeoutMs = remainingAttemptTimeoutMs(startedAtMs, perModelTimeoutMs);
+      if (attemptTimeoutMs <= 0) {
+        lastFailure = { code: 'TIMEOUT', message: 'OpenRouter total time budget exhausted.' };
+        break;
+      }
+      const callResult = await callOpenRouterModel(model, messages, apiKey, attemptTimeoutMs);
       if (!callResult.ok) {
         lastFailure = callResult.failure;
         continue;
@@ -851,8 +885,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     message: 'All OpenRouter models failed.',
   };
 
+  const perModelTimeoutMs = resolveTimeoutMs(process.env);
+  const startedAtMs = Date.now();
   for (const model of models) {
-    const callResult = await callOpenRouterModel(model, messages, apiKey, DEFAULT_TIMEOUT_MS);
+    const attemptTimeoutMs = remainingAttemptTimeoutMs(startedAtMs, perModelTimeoutMs);
+    if (attemptTimeoutMs <= 0) {
+      lastFailure = { code: 'TIMEOUT', message: 'OpenRouter total time budget exhausted.' };
+      break;
+    }
+    const callResult = await callOpenRouterModel(model, messages, apiKey, attemptTimeoutMs);
     if (!callResult.ok) {
       lastFailure = callResult.failure;
       continue;
