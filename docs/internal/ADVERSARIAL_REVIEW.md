@@ -48,3 +48,12 @@ Non-blocking: `basis_cited_peak_explain` wording, a stale Hindi-review comment, 
 
 ## Change 2 (ship-ready), M1 Review 2 (2026-10-14)
 Verdict: APPROVED (06a5266..52eb621). npm test 179/179; tsc 0; playwright 13/13; pytest eval/ 68 passed. Both defects from Review 1 fixed. No numeric changes, no bilingual leakage. UI review skipped for this change because of the user's 1-hour time limit.
+
+## Change 2 (ship-ready), M1 code-review fix round (2026-10-14)
+Verdict: APPROVED (422b213..45d02e0). tsc 0; vitest 196/196; playwright 13/13; pytest eval/ 68 passed; build ok. No numeric changes; ADR-0009 holds (sheets rebuild on language toggle; toggle unreachable while a sheet is open).
+
+Non-blocking, open:
+1. Basal-minimum row uses the verdict to pick dry vs lactating; the solver uses the solved milk level, so they disagree when an animal in milk is solved at 0 L (`src/domain/audit.ts:111`).
+2. Basal-minimum row ignores the farmer's own max kg/day cap, which the solver honours (`solver.ts:244,252`).
+3. Roughage-minimum sheet no longer shows the source note (it was English-only).
+4. BRAINSTORM pending-flag wording: fixed in the same push.
