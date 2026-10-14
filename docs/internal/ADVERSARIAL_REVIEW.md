@@ -45,3 +45,6 @@ Critical defects:
 2. README said feed figures show "Expert check: pending", but the feed/price audit sheet and `auditRoughageShare` passed no `verifiedOn`. Fix: pass `verifiedOn` through (`src/domain/audit.ts`); README "most rows" corrected to "every row".
 
 Non-blocking: `basis_cited_peak_explain` wording, a stale Hindi-review comment, a missing semicolon in `ration-journey.spec.ts`.
+
+## Change 2 (ship-ready), M1 Review 2 (2026-10-14)
+Verdict: APPROVED (06a5266..52eb621). npm test 179/179; tsc 0; playwright 13/13; pytest eval/ 68 passed. Both defects from Review 1 fixed. No numeric changes, no bilingual leakage. UI review skipped for this change because of the user's 1-hour time limit.
