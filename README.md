@@ -28,6 +28,7 @@ SahiDana is an offline-first, auditable Progressive Web Application (PWA) design
 
 ## Live Demo & Quick Access
 
+- **Live app:** [https://sahidana.vercel.app](https://sahidana.vercel.app) (installable PWA; tap "Lactating buffalo" or "Straw only" under One-tap demo). The AI features ("Fill from description", "Explain") need an OpenRouter key on the server; without one, the app uses its offline template explanation.
 - **Local / Demonstration Run:** Run `npm run dev` or `npm run preview` to launch the offline PWA instantly on `http://localhost:5173`.
 - **Offline PWA:** Fully installable to Android home screen; caches application shell, fonts, and feed/breed datasets on first visit for 100% offline doorstep operation.
 - **Repository:** [https://github.com/jegadeesh17/ProjectSahiDana](https://github.com/jegadeesh17/ProjectSahiDana)
