@@ -105,7 +105,12 @@ export function resetRateLimits(): void {
   ipRequestMap.clear();
 }
 
-/** Validates request origin/referer to block unauthorized third-party cross-origin calls. */
+/**
+ * Basic heuristic check on Origin/Referer for browser clients.
+ * Note: Rate limiting (20 requests/min per IP) is the primary guard;
+ * origin check is a secondary heuristic that permits localhost, matching hosts,
+ * and preview domains while rejecting third-party cross-origin calls.
+ */
 export function isAllowedOrigin(originHeader: string | undefined, hostHeader: string | undefined): boolean {
   if (!originHeader) return true; // Direct, serverless, or non-browser request
   try {
@@ -584,7 +589,7 @@ async function callOpenRouterModel(
       headers: {
         Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://sahidana.vercel.app',
+        'HTTP-Referer': 'https://github.com/jegadeesh17/ProjectSahiDana',
         'X-Title': 'SahiDana',
       },
       body: JSON.stringify({

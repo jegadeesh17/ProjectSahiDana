@@ -162,6 +162,8 @@ export function buildRequirementModel(animal: AnimalProfile): RequirementModel {
       minShareOfDm: roughageMinShareOfDm.value,
       citation: roughageCit,
     },
+    mineralSupplement: requirementsV1.mineralSupplement,
+    calciumMax: requirementsV1.calciumMaxRatioOfRequirement,
     fatPctUsed: f,
     citations: {} as Record<NutrientKey, AuditCitation>,
   };

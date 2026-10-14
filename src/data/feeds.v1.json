@@ -1430,7 +1430,7 @@
       "en": "No Jaipur mandi or listing price found for area-specific mineral mixture; estimated at ₹70/kg from cooperative retail rates",
       "hi": "क्षेत्र-विशिष्ट खनिज मिश्रण का जयपुर मंडी या लिस्टिंग भाव नहीं मिला; सहकारी खुदरा दरों से ₹70/kg का अनुमान।"
     },
-    "verifiedOn": "2026-10-13"
+    "verifiedOn": null
   },
   {
     "id": "common_salt",
@@ -1481,6 +1481,6 @@
       "en": "Standard retail packaged common/iodized salt at ₹8/kg",
       "hi": "साधारण आयोडीन युक्त नमक ₹8/kg का खुदरा भाव।"
     },
-    "verifiedOn": "2026-10-13"
+    "verifiedOn": null
   }
 ]

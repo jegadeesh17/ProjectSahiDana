@@ -3,7 +3,6 @@
   "private": true,
   "version": "0.1.0",
   "description": "SahiDana: offline-first, auditable regional dairy ration optimizer for field paravets",
-  "homepage": "https://sahidana.vercel.app",
   "type": "module",
   "scripts": {
     "dev": "vite",

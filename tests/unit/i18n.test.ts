@@ -28,8 +28,8 @@ describe('strings', () => {
     }
   });
 
-  it('asserts the Hindi review gate is verified', () => {
-    expect(HINDI_REVIEW.status).toBe('verified');
+  it('keeps the Hindi review status unverified until 2026-10-14', () => {
+    expect(HINDI_REVIEW.status).toBe('unverified');
   });
 
   it('interpolates numbers as Latin digits', () => {

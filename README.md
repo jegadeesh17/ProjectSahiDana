@@ -1,7 +1,7 @@
 # SahiDana (सही दाना)
 
-> **Live PWA Application:** [https://sahidana.vercel.app](https://sahidana.vercel.app)  
-> **Track 6:** Regional Dairy Ration Balancing Calculator for Jaipur Field Paravets.
+> **Track 6:** Regional Dairy Ration Balancing Calculator for Jaipur Field Paravets.  
+> **Offline-First PWA:** Zero-backend doorstep execution for field paravets, deployable with one command (`npm run build`).
 
 SahiDana is an offline-first, auditable Progressive Web Application (PWA) designed for field paravets and dairy extension workers in Jaipur district, Rajasthan. It pairs an in-browser two-stage Linear Programming (LP) ration optimizer with a curated library of 31 regional feeds across four agro-ecological verticals (indigenous forages, crop residues, agro-byproducts, and minerals) and a cited performance benchmark table of 16 indigenous and crossbred cattle and buffalo breeds.
 
@@ -28,7 +28,7 @@ SahiDana is an offline-first, auditable Progressive Web Application (PWA) design
 
 ## Live Demo & Quick Access
 
-- **Production Deployment:** [https://sahidana.vercel.app](https://sahidana.vercel.app)
+- **Local / Demonstration Run:** Run `npm run dev` or `npm run preview` to launch the offline PWA instantly on `http://localhost:5173`.
 - **Offline PWA:** Fully installable to Android home screen; caches application shell, fonts, and feed/breed datasets on first visit for 100% offline doorstep operation.
 - **Repository:** [https://github.com/jegadeesh17/ProjectSahiDana](https://github.com/jegadeesh17/ProjectSahiDana)
 
@@ -62,7 +62,7 @@ SahiDana is an offline-first, auditable Progressive Web Application (PWA) design
 ### D.03: Offline Field-Paravet PWA with Zero-Leakage Bilingual UI
 - **100% Offline Capability:** Progressive Web App with service worker caching the complete application shell, compiled feed and breed datasets, and bundled `@fontsource/noto-sans` and `@fontsource/noto-sans-devanagari` fonts (zero external CDN dependency in remote villages).
 - **Strict Bilingual UI Isolation (ADR-0009):** Header language toggle (English / हिंदी). Zero Devanagari script leakage in English mode, zero unexempted Latin words in Hindi mode, and universal Latin digits across all numeric displays (SPEC AC-L1.1 to AC-L1.7).
-- **Multilingual Free-Text Extraction:** Accepts spoken or typed field notes in English, Hindi (Devanagari), or Hinglish, mapping quantities, animal attributes, and feed names via `/api/llm` with strict nutrient and price safety gates, origin verification, and sliding-window IP rate limiting.
+- **Multilingual Free-Text Extraction:** Accepts spoken or typed field notes in English, Hindi (Devanagari), or Hinglish, mapping quantities, animal attributes, and feed names via `/api/llm` with strict nutrient and price safety gates, and sliding-window IP rate limiting (20 req/min/IP).
 - **Tap-to-Audit Transparency:** Every displayed number (requirements, feed composition, costs, savings) is tappable, opening the Audit Drawer to reveal primary citations (document title, table, page number), mathematical equations, or dual LP binding constraints.
 
 ---
@@ -232,8 +232,8 @@ Extraction accuracy was evaluated across 30 hand-labelled descriptions in `eval/
 ## Field Impact & Economic Validation
 
 ### Clinical & Economic Realism
-- **Field Evidence Grounding (NDDB RBP):** Large-scale field trials conducted under the National Dairy Development Board's Ration Balancing Programme (RBP) demonstrate average net feed cost savings of **₹15 to ₹25 per animal per day** (approximately 10% to 18% reduction in daily feeding expenses) alongside **+0.5 to +1.0 L/day** milk production gains through scientific nutrient rebalancing.
-- **No Circular Impact Claims:** SahiDana rejects fixed marketing claims (such as "saves 40.5%"). Instead, all cost savings are dynamically computed against the farmer's entered baseline ration using Stage 2' unconstrained linear optimization, transparently displaying savings as a function of the farmer's actual village feed prices.
+- **Field Evidence Grounding (NDDB RBP):** Large-scale field trials conducted under the National Dairy Development Board's Ration Balancing Programme (NDP-I, 33,374 villages) demonstrate an average net gain of **₹25.5 per animal per day** (₹16.3 lower daily feed cost + ₹9.2 more milk and fat value) through scientific nutrient rebalancing.
+- **No Circular Impact Claims:** SahiDana rejects hardcoded savings claims. Instead, all cost savings are dynamically computed against the farmer's entered baseline ration using Stage 2' unconstrained linear optimization, transparently displaying savings as a function of the farmer's actual village feed prices.
 - **Nutritional Safety:** Mineral mixture and common salt basals are non-negotiable basals in every balanced ration, preventing the common clinical pitfall where bare linear programs omit essential micro-minerals once Ca and P constraints are satisfied.
 
 ---
@@ -251,15 +251,16 @@ Extraction accuracy was evaluated across 30 hand-labelled descriptions in `eval/
    - Every row in `data/feeds.csv`, `data/breeds.csv`, and `data/requirements.json` carries a `verified_on` / `verifiedOn` field.
    - Enforced by `tests/unit/compileData.test.ts`. All 31 feeds, 16 breeds, and requirement formulas are audited for primary publication provenance.
 2. **Hindi Review Gate (ADR-0005 / ADR-0009):**
-   - Verified on 2026-10-13 by native speaker Dr. Neha Choudhary:
+   - Maintained in `src/i18n/strings.ts` with strict human-in-the-loop verification status:
      ```typescript
      export const HINDI_REVIEW = {
-       status: 'verified',
-       reviewedBy: 'Dr. Neha Choudhary (Rajasthan native speaker)',
-       reviewedOn: '2026-10-13',
+       status: 'unverified',
+       reviewedBy: null,
+       reviewedOn: null,
      } as const;
      ```
-   - Confirmed natural veterinary terminology, Devanagari breed/feed names, and strict zero-leakage script separation.
+   - All UI strings, Devanagari breed/feed names, and templates carry pending verification status until scheduled native-speaker review (ADR-0005) on 2026-10-14.
+   - Enforced by `tests/unit/compileData.test.ts` and `tests/unit/i18n.test.ts` to guarantee honest provenance flags with zero script leakage.
 3. **Zero Prototype Fixtures in Production Data:**
    - Production JSON files (`src/data/feeds.v1.json`, `src/data/breeds.v1.json`, `src/data/requirements.v1.json`) are audited to ensure zero prototype fixture flags (`__prototype`, `is_fixture`, `fixture`, `isPrototype`) or placeholder values exist.
 
@@ -268,7 +269,7 @@ Extraction accuracy was evaluated across 30 hand-labelled descriptions in `eval/
 ## Hackathon Team & Contributions
 
 SahiDana was developed for Track 6 of Hack4Pashudhan by a multidisciplinary team:
-- **Veterinary Nutrition & Clinical Audit:** Dr. Neha Choudhary (clinical ration balancing, ICAR 2013 standards calibration, Hindi terminology audit).
+- **Clinical Data & Provenance Compilation:** Calibration of nutritive tables, requirements, and breed potential against published ICAR 2013 standards, NDDB 2012 tables, CIRB Buffalopedia, and NRC 2001 equations with automated human verification gates.
 - **Field Data & Mandi Benchmarks:** Regional price benchmarks across Jaipur mandi, RAJFED trade reports, and Rajasthan Zone IV agro-byproduct surveys.
 - **Software Architecture & Optimization:** Two-stage linear programming engine, SciPy HiGHS cross-check evaluation, offline PWA implementation, and bilingual UI engineering.
 
@@ -288,10 +289,17 @@ ProjectSahiDana/
 │   ├── ARCHITECTURE.md                 # System contracts, models, and test specifications
 │   ├── DATA_SOURCES.md                 # Research hand-off and primary citations
 │   ├── DECISIONS.md                    # Architecture Decision Records (ADRs)
+│   ├── DEPLOYMENT.md                   # Vercel and offline PWA deployment guide
 │   ├── PROJECT_MENTAL_MODEL.md         # Problem framing, persona, and core rules
 │   ├── PROJECT_STATUS.md               # Implementation progress tracking
 │   ├── SPEC.md                         # Given/When/Then acceptance criteria
-│   └── TASKS.json                      # Milestone task breakdown and criteria
+│   ├── UI_REVIEW.md                    # UI, DESIGN.md, and WCAG accessibility audit
+│   └── internal/                       # Team research, task backlog, and test execution history
+│       ├── BRAINSTORM.md               # Track analysis, rules, and problem framing
+│       ├── TASKS.json                  # Milestone task breakdown and criteria
+│       ├── QA_RESULTS.json             # Automated test execution records
+│       ├── ADVERSARIAL_REVIEW.md       # Milestone adversarial audit reports
+│       └── FEEDBACK.md                 # Prototype and UAT user feedback rounds
 ├── eval/                               # Python evaluation & cross-check suite
 │   ├── cross_check_solver.py           # SciPy HiGHS LP solver cross-check
 │   ├── evaluate_extraction.py          # Multilingual free-text extraction benchmark

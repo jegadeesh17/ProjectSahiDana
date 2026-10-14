@@ -1,6 +1,6 @@
 // The ONLY source file that may contain Devanagari (ADR-0005, SPEC AC-L1.1).
 // Every visible string is a { hi, en } pair. The reader sees one language at a time (the app-bar toggle).
-// All Hindi strings verified by native-speaker review (see HINDI_REVIEW).
+// All Hindi below is UNVERIFIED until the native-speaker review (see HINDI_REVIEW).
 import { formatNumber, naturalDecimals } from './format';
 import { getActiveLang } from './lang';
 
@@ -332,8 +332,8 @@ export const strings = {
   audit_binding_no: { hi: 'नहीं: इस शर्त में गुंजाइश बची है', en: 'No: this constraint has slack' },
   audit_fixture_key: { hi: 'फ़िक्स्चर कुंजी', en: 'Fixture key' },
   audit_fixture_note: {
-    hi: 'प्रोटोटाइप फ़िक्स्चर: ICAR 2013 एवं NDDB RBP से प्रमाणित सूची।',
-    en: 'Prototype fixture. Validated against cited ICAR 2013 and NDDB RBP standards.',
+    hi: 'प्रोटोटाइप फ़िक्स्चर: प्रमाणित सूची M1 में आएगी।',
+    en: 'Prototype fixture. The cited library arrives in M1.',
   },
   audit_user_input: {
     hi: 'यह मान आपने भरा है; इसका कोई प्रकाशित स्रोत नहीं है।',
@@ -640,6 +640,18 @@ export const strings = {
   demo_roughage: { hi: 'सिर्फ़ दाना (रेशा नहीं)', en: 'Concentrates only' },
   demo_dry: { hi: 'सूखा पशु', en: 'Dry animal' },
   template_verdict: { hi: 'नतीजा: {verdict}', en: 'Verdict: {verdict}' },
+  warning_mineral_missing_title: {
+    hi: 'सलाह: दैनिक खनिज मिश्रण एवं नमक शामिल नहीं है',
+    en: 'Advisory: Daily mineral mixture and salt not included',
+  },
+  warning_mineral_missing_body: {
+    hi: 'NDDB के दिशानिर्देशों के अनुसार दुधारू पशुओं को प्रतिदिन 100g खनिज मिश्रण और 50g साधारण नमक देना आवश्यक है ताकि सूक्ष्म पोषक तत्वों की कमी न हो। कृपया चारे की सूची में इन्हें जोड़ें।',
+    en: 'NDDB RBP guidelines recommend daily basal supplementation of 100g mineral mixture and 50g common salt for milking animals to prevent trace mineral deficiencies. Please add them to your feed selection.',
+  },
+  action_add_mineral_salt: {
+    hi: '+ खनिज मिश्रण और नमक जोड़ें',
+    en: '+ Add mineral mixture & salt',
+  },
 } as const satisfies Record<string, BiText>;
 
 export type StringId = keyof typeof strings;
@@ -647,9 +659,9 @@ export type BiParams = Record<string, number | string | BiText>;
 
 /** Hindi strings stay unverified until the native-speaker review on 2026-10-14 (ADR-0005). */
 export const HINDI_REVIEW = {
-  status: 'verified',
-  reviewedBy: 'Dr. Neha Choudhary (Rajasthan native speaker)',
-  reviewedOn: '2026-10-13',
+  status: 'unverified',
+  reviewedBy: null,
+  reviewedOn: null,
 } as const;
 
 function formatParam(value: number | string): string {

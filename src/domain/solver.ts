@@ -204,11 +204,14 @@ function solveFixedMilk(
   const reqAtY = evaluateRequirementsAtMilk(reqModel, milkYieldLPerDay);
   const r = reqModel.roughage.minShareOfDm;
 
+  const caMaxRatio = reqModel.calciumMax?.value ?? 2.5;
+  const caMaxDm = reqModel.calciumMax?.maxGramsPerKgDm ?? 15;
+
   const constraints: LpModel['constraints'] = {
     DM: { max: reqAtY.dmKgPerDay },
     CP: { min: reqAtY.cpGramsPerDay },
     ME: { min: reqAtY.meMcalPerDay },
-    Ca: { min: reqAtY.caGramsPerDay, max: Math.max(reqAtY.caGramsPerDay * 2.5, reqAtY.dmKgPerDay * 15) },
+    Ca: { min: reqAtY.caGramsPerDay, max: Math.max(reqAtY.caGramsPerDay * caMaxRatio, reqAtY.dmKgPerDay * caMaxDm) },
     P: { min: reqAtY.pGramsPerDay },
   };
 
@@ -235,13 +238,17 @@ function solveFixedMilk(
       v.roughage = isRoughage(feed) ? (1 - r) * c.dm : -r * c.dm;
     }
     if (feed.id === 'mineral_mix') {
-      const minMm = milkYieldLPerDay > 0 ? 0.1 : 0.05;
+      const minMm = milkYieldLPerDay > 0
+        ? (reqModel.mineralSupplement?.mineralMixMinKgPerDay?.lactating ?? 0.1)
+        : (reqModel.mineralSupplement?.mineralMixMinKgPerDay?.dry ?? 0.05);
       const targetMin = input.maxKgAsFedPerDay !== null ? Math.min(minMm, input.maxKgAsFedPerDay) : minMm;
       constraints.min_mineral_mix = { min: targetMin };
       v.min_mineral_mix = 1;
     }
     if (feed.id === 'common_salt') {
-      const minSalt = milkYieldLPerDay > 0 ? 0.05 : 0.03;
+      const minSalt = milkYieldLPerDay > 0
+        ? (reqModel.mineralSupplement?.saltMinKgPerDay?.lactating ?? 0.05)
+        : (reqModel.mineralSupplement?.saltMinKgPerDay?.dry ?? 0.03);
       const targetMin = input.maxKgAsFedPerDay !== null ? Math.min(minSalt, input.maxKgAsFedPerDay) : minSalt;
       constraints.min_common_salt = { min: targetMin };
       v.min_common_salt = 1;
@@ -738,7 +745,9 @@ export function verifyRationSolution(
       `Supplied Ca ${totalCa} is below requirement ${reqAtMilk.caGramsPerDay} beyond 1e-6 tolerance`,
     );
   }
-  const maxCa = Math.max(reqAtMilk.caGramsPerDay * 2.5, reqAtMilk.dmKgPerDay * 15);
+  const caMaxRatio = reqModel.calciumMax?.value ?? 2.5;
+  const caMaxDm = reqModel.calciumMax?.maxGramsPerKgDm ?? 15;
+  const maxCa = Math.max(reqAtMilk.caGramsPerDay * caMaxRatio, reqAtMilk.dmKgPerDay * caMaxDm);
   if (totalCa > maxCa + relTol(maxCa)) {
     throw new SolverError(
       `Supplied Ca ${totalCa} exceeds maximum tolerable ceiling ${maxCa} beyond 1e-6 tolerance`,
@@ -752,11 +761,25 @@ export function verifyRationSolution(
   const mmLine = solution.feeds.find((f) => f.feedId === 'mineral_mix');
   const mmInput = inputMap.get('mineral_mix');
   if (mmInput) {
-    const minMm = milkLevel > 0 ? 0.1 : 0.05;
+    const minMm = milkLevel > 0
+      ? (reqModel.mineralSupplement?.mineralMixMinKgPerDay?.lactating ?? 0.1)
+      : (reqModel.mineralSupplement?.mineralMixMinKgPerDay?.dry ?? 0.05);
     const expMin = mmInput.maxKgAsFedPerDay !== null ? Math.min(minMm, mmInput.maxKgAsFedPerDay) : minMm;
     const actualMm = mmLine ? mmLine.kgAsFed : 0;
     if (actualMm + relTol(expMin) < expMin) {
       throw new SolverError(`Supplied mineral_mix ${actualMm} is below minimum ${expMin}`);
+    }
+  }
+  const saltLine = solution.feeds.find((f) => f.feedId === 'common_salt');
+  const saltInput = inputMap.get('common_salt');
+  if (saltInput) {
+    const minSalt = milkLevel > 0
+      ? (reqModel.mineralSupplement?.saltMinKgPerDay?.lactating ?? 0.05)
+      : (reqModel.mineralSupplement?.saltMinKgPerDay?.dry ?? 0.03);
+    const expMin = saltInput.maxKgAsFedPerDay !== null ? Math.min(minSalt, saltInput.maxKgAsFedPerDay) : minSalt;
+    const actualSalt = saltLine ? saltLine.kgAsFed : 0;
+    if (actualSalt + relTol(expMin) < expMin) {
+      throw new SolverError(`Supplied common_salt ${actualSalt} is below minimum ${expMin}`);
     }
   }
   if (roughageDm + relTol(totalDm) < r * totalDm) {
@@ -951,11 +974,13 @@ export function solveRation(
   const effectiveCapSource: 'breed' | 'today_milk' =
     todayMilk > breed.milkCapLPerDay + TOL ? 'today_milk' : 'breed';
 
+  const caMaxDm = reqModel.calciumMax?.maxGramsPerKgDm ?? 15;
+
   const stage1Constraints: LpModel['constraints'] = {
     CP: { min: reqModel.CP.maintenance },
     ME: { min: reqModel.ME.maintenance },
     Ca: { min: reqModel.Ca.maintenance },
-    Ca_max: { max: 15 * reqModel.dmMax.maintenance },
+    Ca_max: { max: caMaxDm * reqModel.dmMax.maintenance },
     P: { min: reqModel.P.maintenance },
     DM: { max: reqModel.dmMax.maintenance },
     roughage: { min: 0 },
@@ -969,7 +994,7 @@ export function solveRation(
       CP: -reqModel.CP.perLitre,
       ME: -reqModel.ME.perLitre,
       Ca: -reqModel.Ca.perLitre,
-      Ca_max: -15 * reqModel.dmMax.perLitre,
+      Ca_max: -caMaxDm * reqModel.dmMax.perLitre,
       P: -reqModel.P.perLitre,
       DM: -reqModel.dmMax.perLitre,
       milkCap: 1,
@@ -989,13 +1014,17 @@ export function solveRation(
       cost: input.priceInrPerKgAsFed,
     };
     if (feed.id === 'mineral_mix') {
-      const minMm = todayMilk > 0 ? 0.1 : 0.05;
+      const minMm = todayMilk > 0
+        ? (reqModel.mineralSupplement?.mineralMixMinKgPerDay?.lactating ?? 0.1)
+        : (reqModel.mineralSupplement?.mineralMixMinKgPerDay?.dry ?? 0.05);
       const targetMin = input.maxKgAsFedPerDay !== null ? Math.min(minMm, input.maxKgAsFedPerDay) : minMm;
       stage1Constraints.min_mineral_mix = { min: targetMin };
       v.min_mineral_mix = 1;
     }
     if (feed.id === 'common_salt') {
-      const minSalt = todayMilk > 0 ? 0.05 : 0.03;
+      const minSalt = todayMilk > 0
+        ? (reqModel.mineralSupplement?.saltMinKgPerDay?.lactating ?? 0.05)
+        : (reqModel.mineralSupplement?.saltMinKgPerDay?.dry ?? 0.03);
       const targetMin = input.maxKgAsFedPerDay !== null ? Math.min(minSalt, input.maxKgAsFedPerDay) : minSalt;
       stage1Constraints.min_common_salt = { min: targetMin };
       v.min_common_salt = 1;

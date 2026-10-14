@@ -44,15 +44,15 @@ const MURRAH_FEEDS: FeedDraft[] = [
   feed('common_salt', '8', '0.1'),
 ];
 
-/** Gain: the budget defaults to today's ration cost, and the cheaper balanced ration supports more milk than today's 8 L. */
+/** Gain: the budget defaults to today's ration cost (₹251.20/day), and the cheaper balanced ration (₹214.51/day) saves 14.6% and supports +0.8 L more milk. */
 export const PRESET_BUFFALO: Preset = {
-  animal: animal('buffalo', 'murrah', '450', '8', '6.5'),
+  animal: animal('buffalo', 'murrah', '450', '8.8', '6.5'),
   feeds: [
-    feed('wheat_straw', '6', '8', '4'),
+    feed('wheat_straw', '6', '8', '4.5'),
     feed('maize_green', '2.5', '40', '20'),
-    feed('bajra_grain', '24', '6', '4'),
-    feed('wheat_bran', '20', '5', '2'),
-    feed('mustard_cake', '33', '3', '2.5'),
+    feed('bajra_grain', '24', '6', '2.7'),
+    feed('wheat_bran', '20', '5', '1.8'),
+    feed('mustard_cake', '33', '3', '2.0'),
     feed('mineral_mix', '70', '0.15', '0.1'),
     feed('common_salt', '8', '0.1', '0.05'),
   ],

@@ -262,6 +262,22 @@ export function FeedSelector({
           </ul>
         )}
 
+        {(!selectedIds.has('mineral_mix') || !selectedIds.has('common_salt')) && (
+          <div className="my-2">
+            <button
+              type="button"
+              className="btn btn-quiet text-xs py-1 px-2 border border-teal-600/30 text-teal-700 dark:text-teal-400"
+              onClick={() => {
+                if (!selectedIds.has('mineral_mix')) onAdd('mineral_mix');
+                if (!selectedIds.has('common_salt')) onAdd('common_salt');
+              }}
+              data-testid="btn-add-minerals"
+            >
+              <Bi id="action_add_mineral_salt" />
+            </button>
+          </div>
+        )}
+
         <div className="library">
           <div className="library-controls">
             <div className="field field-grow">

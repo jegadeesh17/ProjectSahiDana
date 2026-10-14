@@ -171,6 +171,14 @@ export interface RequirementModel {
     minShareOfDm: number;
     citation: AuditCitation;
   };
+  mineralSupplement?: {
+    mineralMixMinKgPerDay: { lactating: number; dry: number };
+    saltMinKgPerDay: { lactating: number; dry: number };
+  };
+  calciumMax?: {
+    value: number;
+    maxGramsPerKgDm?: number;
+  };
   fatPctUsed: number;
   citations: Record<NutrientKey, AuditCitation>;
 }

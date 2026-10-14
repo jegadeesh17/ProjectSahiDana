@@ -182,7 +182,7 @@ test.describe('One language at a time across every screen state and modal (AC-L1
             action: 'explain',
             modelUsed: 'meta-llama/llama-3.3-70b-instruct:free',
             explanationText:
-              'Your 450 kg Murrah buffalo gives 8 L of milk a day at 6.5% fat. A budget of ₹299.50 per day supports 9.6 L of milk a day, up to the breed cap of 9.64 L.',
+              'Your 450 kg Murrah buffalo gives 8.8 L of milk a day at 6.5% fat. A budget of ₹251.20 per day supports 9.6 L of milk a day, up to the breed cap of 9.64 L.',
           }),
         });
         return;

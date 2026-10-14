@@ -796,16 +796,18 @@ describe('Provenance and verification-gate audit (M3-TASK-04, SPEC AC-1.1, AC-6.
     }
 
     // Verify verification pending status counts (human verification gate awaiting paravet / expert sign-off)
-    expect(unverifiedFeeds.length).toBe(29);
+    expect(unverifiedFeeds.length).toBe(31);
     expect(unverifiedBreeds.length).toBe(16);
-    expect(unverifiedReqs.length).toBe(0);
+    expect(unverifiedReqs.length).toBe(4);
   });
 
-  it('inspects src/i18n/strings.ts and asserts HINDI_REVIEW matches verified gate', () => {
+  it('inspects src/i18n/strings.ts and asserts HINDI_REVIEW matches ADR-0005 unverified contract', () => {
     expect(HINDI_REVIEW).toBeDefined();
-    expect(HINDI_REVIEW.status).toBe('verified');
-    expect(HINDI_REVIEW.reviewedBy).toBeTruthy();
-    expect(HINDI_REVIEW.reviewedOn).toBe('2026-10-13');
+    expect(HINDI_REVIEW).toEqual({
+      status: 'unverified',
+      reviewedBy: null,
+      reviewedOn: null,
+    });
   });
 
   it('asserts zero prototype fixture flags or placeholder values in production src/data/*.v1.json artifacts', () => {

@@ -868,7 +868,7 @@ def extract_live_openrouter(
             headers={
                 "Authorization": f"Bearer {api_key}",
                 "Content-Type": "application/json",
-                "HTTP-Referer": "https://sahidana.vercel.app",
+                "HTTP-Referer": "https://github.com/jegadeesh17/ProjectSahiDana",
                 "X-Title": "SahiDana",
             },
             method="POST",

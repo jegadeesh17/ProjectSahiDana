@@ -212,6 +212,18 @@ function SolvedBody({
       {breed && !dry && !verdictLeads && <SupportsHeadline solution={solution} profile={profile} breed={breed} library={library} />}
       {breed && <VerdictCard solution={solution} profile={profile} breed={breed} library={library} />}
 
+      {(!solution.feeds.some((f) => f.feedId === 'mineral_mix' && f.kgAsFed > 0) ||
+        !solution.feeds.some((f) => f.feedId === 'common_salt' && f.kgAsFed > 0)) && (
+        <div className="banner banner-warn my-2 p-3 rounded-lg border border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/20" data-testid="mineral-advisory-warning">
+          <p className="font-semibold text-xs text-amber-800 dark:text-amber-200">
+            <Bi id="warning_mineral_missing_title" />
+          </p>
+          <p className="text-xs text-amber-700/90 dark:text-amber-300/80 mt-1">
+            <Bi id="warning_mineral_missing_body" />
+          </p>
+        </div>
+      )}
+
       <div className="ration" data-testid="mrp">
         <h3 className="ration-title">
           <Bi id="label_ration" />
