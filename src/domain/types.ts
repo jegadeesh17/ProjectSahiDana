@@ -147,6 +147,8 @@ export interface AuditCitation {
   maintenancePart: number;
   lactationPart: number;
   provenanceStatus: 'cited' | 'team-asserted';
+  /** null = pending human expert verification; undefined = not tracked for this figure. */
+  verifiedOn?: string | null;
   sourceKey: string;
 }
 
@@ -418,6 +420,8 @@ export interface AuditMeta {
     page: string;
     formula?: string;
     provenanceStatus: 'cited' | 'team-asserted';
+    /** null = expert check pending (shows a line on the sheet); undefined = not tracked. */
+    verifiedOn?: string | null;
   } | null;
   /** role and activeConstraint are BiText (not string) so the sheet stays bilingual; breakdown is language-neutral arithmetic. */
   solverConstraint: { role: BiText; activeConstraint: BiText; breakdown: string } | null;

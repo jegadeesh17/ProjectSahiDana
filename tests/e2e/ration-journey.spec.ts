@@ -46,7 +46,8 @@ test.describe('SahiDana M1 offline vertical-slice journey', () => {
     const benchmark = page.locator('.benchmark[data-benchmark="murrah"]');
     await expect(benchmark).toBeVisible();
     await expect(benchmark).toContainText('9.64 L');
-    await expect(benchmark).toContainText('cited peak daily yield');
+    await expect(benchmark).toContainText('Cited breed benchmark')
+    await expect(benchmark).toContainText('cited daily yield, as reported');
     await expect(benchmark).toContainText('7.34%');
 
     await benchmark.locator('.fig').first().click();

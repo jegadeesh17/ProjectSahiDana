@@ -45,7 +45,7 @@ export function auditBreedCap(breed: BreedStandard, todayMilk: number | null = n
           days: formatNumber(cap.lengthDays, 0),
           cap: formatNumber(cap.value, 2),
         })
-      : t('audit_cap_working_avg', { cap: formatNumber(cap.value, 2) });
+      : t(cap.basis === 'cited_peak' ? 'audit_cap_working_cited' : 'audit_cap_working_avg', { cap: formatNumber(cap.value, 2) });
   return {
     id: `breed-cap-${breed.id}`,
     label: t('audit_label_breed_cap', { breed: breedNameBi(breed) }),
@@ -57,6 +57,7 @@ export function auditBreedCap(breed: BreedStandard, todayMilk: number | null = n
       table: breed.sourceTable,
       page: breed.sourcePage,
       provenanceStatus: breed.provenanceStatus,
+      verifiedOn: breed.verifiedOn,
     },
     solverConstraint: null,
     sourceKey: breed.sourceKey,
@@ -93,7 +94,7 @@ export function auditBreedFat(breed: BreedStandard): AuditMeta | null {
     formattedValue: text,
     numericValue: breed.fatPct,
     originType: 'cited_source',
-    citation: { doc: breed.sourceDoc, table: breed.sourceTable, page: breed.sourcePage, provenanceStatus: breed.provenanceStatus },
+    citation: { doc: breed.sourceDoc, table: breed.sourceTable, page: breed.sourcePage, provenanceStatus: breed.provenanceStatus, verifiedOn: breed.verifiedOn },
     solverConstraint: null,
     sourceKey: breed.sourceKey,
     notes: [t('note_milk_kg_l')],

@@ -67,7 +67,7 @@ export function SupportsHeadline({ solution, profile, breed, library }: Props) {
           ·
         </span>
         <span>
-          <Bi id={breed.capBasis === 'cited_peak' ? 'label_milk_cap_peak' : isNonDescript(breed) ? 'label_milk_cap_national' : 'label_milk_cap_average'} />{' '}
+          <Bi id={isNonDescript(breed) ? 'label_milk_cap_national' : 'label_milk_cap_benchmark'} />{' '}
           <Fig inline audit={auditBreedCap(breed, todayMilk)}>
             {formatLitres(solution.milkCapLPerDay, 2)}
           </Fig>

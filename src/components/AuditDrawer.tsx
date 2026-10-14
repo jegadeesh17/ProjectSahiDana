@@ -156,6 +156,12 @@ function FinePrintSheet({ meta, onClose }: { meta: AuditMeta; onClose: () => voi
               )}
               <Row labelId="audit_status">
                 <Bi id={meta.citation.provenanceStatus === 'cited' ? 'label_cited' : 'label_team_asserted'} />
+                {meta.citation.verifiedOn === null && (
+                  <span className="detail-note" data-testid="expert-pending">
+                    {' · '}
+                    <Bi id="audit_expert_pending" />
+                  </span>
+                )}
               </Row>
             </>
           )}

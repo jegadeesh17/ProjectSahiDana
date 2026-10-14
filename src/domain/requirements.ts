@@ -12,6 +12,11 @@ import type {
   RequirementResult,
 } from './types';
 
+/** A requirement is verified only when every data block behind it is; otherwise it stays null (expert check pending). */
+function verifiedOnAll(...blocks: { verifiedOn: string | null }[]): string | null {
+  return blocks.every((b) => b.verifiedOn) ? (blocks[0]?.verifiedOn ?? null) : null;
+}
+
 function resolveFatPct(animal: AnimalProfile): number {
   const raw = animal.milkFatPct;
   if (typeof raw === 'number' && Number.isFinite(raw) && raw > 0) {
@@ -25,7 +30,7 @@ export function computeCitationsAtMilk(
   bodyWeightKg: number,
   milkYieldLPerDay: number,
 ): Record<NutrientKey, AuditCitation> {
-  const { maintenance, lactation, nutrientCitations } = requirementsV1;
+  const { dmi, maintenance, lactation, nutrientCitations } = requirementsV1;
   const y = Math.max(0, Number.isFinite(milkYieldLPerDay) ? milkYieldLPerDay : 0);
   const bw = Math.max(0, Number.isFinite(bodyWeightKg) ? bodyWeightKg : 0);
   const f = model.fatPctUsed;
@@ -60,6 +65,7 @@ export function computeCitationsAtMilk(
       maintenancePart: dmMaint,
       lactationPart: dmLact,
       provenanceStatus: 'cited',
+      verifiedOn: verifiedOnAll(dmi),
       sourceKey: 'REQ-DMI-NRC2001-EQ1-1',
     },
     CP: {
@@ -70,6 +76,7 @@ export function computeCitationsAtMilk(
       maintenancePart: cpMaint,
       lactationPart: cpLact,
       provenanceStatus: 'cited',
+      verifiedOn: verifiedOnAll(maintenance, lactation),
       sourceKey: 'REQ-CP-ICAR2013',
     },
     ME: {
@@ -80,6 +87,7 @@ export function computeCitationsAtMilk(
       maintenancePart: meMaint,
       lactationPart: meLact,
       provenanceStatus: 'cited',
+      verifiedOn: verifiedOnAll(maintenance, lactation),
       sourceKey: 'REQ-ME-ICAR2013',
     },
     Ca: {
@@ -90,6 +98,7 @@ export function computeCitationsAtMilk(
       maintenancePart: caMaint,
       lactationPart: caLact,
       provenanceStatus: 'cited',
+      verifiedOn: verifiedOnAll(maintenance, lactation),
       sourceKey: 'REQ-CA-ICAR2013',
     },
     P: {
@@ -100,6 +109,7 @@ export function computeCitationsAtMilk(
       maintenancePart: pMaint,
       lactationPart: pLact,
       provenanceStatus: 'cited',
+      verifiedOn: verifiedOnAll(maintenance, lactation),
       sourceKey: 'REQ-P-ICAR2013',
     },
   };
@@ -128,6 +138,7 @@ export function buildRequirementModel(animal: AnimalProfile): RequirementModel {
     maintenancePart: roughageMinShareOfDm.value,
     lactationPart: 0,
     provenanceStatus: 'cited',
+    verifiedOn: roughageMinShareOfDm.verifiedOn,
     sourceKey: 'REQ-ROUGHAGE-MIN',
   };
 

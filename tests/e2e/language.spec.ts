@@ -102,11 +102,18 @@ test.describe('Language toggle, persistence, and offline self-hosted fonts (AC-L
     await expect(page.locator('html')).toHaveAttribute('lang', 'hi');
     await expect(page.locator('.langtoggle-btn[lang="hi"]')).toHaveAttribute('aria-pressed', 'true');
 
-    // Go offline and verify Noto Sans Devanagari is ready from local self-hosted assets
+    // Make sure the Devanagari face has actually finished loading while still online. After a reload the font
+    // download can still be in flight, and going offline first aborts it (the flake seen under CPU load).
+    await page.evaluate(async () => {
+      await document.fonts.load('16px "Noto Sans Devanagari"', 'हिन्दी');
+      await document.fonts.ready;
+    });
+
+    // Go offline and verify Noto Sans Devanagari is still ready from local self-hosted assets
     await context.setOffline(true);
     const fontCheck = await page.evaluate(async () => {
       await document.fonts.ready;
-      return document.fonts.check('16px "Noto Sans Devanagari"');
+      return document.fonts.check('16px "Noto Sans Devanagari"', 'हिन्दी');
     });
     expect(fontCheck).toBe(true);
 

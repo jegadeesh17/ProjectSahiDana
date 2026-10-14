@@ -45,6 +45,7 @@ export function auditRequirement(n: NutrientKey, req: RequirementResult): AuditM
       page: c.sourcePage,
       formula: c.formulaDisplay,
       provenanceStatus: c.provenanceStatus,
+      verifiedOn: c.verifiedOn,
     },
     solverConstraint: null,
     sourceKey: c.sourceKey,
@@ -274,6 +275,7 @@ export function auditRoughageMin(minPct: number): AuditMeta {
       page: ROUGHAGE_CITATION.page,
       formula: `roughage DM ÷ total DM ≥ ${formatPct(minPct, 0)} (${ROUGHAGE_NOTE})`,
       provenanceStatus: 'cited',
+      verifiedOn: requirementsV1.roughageMinShareOfDm.verifiedOn,
     },
     solverConstraint: {
       role: t('audit_role_roughage'),

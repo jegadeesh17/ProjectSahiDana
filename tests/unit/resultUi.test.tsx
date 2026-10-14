@@ -214,3 +214,45 @@ describe('breed, budget and the feed picker', () => {
   });
 });
 
+describe('honest labelling of unverified and benchmark figures', () => {
+  beforeEach(() => {
+    Element.prototype.scrollIntoView = () => undefined;
+    window.localStorage.clear();
+    setActiveLang('en');
+  });
+  afterEach(() => {
+    cleanup();
+    window.localStorage.clear();
+    setActiveLang('en');
+    document.documentElement.lang = 'en';
+  });
+
+  it('labels the breed cap as a cited benchmark (not a peak) and flags “Expert check: pending” in the audit sheet', () => {
+    const { container } = render(<App />);
+    demo(container, 'gain');
+    const benchmark = container.querySelector('.benchmark')!;
+    expect(benchmark.textContent).toContain('Cited breed benchmark');
+    expect(benchmark.textContent).not.toMatch(/peak/i);
+    expect(container.textContent).not.toContain('Cited breed peak');
+    act(() => {
+      fireEvent.click(benchmark.querySelector<HTMLElement>('.fig')!);
+    });
+    const dialog = container.querySelector('[role="dialog"][data-audit-id^="breed-cap-"]')!;
+    expect(dialog).toBeTruthy();
+    expect(dialog.querySelector('[data-testid="expert-pending"]')?.textContent).toContain('Expert check: pending');
+    expect(dialog.textContent).toContain('Cited figure:');
+    expect(dialog.textContent).not.toContain('Cited average');
+  });
+
+  it('shows the pending line in Hindi too, with no English leaking in', () => {
+    window.localStorage.setItem(LANG_STORAGE_KEY, 'hi');
+    const { container } = render(<App />);
+    demo(container, 'gain');
+    act(() => {
+      fireEvent.click(container.querySelector<HTMLElement>('.benchmark .fig')!);
+    });
+    const pending = container.querySelector('[data-testid="expert-pending"]');
+    expect(pending?.textContent).toContain('विशेषज्ञ जाँच: बाकी');
+    expect(pending?.textContent).not.toMatch(/[A-Za-z]/);
+  });
+});
