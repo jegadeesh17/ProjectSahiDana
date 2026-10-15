@@ -15,6 +15,9 @@ test.describe('SahiDana M1 offline vertical-slice journey', () => {
     await expect(howToUse).toBeVisible();
     await expect(howToUse).toContainText('How to use:');
     await expect(howToUse).toContainText('Balance ration');
+    await expect(howToUse).toContainText(
+      'Enter your cow or buffalo, set a daily budget, add feeds, then tap “Balance ration”',
+    );
 
     // 2. Toggle English -> Hindi, verify persistence across reload, and switch back to English (AC-L1.1)
     const hiBtn = page.locator('.langtoggle-btn[lang="hi"]');
@@ -222,6 +225,60 @@ test.describe('SahiDana M1 offline vertical-slice journey', () => {
     expect(clipboardText).toContain('₹250.00');
     expect(clipboardText).toContain('Sources:');
   });
+
+  for (const [lang, label, viewport] of [
+    ['en', '375 px', { width: 375, height: 812 }],
+    ['en', 'desktop', { width: 1280, height: 900 }],
+    ['hi', '375 px', { width: 375, height: 812 }],
+    ['hi', 'desktop', { width: 1280, height: 900 }],
+  ] as const) {
+    test(`orders the input column extractor, cow or buffalo, budget, feeds, balance button at ${label} in ${lang} (AC-C3-1.1, AC-C3-1.4)`, async ({
+      page,
+    }) => {
+      await page.setViewportSize(viewport);
+      await page.goto('/');
+      if (lang === 'hi') {
+        await page.locator('.langtoggle-btn[lang="hi"]').click();
+        await expect(page.locator('html')).toHaveAttribute('lang', 'hi');
+      }
+      const budgetName = lang === 'en' ? 'Daily budget' : 'रोज़ का बजट';
+      const balanceName = lang === 'en' ? 'Balance ration' : 'राशन संतुलित करें';
+
+      const sections = [
+        page.locator('.inputs .extractor'),
+        page.locator('.inputs fieldset.block'),
+        page.locator('.inputs section.block').filter({ has: page.getByRole('textbox', { name: budgetName }) }),
+        page.locator('.inputs section.block').filter({ has: page.locator('.librow') }).first(),
+        page.locator('.inputs .balancebar'),
+      ];
+      const handles = [];
+      for (const section of sections) {
+        await expect(section).toBeVisible();
+        handles.push(await section.elementHandle());
+      }
+
+      // DOM order: each section follows the one before it.
+      for (let i = 1; i < handles.length; i += 1) {
+        const follows = await page.evaluate(
+          ([a, b]) => Boolean(a!.compareDocumentPosition(b!) & Node.DOCUMENT_POSITION_FOLLOWING),
+          [handles[i - 1], handles[i]],
+        );
+        expect(follows, `section ${i} follows section ${i - 1} in the DOM`).toBe(true);
+      }
+
+      // Visual order: each section starts lower than the one before it. Below 1024 px the balance bar is pinned to the
+      // bottom of the screen, so its position is not comparable and only the four cards are checked.
+      const tops: number[] = [];
+      const visualCount = viewport.width >= 1024 ? sections.length : sections.length - 1;
+      for (const section of sections.slice(0, visualCount)) tops.push((await section.boundingBox())!.y);
+      for (let i = 1; i < tops.length; i += 1) {
+        expect(tops[i], `section ${i} sits below section ${i - 1}`).toBeGreaterThan(tops[i - 1]);
+      }
+
+      // No feeds yet: the button is still disabled (AC-E1.2 through C3-M1).
+      await expect(page.getByRole('button', { name: balanceName })).toBeDisabled();
+    });
+  }
 
   test('verifies vercel.json routing, PWA precache manifest, and bundled woff2 font budget <= 300 KB', async () => {
     const rootDir = process.cwd();

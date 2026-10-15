@@ -256,7 +256,7 @@
             "tests/e2e/ration-journey.spec.ts"
           ],
           "acceptance_criteria": "SPEC AC-C3-1.1, AC-C3-1.4 (how-to-use line in new order), AC-C3-1.7; regression AC-C3-R3, AC-C3-R7: tests/e2e/ration-journey.spec.ts checks that the extractor, 'Your cow or buffalo' card, budget, feeds and balance button appear in that DOM order at 375 px and desktop, and that Balance ration is still disabled with no feeds; solver expected values are unchanged. Verify: npm test exits 0.",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "C3-M1-T3",

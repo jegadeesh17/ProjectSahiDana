@@ -34,12 +34,21 @@ describe('strings', () => {
     expect(strings.label_animal_buffalo).toEqual({ en: 'Your buffalo', hi: 'आपकी भैंस' });
   });
 
-  it('never calls the farmer’s cow or buffalo an animal or पशु outside audit_* labels (AC-C3-1.4)', () => {
+  it('never calls the farmer’s cow or buffalo an animal or पशु (AC-C3-1.4)', () => {
     for (const [id, v] of entries) {
-      if (id.startsWith('audit_')) continue;
       expect(/animal/i.test(v.en), `${id} en`).toBe(false);
       expect(v.hi.includes('पशु'), `${id} hi`).toBe(false);
     }
+  });
+
+  it('names the cow or buffalo, then the budget, then the feeds, then the button in the how-to-use line, in both languages (AC-C3-1.4)', () => {
+    const inOrder = (text: string, marks: string[]) => {
+      const positions = marks.map((m) => text.indexOf(m));
+      expect(positions.every((p) => p >= 0), `${text} contains ${marks.join(' | ')}`).toBe(true);
+      expect(positions).toEqual([...positions].sort((a, b) => a - b));
+    };
+    inOrder(strings.notice_how_to_use.en, ['cow or buffalo', 'daily budget', 'add feeds', 'Balance ration']);
+    inOrder(strings.notice_how_to_use.hi, ['गाय या भैंस', 'रोज़ का बजट', 'फ़ीड', 'राशन संतुलित करें']);
   });
 
   it('keeps the Hindi review status unverified until 2026-10-14', () => {

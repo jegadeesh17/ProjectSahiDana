@@ -473,6 +473,15 @@ function Workspace() {
             <AnimalProfileForm draft={animal} errors={validation.errors} breeds={breeds} onChange={editAnimal} prefilled={prefill !== null} />
           </div>
 
+          <BudgetField
+            draft={animal}
+            todayCost={todayCost}
+            error={validation.errors.budget}
+            prefilled={prefill !== null}
+            onChange={(text) => editAnimal({ ...animal, budget: text, budgetEdited: true })}
+            onUseToday={() => editAnimal({ ...animal, budget: '', budgetEdited: false })}
+          />
+
           <FeedSelector
             library={library}
             drafts={feeds}
@@ -483,15 +492,6 @@ function Workspace() {
             onRemove={removeFeed}
             onOpen={() => setFeedsOpen(true)}
             onCollapse={() => setFeedsOpen(false)}
-          />
-
-          <BudgetField
-            draft={animal}
-            todayCost={todayCost}
-            error={validation.errors.budget}
-            prefilled={prefill !== null}
-            onChange={(text) => editAnimal({ ...animal, budget: text, budgetEdited: true })}
-            onUseToday={() => editAnimal({ ...animal, budget: '', budgetEdited: false })}
           />
 
           <div className="balancebar">

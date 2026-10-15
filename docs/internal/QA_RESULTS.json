@@ -102,7 +102,13 @@
     "exit_code": 0,
     "summary": "15 unit test files passed, 233 tests passed (including 25 tests in tests/unit/farmerWording.test.tsx, 19 tests in tests/unit/oneLanguage.test.tsx and 12 tests in tests/unit/i18n.test.ts)",
     "failure_output": ""
+  },
+  {
+    "task_id": "C3-M1-T2",
+    "attempt": 1,
+    "command": "npm test && npx playwright test tests/e2e/ration-journey.spec.ts",
+    "exit_code": 0,
+    "summary": "npm test: 15 unit test files passed, 234 tests passed (including 13 tests in tests/unit/i18n.test.ts, with 1 new test for the how-to-use order in English and Hindi). npx playwright test tests/e2e/ration-journey.spec.ts: 9 passed (including 4 input-column order tests, at 375 px and desktop in English and Hindi).",
+    "failure_output": ""
   }
 ]
-
-

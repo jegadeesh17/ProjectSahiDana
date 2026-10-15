@@ -46,8 +46,8 @@ export const strings = {
   // ---- wayfinding (next decision) -------------------------------------------------------------
   label_how_to_use: { hi: 'कैसे इस्तेमाल करें:', en: 'How to use:' },
   notice_how_to_use: {
-    hi: 'गाय या भैंस चुनें, फ़ीड और रोज़ का बजट भरें, फिर “राशन संतुलित करें” दबाएँ — किसी भी संख्या को दबाकर उसका स्रोत देखें।',
-    en: 'Enter your cow or buffalo, pick feeds and set a daily budget, then tap “Balance ration” — tap any number to see its source.',
+    hi: 'अपनी गाय या भैंस की जानकारी भरें, रोज़ का बजट तय करें, फ़ीड जोड़ें, फिर “राशन संतुलित करें” दबाएँ — किसी भी संख्या को दबाकर उसका स्रोत देखें।',
+    en: 'Enter your cow or buffalo, set a daily budget, add feeds, then tap “Balance ration” — tap any number to see its source.',
   },
   notice_next_animal: { hi: 'अगला कदम: गाय या भैंस की जानकारी भरें', en: 'Next: enter your cow or buffalo details' },
   notice_next_fix: { hi: 'अगला कदम: लाल निशान वाले खाने ठीक करें', en: 'Next: fix the fields marked in red' },
@@ -434,12 +434,12 @@ export const strings = {
   audit_cap_basis: { hi: 'सीमा का आधार', en: 'How the cap is set' },
   audit_basal_min: { hi: 'न्यूनतम बुनियादी मात्रा', en: 'Basal minimum' },
   audit_basal_min_lactating: {
-    hi: 'दुधारू पशु के लिए रोज़ कम से कम {kg}; हर राशन में रखा जाता है',
-    en: 'At least {kg} a day for an animal in milk; kept in every ration',
+    hi: 'दुधारू गाय या भैंस के लिए रोज़ कम से कम {kg}; हर राशन में रखा जाता है',
+    en: 'At least {kg} a day for a cow or buffalo in milk; kept in every ration',
   },
   audit_basal_min_dry: {
-    hi: 'सूखे पशु के लिए रोज़ कम से कम {kg}; हर राशन में रखा जाता है',
-    en: 'At least {kg} a day for a dry animal; kept in every ration',
+    hi: 'सूखी गाय या भैंस के लिए रोज़ कम से कम {kg}; हर राशन में रखा जाता है',
+    en: 'At least {kg} a day for a dry cow or buffalo; kept in every ration',
   },
   audit_notes: { hi: 'टिप्पणी', en: 'Note' },
   audit_peak_note: { hi: 'उत्पादन पर टिप्पणी', en: 'Yield note' },

@@ -442,14 +442,14 @@ describe('expert-check line only where the sheet shows a cited figure', () => {
   it('the mineral mixture kg sheet states the basal minimum, cites it and flags the pending check', () => {
     const sheet = sheetFor(auditFeedKg(byId('mineral_mix'), 0.1, false, solutionOf('gain')));
     expect(sheet.textContent).toContain('Basal minimum');
-    expect(sheet.textContent).toContain('At least 0.10 kg a day for an animal in milk');
+    expect(sheet.textContent).toContain('At least 0.10 kg a day for a cow or buffalo in milk');
     expect(sheet.textContent).toContain('NDDB, Ration Balancing Programme Field Guidelines');
     expect(sheet.querySelector('[data-testid="expert-pending"]')?.textContent).toContain('Expert check: pending');
   });
 
-  it('the salt kg sheet uses the dry-animal minimum for a dry animal', () => {
+  it('the salt kg sheet uses the dry-animal minimum for a dry cow or buffalo', () => {
     const sheet = sheetFor(auditFeedKg(byId('common_salt'), 0.03, false, solutionOf('dry_animal')));
-    expect(sheet.textContent).toContain('At least 0.03 kg a day for a dry animal');
+    expect(sheet.textContent).toContain('At least 0.03 kg a day for a dry cow or buffalo');
     expect(sheet.querySelector('[data-testid="expert-pending"]')).not.toBeNull();
   });
 
