@@ -9,6 +9,7 @@ import { useLang } from '../i18n/LanguageProvider';
 import { BreedBenchmark } from './BreedBenchmark';
 import type { StringId } from '../i18n/strings';
 import { bi } from '../i18n/strings';
+import { Input } from './ui/input';
 
 interface AnimalProfileFormProps {
   draft: AnimalDraft;
@@ -44,9 +45,9 @@ function NumberField({ field, labelId, unit, hint, value, error, showError, pref
         <Bi id={labelId} />
       </label>
       <div className="input-wrap">
-        <input
+        <Input
           id={inputId}
-          className="input num"
+          className="num"
           type="text"
           inputMode="decimal"
           autoComplete="off"

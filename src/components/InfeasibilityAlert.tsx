@@ -7,6 +7,7 @@ import { t } from '../i18n/strings';
 import { Fig } from './Fig';
 import { FeedChip, FeedName } from './FeedName';
 import { StatusPill } from './StatusPill';
+import { Button } from './ui/button';
 
 interface Props {
   report: InfeasibilityReport;
@@ -93,9 +94,9 @@ export function InfeasibilityAlert({ report, requirement, library, onAddFeed }: 
                       )}
                     </span>
                   </span>
-                  <button type="button" className="btn btn-sm" onClick={() => onAddFeed(s.feedId)}>
+                  <Button size="sm" onClick={() => onAddFeed(s.feedId)}>
                     <Bi id="action_add_feed" />
-                  </button>
+                  </Button>
                 </li>
               );
             })}

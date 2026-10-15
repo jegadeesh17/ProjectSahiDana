@@ -1,5 +1,6 @@
 import type { BiParams, StringId } from '../i18n/strings';
 import { Bi } from '../i18n/Bi';
+import { Badge } from './ui/badge';
 
 interface StatusPillProps {
   id: StringId;
@@ -12,8 +13,8 @@ interface StatusPillProps {
 /** Soft tinted status pill: a dot and a short bilingual label. Never rotated, outlined or animated. */
 export function StatusPill({ id, params, tone, size = 'md' }: StatusPillProps) {
   return (
-    <span className={`pill pill-${tone}${size === 'lg' ? ' pill-lg' : ''}`} data-pill={id}>
+    <Badge variant={tone} size={size === 'lg' ? 'lg' : 'default'} data-pill={id}>
       <Bi id={id} params={params} />
-    </span>
+    </Badge>
   );
 }

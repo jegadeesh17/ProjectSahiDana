@@ -21,6 +21,7 @@ Key technical, hosting, solver, AI integration, data and language decisions for 
 | [ADR-0015](#adr-0015-no-invented-per-feed-inclusion-caps-for-library-feeds) | No Invented Per-Feed Inclusion Caps for Library Feeds | Accepted | 2026-10-15 |
 | [ADR-0016](#adr-0016-candidate-month-is-the-devices-current-month) | Candidate Month Is the Device's Current Month | Accepted | 2026-10-15 |
 | [ADR-0017](#adr-0017-two-milestone-delivery-layout-first-then-farmer-first-solve) | Two-Milestone Delivery: Layout First, Then Farmer-First Solve | Accepted | 2026-10-15 |
+| [ADR-0018](#adr-0018-ui-primitives-vaul-radix-shadcn-style-components-lucide) | UI Primitives: vaul, Radix, shadcn-Style Components, lucide | Accepted | 2026-10-15 |
 
 ---
 
@@ -582,3 +583,35 @@ Change 3 mixes a layout and wording pass (order of the input column, "Your cow o
 
 - **Positive:** The user sees the layout early, and `main` always shows a finished app.
 - **Negative:** Two review and UAT rounds. Between the milestones, the new layout still requires at least one feed.
+
+---
+
+## ADR-0018: UI Primitives: vaul, Radix, shadcn-Style Components, lucide
+
+Date: 2026-10-15
+Status: Accepted
+
+### Context
+
+The audit sheet lacked native mobile swipe-to-dismiss and robust scroll locking, button and pill elements had repetitive markup across multiple components, and icons were either missing or authored as ad-hoc inline SVGs. Upgrading to structured UI primitives was proposed: (1) `vaul` and `@radix-ui/react-dialog` for the audit sheet, (2) `lucide-react` for bundled iconography, and (3) typed shadcn-style `Button`, `Input`, `Badge`, `Drawer`, and `Accordion` primitives in `src/components/ui/`.
+Technical trade-offs were identified: `vaul` is currently unmaintained, and standard `shadcn init / add` commands clobber existing `tailwind.config.ts` design tokens and `index.css`. The user accepted the unmaintained status of `vaul` on 2026-10-15 and approved adopting all three improvements.
+
+### Decision
+
+1. Adopt `vaul@1.1.2`, `@radix-ui/react-dialog@1.1.23`, `@radix-ui/react-accordion@1.2.20`, `@radix-ui/react-slot@1.3.3`, `class-variance-authority@0.7.1`, `clsx@2.1.1`, `tailwind-merge@2.6.1`, and `lucide-react@1.49.0`.
+2. Hand-write shadcn-style primitives (`Button`, `Input`, `Badge`, `Drawer`, `Accordion`) in `src/components/ui/` with `cva` variants that map strictly to existing `index.css` classes (`btn`, `btn-primary`, `btn-quiet`, `btn-green`, `btn-preset`, `btn-sm`, `pill`, `pill-ok`, `pill-warn`, `pill-danger`, `pill-neutral`, `scrim`, `sheet`), preserving DESIGN.md tokens without running `shadcn CLI`.
+3. Render `Drawer` inline without a portal so unit tests continue to query modal content within container bounds.
+4. Replace the custom disclosure on the result details panel with `@radix-ui/react-accordion`, rendering `AccordionHeader` with `asChild` as a `div` to avoid unwanted `<h3>` hierarchy insertion.
+5. Standardize iconography using `lucide-react` (`X`, `Copy`, `WifiOff`, `Trash2`, `BookOpen`, `ChevronDown`, `Check`), all tagged with `aria-hidden="true"` and no text/title elements to preserve strict single-language isolation tests.
+
+### Alternatives considered
+
+- **Running `shadcn init` / `shadcn add` (Rejected):** Rewrites `tailwind.config.ts` and replaces the design token system with shadcn defaults.
+- **Portalled Dialog / Drawer (Rejected):** Breaks unit tests that inspect modal dialogs within test containers.
+- **Custom touch/swipe event handlers (Rejected):** Error-prone across diverse mobile viewports and reduced-motion states compared to vaul's established physics.
+
+### Consequences
+
+- **Positive:** Audit sheet has native drag-down dismiss and scroll locking; button/input/badge markup is type-safe and consistent; visual styling and language test isolation remain 100% intact.
+- **Negative:** `vaul` is unmaintained; dependency pinned at version 1.1.2.
+

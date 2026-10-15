@@ -1,5 +1,6 @@
 import { forwardRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import { ChevronDown, Copy, WifiOff } from 'lucide-react';
 import requirementsV1 from '../data/requirements.v1.json';
 import {
   auditFeedCost,
@@ -42,6 +43,8 @@ import { NutrientCoverageBars } from './NutrientCoverageBars';
 import { StatusPill } from './StatusPill';
 import { SupportsHeadline, VerdictCard } from './VerdictCard';
 import { useAudit } from './AuditDrawer';
+import { Button } from './ui/button';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from './ui/accordion';
 
 type Profile = Omit<AnimalProfile, 'isConfirmed'>;
 
@@ -332,16 +335,25 @@ function SolvedBody({
         </ul>
       </div>
 
-      <button
-        type="button"
-        className="btn btn-quiet details-toggle"
-        aria-expanded={details}
-        aria-controls="result-details"
-        onClick={() => setDetails(!details)}
+      <Accordion
+        type="single"
+        collapsible
+        value={details ? 'details' : ''}
+        onValueChange={(val) => setDetails(val === 'details')}
       >
-        <Bi id={details ? 'action_hide_details' : 'action_show_details'} />
-      </button>
-      {details && <Details solution={solution} profile={profile} requirement={requirement} library={library} breeds={breeds} />}
+        <AccordionItem value="details">
+          <AccordionTrigger
+            className="btn btn-quiet details-toggle"
+            aria-controls="result-details"
+          >
+            <ChevronDown size={18} strokeWidth={2} aria-hidden="true" />
+            <Bi id={details ? 'action_hide_details' : 'action_show_details'} />
+          </AccordionTrigger>
+          <AccordionContent>
+            <Details solution={solution} profile={profile} requirement={requirement} library={library} breeds={breeds} />
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </div>
   );
 }
@@ -408,25 +420,25 @@ export const RationResultsPanel = forwardRef<HTMLElement, Props>(function Ration
         <>
           <div className="frame-actions">
             <div className="action-cell">
-              <button
-                type="button"
-                className="btn"
+              <Button
                 onClick={onExplain}
                 disabled={!online || explain.kind === 'loading'}
                 aria-describedby={!online ? 'explain-offline' : undefined}
               >
                 <Bi id="action_explain" />
-              </button>
+              </Button>
               {!online && (
                 <span id="explain-offline" className="tag tag-offline">
+                  <WifiOff size={18} strokeWidth={2} aria-hidden="true" />
                   <Bi id="notice_needs_internet" />
                 </span>
               )}
             </div>
             <div className="action-cell">
-              <button type="button" className="btn" onClick={onCopy}>
+              <Button onClick={onCopy}>
+                <Copy size={18} strokeWidth={2} aria-hidden="true" />
                 <Bi id="action_copy_summary" />
-              </button>
+              </Button>
             </div>
           </div>
           <ExplanationCard state={explain} />

@@ -6,6 +6,7 @@ import { Bi, BiRich } from '../i18n/Bi';
 import { Fig } from './Fig';
 import { FeedChip, FeedName } from './FeedName';
 import { StatusPill } from './StatusPill';
+import { Button } from './ui/button';
 
 interface Props {
   report: BudgetShortfallReport;
@@ -58,9 +59,9 @@ export function BudgetShortfallAlert({ report, library, onAddFeed }: Props) {
                     />
                   </span>
                 </span>
-                <button type="button" className="btn btn-sm" onClick={() => onAddFeed(fix.id)}>
+                <Button size="sm" onClick={() => onAddFeed(fix.id)}>
                   <Bi id="action_add_feed" />
-                </button>
+                </Button>
               </li>
             </ul>
           </>

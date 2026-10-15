@@ -15,6 +15,10 @@ import { bi } from '../i18n/strings';
 import type { StringId } from '../i18n/strings';
 import { useAudit } from './AuditDrawer';
 import { FeedChip, FeedName } from './FeedName';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Badge } from './ui/badge';
+import { Trash2 } from 'lucide-react';
 
 interface FeedSelectorProps {
   library: FeedItem[];
@@ -47,9 +51,9 @@ function RowField({ id, labelId, value, error, optional, onChange, onBlur }: Row
       <label htmlFor={id} className="field-label">
         <Bi id={labelId} />
       </label>
-      <input
+      <Input
         id={id}
-        className="input num"
+        className="num"
         type="text"
         inputMode="decimal"
         autoComplete="off"
@@ -68,10 +72,17 @@ function RowField({ id, labelId, value, error, optional, onChange, onBlur }: Row
 function SeasonMark({ feed, month, quiet = false }: { feed: FeedItem; month: number; quiet?: boolean }) {
   const { open } = useAudit();
   if (inSeason(feed, month)) {
+    if (quiet) {
+      return (
+        <span className="season-in" data-season="in">
+          <Bi id="state_in_season" />
+        </span>
+      );
+    }
     return (
-      <span className={quiet ? 'season-in' : 'pill pill-ok'} data-season="in">
+      <Badge variant="ok" data-season="in">
         <Bi id="state_in_season" />
-      </span>
+      </Badge>
     );
   }
   return (
@@ -121,19 +132,19 @@ export function FeedSelector({
         </h2>
         <div className="block-head-actions">
           {!collapsed && drafts.length > 0 && (
-            <button type="button" className="btn btn-sm btn-quiet" aria-pressed={details} onClick={() => setDetails(!details)}>
+            <Button size="sm" variant="quiet" aria-pressed={details} onClick={() => setDetails(!details)}>
               <Bi id={details ? 'action_hide_details' : 'action_show_details'} />
-            </button>
+            </Button>
           )}
           {collapsed ? (
-            <button type="button" className="btn btn-sm lg:hidden" onClick={onOpen}>
+            <Button size="sm" className="lg:hidden" onClick={onOpen}>
               <Bi id="action_edit_feeds" />
-            </button>
+            </Button>
           ) : (
             drafts.length > 0 && (
-              <button type="button" className="btn btn-sm lg:hidden" onClick={onCollapse}>
+              <Button size="sm" className="lg:hidden" onClick={onCollapse}>
                 <Bi id="action_done" />
-              </button>
+              </Button>
             )
           )}
         </div>
@@ -183,15 +194,16 @@ export function FeedSelector({
                       <FeedName feed={feed} />
                     </div>
                     <SeasonMark feed={feed} month={month} />
-                    <button
-                      type="button"
-                      className="btn btn-sm btn-quiet"
+                    <Button
+                      size="sm"
+                      variant="quiet"
                       onClick={() => onRemove(d.feedId)}
                       aria-label={`${bi('action_remove_feed')}: ${feedLabel(feed, lang)}`}
                       data-lang-exempt={lang === 'hi' && feed.localNameDeva === null ? 'feed-no-deva' : undefined}
                     >
+                      <Trash2 size={16} strokeWidth={2} aria-hidden="true" />
                       <Bi id="action_remove_feed" />
-                    </button>
+                    </Button>
                   </div>
                   <div className={`grid gap-2 ${details ? 'grid-cols-3' : 'grid-cols-2'}`}>
                     <RowField
@@ -251,9 +263,9 @@ export function FeedSelector({
                       <Bi id="action_view_source" />
                     </button>
                     {edited && (
-                      <span className="pill pill-neutral" data-pill="your-price">
+                      <Badge variant="neutral" data-pill="your-price">
                         <Bi id="label_your_price" />
-                      </span>
+                      </Badge>
                     )}
                   </div>
                 </li>
@@ -264,9 +276,9 @@ export function FeedSelector({
 
         {(!selectedIds.has('mineral_mix') || !selectedIds.has('common_salt')) && (
           <div className="my-2">
-            <button
-              type="button"
-              className="btn btn-quiet text-xs py-1 px-2 border border-teal-600/30 text-teal-700 dark:text-teal-400"
+            <Button
+              variant="quiet"
+              className="text-xs py-1 px-2 border border-teal-600/30 text-teal-700 dark:text-teal-400"
               onClick={() => {
                 if (!selectedIds.has('mineral_mix')) onAdd('mineral_mix');
                 if (!selectedIds.has('common_salt')) onAdd('common_salt');
@@ -274,7 +286,7 @@ export function FeedSelector({
               data-testid="btn-add-minerals"
             >
               <Bi id="action_add_mineral_salt" />
-            </button>
+            </Button>
           </div>
         )}
 
@@ -284,9 +296,8 @@ export function FeedSelector({
               <label htmlFor={`${uid}-search`} className="field-label">
                 <Bi id="label_feed_search" />
               </label>
-              <input
+              <Input
                 id={`${uid}-search`}
-                className="input"
                 type="search"
                 autoComplete="off"
                 value={query}
@@ -365,16 +376,16 @@ export function FeedSelector({
                             </span>
                           </div>
                           {!inSeason(feed, month) && <SeasonMark feed={feed} month={month} />}
-                          <button
-                            type="button"
-                            className="btn btn-sm librow-act"
+                          <Button
+                            size="sm"
+                            className="librow-act"
                             disabled={added}
                             onClick={() => onAdd(feed.id)}
                             aria-label={`${added ? bi('state_added') : bi('action_add_feed')}: ${feedLabel(feed, lang)}`}
                             data-lang-exempt={lang === 'hi' && feed.localNameDeva === null ? 'feed-no-deva' : undefined}
                           >
                             <Bi id={added ? 'state_added' : 'action_add_feed'} />
-                          </button>
+                          </Button>
                         </li>
                       );
                     })}

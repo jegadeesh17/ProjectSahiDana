@@ -17,9 +17,17 @@
   "dependencies": {
     "@fontsource/noto-sans": "^5.1.0",
     "@fontsource/noto-sans-devanagari": "^5.1.0",
+    "@radix-ui/react-accordion": "^1.2.20",
+    "@radix-ui/react-dialog": "^1.1.23",
+    "@radix-ui/react-slot": "^1.3.3",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "javascript-lp-solver": "^0.4.24",
+    "lucide-react": "^1.49.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "tailwind-merge": "^2.6.1",
+    "vaul": "^1.1.2"
   },
   "devDependencies": {
     "@playwright/test": "^1.48.0",

@@ -8,6 +8,8 @@ import { bi } from '../i18n/strings';
 import { rationService } from '../services/rationService';
 import { FeedName } from './FeedName';
 import { StatusPill } from './StatusPill';
+import { Button } from './ui/button';
+import { WifiOff } from 'lucide-react';
 
 export type UnmatchedResolution = null | { kind: 'map'; feedId: string } | { kind: 'drop' };
 
@@ -99,6 +101,7 @@ export function FreeTextExtractor({
           <Bi id="label_describe" />
           {blocked ? (
             <span className="tag tag-offline">
+              <WifiOff size={18} strokeWidth={2} aria-hidden="true" />
               <Bi id="notice_needs_internet" />
             </span>
           ) : (
@@ -138,11 +141,12 @@ export function FreeTextExtractor({
           </div>
 
           <div className="action-row">
-            <button type="button" className="btn" disabled={blocked || status.kind === 'loading'} onClick={run} aria-describedby={blocked ? `${uid}-offline` : undefined}>
+            <Button disabled={blocked || status.kind === 'loading'} onClick={run} aria-describedby={blocked ? `${uid}-offline` : undefined}>
               <Bi id="action_fill_from_description" />
-            </button>
+            </Button>
             {blocked && (
               <span id={`${uid}-offline`} className="tag tag-offline">
+                <WifiOff size={18} strokeWidth={2} aria-hidden="true" />
                 <Bi id="notice_needs_internet" />
               </span>
             )}
@@ -164,9 +168,9 @@ export function FreeTextExtractor({
               <p>
                 <Bi id={LLM_ERROR_STRING[status.code]} />
               </p>
-              <button type="button" className="btn btn-sm" onClick={run} disabled={blocked}>
+              <Button size="sm" onClick={run} disabled={blocked}>
                 <Bi id="action_try_again" />
-              </button>
+              </Button>
             </div>
           )}
         </div>
@@ -229,9 +233,9 @@ export function FreeTextExtractor({
                           <span className="tag">
                             <Bi id="state_dropped" />
                           </span>
-                          <button type="button" className="btn btn-sm btn-quiet" onClick={() => setResolution(null)}>
+                          <Button size="sm" variant="quiet" onClick={() => setResolution(null)}>
                             <Bi id="action_undo" />
-                          </button>
+                          </Button>
                         </div>
                       ) : (
                         <div className="action-row">
@@ -257,9 +261,9 @@ export function FreeTextExtractor({
                               ))}
                             </select>
                           </div>
-                          <button type="button" className="btn btn-sm" onClick={() => setResolution({ kind: 'drop' })}>
+                          <Button size="sm" onClick={() => setResolution({ kind: 'drop' })}>
                             <Bi id="action_drop" />
-                          </button>
+                          </Button>
                         </div>
                       )}
                     </li>
@@ -270,12 +274,12 @@ export function FreeTextExtractor({
           )}
 
           <div className="action-row action-row-wrap">
-            <button type="button" className="btn btn-green" disabled={unresolved > 0} onClick={onConfirm} aria-describedby={unresolved > 0 ? `${uid}-resolve` : undefined}>
+            <Button variant="green" disabled={unresolved > 0} onClick={onConfirm} aria-describedby={unresolved > 0 ? `${uid}-resolve` : undefined}>
               <Bi id="action_confirm_prefill" />
-            </button>
-            <button type="button" className="btn btn-quiet" onClick={onDiscard}>
+            </Button>
+            <Button variant="quiet" onClick={onDiscard}>
               <Bi id="action_discard_prefill" />
-            </button>
+            </Button>
           </div>
           {unresolved > 0 && (
             <p id={`${uid}-resolve`} className="field-hint">

@@ -1,8 +1,12 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import { Check, X, BookOpen } from 'lucide-react';
 import type { AuditMeta } from '../domain/types';
 import { Bi } from '../i18n/Bi';
 import type { BiText, StringId } from '../i18n/strings';
+import { Button } from './ui/button';
+import { Badge } from './ui/badge';
+import { Drawer, DrawerOverlay, DrawerContent, DrawerTitle } from './ui/drawer';
 
 interface AuditContextValue {
   open: (meta: AuditMeta) => void;
@@ -49,11 +53,7 @@ export function AuditProvider({ children }: { children: ReactNode }) {
 function Tick({ on }: { on: boolean }) {
   return (
     <span className="tick" data-on={on} aria-hidden="true">
-      {on && (
-        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
-          <path d="M3.5 8.5 L6.5 11.5 L12.5 4.5" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      )}
+      {on && <Check size={16} strokeWidth={2.5} aria-hidden="true" />}
     </span>
   );
 }
@@ -76,54 +76,28 @@ const ORIGIN_STRING = {
 
 /** The fine-print sheet: a rounded bottom sheet that slides up from the bottom, 220ms. */
 function FinePrintSheet({ meta, onClose }: { meta: AuditMeta; onClose: () => void }) {
-  const sheetRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    closeRef.current?.focus();
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        onClose();
-        return;
-      }
-      if (e.key !== 'Tab' || !sheetRef.current) return;
-      const focusables = sheetRef.current.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-      if (focusables.length === 0) return;
-      const first = focusables[0];
-      const last = focusables[focusables.length - 1];
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      }
-    };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [onClose]);
-
   const isFixture = meta.sourceKey?.startsWith('PROTO') ?? false;
 
   return (
-    <>
-      <div className="scrim" onClick={onClose} aria-hidden="true" />
-      <div
-        ref={sheetRef}
-        className="sheet"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="fp-title"
+    <Drawer open onOpenChange={(o) => !o && onClose()}>
+      <DrawerOverlay />
+      <DrawerContent
         data-audit-id={meta.id}
+        aria-describedby={undefined}
+        onOpenAutoFocus={(e) => {
+          e.preventDefault();
+          closeRef.current?.focus();
+        }}
       >
         <div className="fp-head">
-          <h2 id="fp-title" className="fp-title">
+          <DrawerTitle className="fp-title" id="fp-title">
             <Bi id="audit_title" />
-          </h2>
-          <button ref={closeRef} type="button" className="btn btn-sm" onClick={onClose}>
+          </DrawerTitle>
+          <Button ref={closeRef} size="sm" onClick={onClose}>
+            <X size={16} strokeWidth={2} aria-hidden="true" />
             <Bi id="action_close" />
-          </button>
+          </Button>
         </div>
 
         <div className="fp-value">
@@ -141,7 +115,10 @@ function FinePrintSheet({ meta, onClose }: { meta: AuditMeta; onClose: () => voi
           {meta.citation && (
             <>
               <Row labelId="audit_source">
-                <span lang="en" data-lang-exempt="citation">{meta.citation.doc}</span>
+                <span lang="en" data-lang-exempt="citation" className="inline-flex items-center gap-1.5">
+                  <BookOpen size={18} strokeWidth={2} aria-hidden="true" />
+                  {meta.citation.doc}
+                </span>
               </Row>
               <Row labelId="audit_table">
                 <span lang="en" data-lang-exempt="citation">{meta.citation.table}</span>
@@ -158,10 +135,12 @@ function FinePrintSheet({ meta, onClose }: { meta: AuditMeta; onClose: () => voi
                 <Bi id={meta.citation.provenanceStatus === 'cited' ? 'label_cited' : 'label_team_asserted'} />
                 {/* Pending only for a cited figure: when the sheet shows the user's own value, the feed's expert check does not apply. */}
                 {meta.citation.verifiedOn === null && meta.originType !== 'user_input' && (
-                  <span className="detail-note" data-testid="expert-pending">
+                  <>
                     {' · '}
-                    <Bi id="audit_expert_pending" />
-                  </span>
+                    <Badge variant="warn" data-testid="expert-pending">
+                      <Bi id="audit_expert_pending" />
+                    </Badge>
+                  </>
                 )}
               </Row>
             </>
@@ -231,7 +210,7 @@ function FinePrintSheet({ meta, onClose }: { meta: AuditMeta; onClose: () => voi
             <Bi id="audit_fixture_note" />
           </p>
         )}
-      </div>
-    </>
+      </DrawerContent>
+    </Drawer>
   );
 }

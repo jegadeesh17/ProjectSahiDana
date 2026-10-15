@@ -230,3 +230,4 @@ Tagline: **"Sahi dana, har number ka hisaab."** (Right feed, every number accoun
 - **Budget prompt:** "Add ₹X/day" where X = least-cost ration at the effective cap with no budget, minus the budget (a solver output).
 - **No invented caps:** library feeds get no per-feed inclusion caps, because none are cited.
 - Work on branch `feat/farmer-flow`; merge to `main` after both milestones are accepted.
+- **UI kit & primitives (2026-10-15):** Adopted hand-written shadcn-style Button/Input/Badge/Drawer/Accordion skinned with existing tokens, vaul (pinned 1.1.2, unmaintained status accepted) for swipe-to-dismiss audit drawer, Radix Accordion, and lucide-react icons (ADR-0018).

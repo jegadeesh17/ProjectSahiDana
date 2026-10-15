@@ -14,6 +14,7 @@ import type { ConnectionMode, ExampleKey } from './components/PrototypeStatesPan
 import { PrototypeStatesPanel } from './components/PrototypeStatesPanel';
 import { RationResultsPanel } from './components/RationResultsPanel';
 import { StatusPill } from './components/StatusPill';
+import { Button } from './components/ui/button';
 import { DEMO_CASES, PRESET_BUFFALO, PRESET_STRAW } from './domain/presets';
 import type { DemoKey, Preset } from './domain/presets';
 import { buildSummary } from './domain/summary';
@@ -424,9 +425,9 @@ function Workspace() {
             <div className="specrow-side">
               {prefill && <StatusPill id="stamp_unconfirmed" tone="warn" />}
               {animalOnly && !prefill && (
-                <button type="button" className="btn btn-sm" aria-expanded={!animalCollapsed} onClick={() => setAnimalOpen(animalCollapsed)}>
+                <Button size="sm" aria-expanded={!animalCollapsed} onClick={() => setAnimalOpen(animalCollapsed)}>
                   <Bi id={animalCollapsed ? 'action_edit_animal' : 'action_done'} />
-                </button>
+                </Button>
               )}
             </div>
           </section>
@@ -476,9 +477,9 @@ function Workspace() {
                 <Bi id={nextStep} />
               </p>
             )}
-            <button type="button" className="btn btn-primary" disabled={!canBalance} onClick={onBalance} aria-describedby={canBalance ? undefined : 'balance-reason'}>
+            <Button variant="primary" disabled={!canBalance} onClick={onBalance} aria-describedby={canBalance ? undefined : 'balance-reason'}>
               <Bi id="action_balance_ration" />
-            </button>
+            </Button>
           </div>
 
           <section className="presets" aria-labelledby="example-h">
@@ -486,22 +487,22 @@ function Workspace() {
               <Bi id="label_try_example" />
             </h2>
             <div className="presets-row">
-              <button type="button" className="btn btn-preset" onClick={() => applyPreset(PRESET_BUFFALO)} data-preset="buffalo">
+              <Button variant="preset" onClick={() => applyPreset(PRESET_BUFFALO)} data-preset="buffalo">
                 <span className="preset-name">
                   <Bi id="action_demo_buffalo" />
                 </span>
                 <span className="preset-note">
                   <Bi id="note_demo_solved" />
                 </span>
-              </button>
-              <button type="button" className="btn btn-preset" onClick={() => applyPreset(PRESET_STRAW)} data-preset="straw">
+              </Button>
+              <Button variant="preset" onClick={() => applyPreset(PRESET_STRAW)} data-preset="straw">
                 <span className="preset-name">
                   <Bi id="action_demo_straw" />
                 </span>
                 <span className="preset-note">
                   <Bi id="note_demo_infeasible" />
                 </span>
-              </button>
+              </Button>
             </div>
           </section>
         </div>

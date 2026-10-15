@@ -6,6 +6,9 @@ import { formatInr, toLatinDigits } from '../i18n/format';
 import { Bi } from '../i18n/Bi';
 import { t } from '../i18n/strings';
 import { Fig } from './Fig';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Badge } from './ui/badge';
 
 interface Props {
   draft: AnimalDraft;
@@ -34,9 +37,9 @@ export function BudgetField({ draft, todayCost, error, prefilled, onChange, onUs
           <Bi id="label_budget" />
         </h2>
         {isDefault && (
-          <span className="pill pill-neutral" data-pill="budget-default">
+          <Badge variant="neutral" data-pill="budget-default">
             <Bi id="label_budget_today_cost" />
-          </span>
+          </Badge>
         )}
       </div>
       <div className="field">
@@ -44,9 +47,9 @@ export function BudgetField({ draft, todayCost, error, prefilled, onChange, onUs
           <Bi id="label_budget" />
         </label>
         <div className="input-wrap input-wrap-wide">
-          <input
+          <Input
             id={`${uid}-input`}
-            className="input num"
+            className="num"
             type="text"
             inputMode="decimal"
             autoComplete="off"
@@ -79,9 +82,9 @@ export function BudgetField({ draft, todayCost, error, prefilled, onChange, onUs
             </Fig>
           </span>
           {draft.budgetEdited && (
-            <button type="button" className="btn btn-sm btn-quiet" onClick={onUseToday}>
+            <Button size="sm" variant="quiet" onClick={onUseToday}>
               <Bi id="action_use_today_cost" />
-            </button>
+            </Button>
           )}
         </p>
       )}
