@@ -287,7 +287,7 @@
             "tests/e2e/ration-journey.spec.ts"
           ],
           "acceptance_criteria": "SPEC AC-C3-1.1 (no demo above or between the input sections), AC-C3-1.6, AC-C3-1.7; regression AC-C3-R7: tests/e2e/ration-journey.spec.ts asserts 'Try an example' follows the balance button and that tapping each data-preset button fills the form as before; tests/unit/oneLanguage.test.tsx asserts 'Try an example' / 'उदाहरण आज़माएँ' with no script leakage. Verify: npm test exits 0 (milestone end: npm run test:full and npm run build exit 0).",
-          "status": "pending"
+          "status": "completed"
         }
       ]
     },

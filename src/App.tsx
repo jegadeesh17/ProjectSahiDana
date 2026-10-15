@@ -431,30 +431,6 @@ function Workspace() {
             </div>
           </section>
 
-          <section className="presets" aria-labelledby="demo-h">
-            <h2 id="demo-h" className="presets-title">
-              <Bi id="label_demo" />
-            </h2>
-            <div className="presets-row">
-              <button type="button" className="btn btn-preset" onClick={() => applyPreset(PRESET_BUFFALO)} data-preset="buffalo">
-                <span className="preset-name">
-                  <Bi id="action_demo_buffalo" />
-                </span>
-                <span className="preset-note">
-                  <Bi id="note_demo_solved" />
-                </span>
-              </button>
-              <button type="button" className="btn btn-preset" onClick={() => applyPreset(PRESET_STRAW)} data-preset="straw">
-                <span className="preset-name">
-                  <Bi id="action_demo_straw" />
-                </span>
-                <span className="preset-note">
-                  <Bi id="note_demo_infeasible" />
-                </span>
-              </button>
-            </div>
-          </section>
-
           <FreeTextExtractor
             online={online}
             library={library}
@@ -504,6 +480,30 @@ function Workspace() {
               <Bi id="action_balance_ration" />
             </button>
           </div>
+
+          <section className="presets" aria-labelledby="example-h">
+            <h2 id="example-h" className="presets-title">
+              <Bi id="label_try_example" />
+            </h2>
+            <div className="presets-row">
+              <button type="button" className="btn btn-preset" onClick={() => applyPreset(PRESET_BUFFALO)} data-preset="buffalo">
+                <span className="preset-name">
+                  <Bi id="action_demo_buffalo" />
+                </span>
+                <span className="preset-note">
+                  <Bi id="note_demo_solved" />
+                </span>
+              </button>
+              <button type="button" className="btn btn-preset" onClick={() => applyPreset(PRESET_STRAW)} data-preset="straw">
+                <span className="preset-name">
+                  <Bi id="action_demo_straw" />
+                </span>
+                <span className="preset-note">
+                  <Bi id="note_demo_infeasible" />
+                </span>
+              </button>
+            </div>
+          </section>
         </div>
 
         <RationResultsPanel

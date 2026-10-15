@@ -280,6 +280,77 @@ test.describe('SahiDana M1 offline vertical-slice journey', () => {
     });
   }
 
+  for (const [lang, label, viewport] of [
+    ['en', '375 px', { width: 375, height: 812 }],
+    ['en', 'desktop', { width: 1280, height: 900 }],
+    ['hi', '375 px', { width: 375, height: 812 }],
+    ['hi', 'desktop', { width: 1280, height: 900 }],
+  ] as const) {
+    test(`puts "Try an example" after the balance button and each demo still fills the form at ${label} in ${lang} (AC-C3-1.6)`, async ({
+      page,
+    }) => {
+      await page.setViewportSize(viewport);
+      await page.goto('/');
+      if (lang === 'hi') {
+        await page.locator('.langtoggle-btn[lang="hi"]').click();
+        await expect(page.locator('html')).toHaveAttribute('lang', 'hi');
+      }
+      const title = lang === 'en' ? 'Try an example' : 'उदाहरण आज़माएँ';
+      const section = page.locator('.inputs .presets');
+      await expect(section.locator('.presets-title')).toHaveText(title);
+
+      // DOM order: after the balance bar; nothing demo-like above the extractor.
+      const afterBar = await page.evaluate(() => {
+        const bar = document.querySelector('.inputs .balancebar')!;
+        const presets = document.querySelector('.inputs .presets')!;
+        const extractor = document.querySelector('.inputs .extractor')!;
+        return {
+          afterBar: Boolean(bar.compareDocumentPosition(presets) & Node.DOCUMENT_POSITION_FOLLOWING),
+          afterExtractor: Boolean(extractor.compareDocumentPosition(presets) & Node.DOCUMENT_POSITION_FOLLOWING),
+        };
+      });
+      expect(afterBar.afterBar, 'section follows the balance bar in the DOM').toBe(true);
+      expect(afterBar.afterExtractor, 'section is not above the extractor').toBe(true);
+
+      // Visually under the button at every width; on phones the pinned bar then sits above it and does not cover it.
+      await section.scrollIntoViewIfNeeded();
+      const presetBox = (await section.boundingBox())!;
+      const barBox = (await page.locator('.inputs .balancebar').boundingBox())!;
+      expect(presetBox.y, 'section sits below the balance button').toBeGreaterThanOrEqual(barBox.y + barBox.height - 1);
+
+      for (const key of ['buffalo', 'straw']) {
+        const button = section.locator(`[data-preset="${key}"]`);
+        await expect(button).toBeVisible();
+        expect((await button.boundingBox())!.height, 'touch target >= 44 px').toBeGreaterThanOrEqual(44);
+      }
+
+      // Tapping the buffalo demo fills the form and shows the result.
+      await section.locator('[data-preset="buffalo"]').click();
+      await expect(page.locator('#analysis')).toHaveAttribute('data-state', 'solved');
+      await expect(page.locator('.feedrow')).toHaveCount(7);
+      if (lang === 'en') await expect(page.locator('.inputs').getByLabel('Body weight', { exact: true })).toHaveValue('450');
+    });
+
+    test(`fills the form from "Straw only" and shows the infeasible state at ${label} in ${lang} (AC-C3-1.6)`, async ({
+      page,
+    }) => {
+      await page.setViewportSize(viewport);
+      await page.goto('/');
+      if (lang === 'hi') {
+        await page.locator('.langtoggle-btn[lang="hi"]').click();
+        await expect(page.locator('html')).toHaveAttribute('lang', 'hi');
+      }
+      const section = page.locator('.inputs .presets');
+      await section.locator('[data-preset="straw"]').click();
+      await expect(page.locator('#analysis')).toHaveAttribute('data-state', 'infeasible');
+      await expect(page.locator('.feedrow')).toHaveCount(1);
+      if (lang === 'en') {
+        await expect(page.locator('.feedrow').first()).toContainText('Wheat straw');
+        await expect(page.locator('.inputs').getByLabel('Body weight', { exact: true })).toHaveValue('400');
+      }
+    });
+  }
+
   for (const [label, viewport] of [
     ['375 px', { width: 375, height: 812 }],
     ['desktop', { width: 1280, height: 900 }],

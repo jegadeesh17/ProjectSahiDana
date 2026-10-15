@@ -130,7 +130,7 @@ Noto Sans with Noto Sans Devanagari, self-hosted, weights 400 and 600 only. No o
 
 ## Layout
 
-Mobile first at 390px, one column on an 8px rhythm: slim white app bar (wordmark, tagline, language toggle, online pill), the one-line "How to use" banner, the animal spec row, two demo chips, the describe-in-words disclosure, the Animal card, the Feeds card, the Budget card, then the result card. After Balance, the form collapses to the spec row and feed chips and the result card scrolls into view.
+Mobile first at 390px, one column on an 8px rhythm: slim white app bar (wordmark, tagline, language toggle, online pill), the one-line "How to use" banner, the animal spec row, the describe-in-words disclosure, the Animal card, the Budget card, the Feeds card, the Balance button, a quiet "Try an example" row (two hairline pills, no card), then the result card. After Balance, the form collapses to the spec row and feed chips and the result card scrolls into view.
 
 On phones **Balance ration** is a full-width rounded green button in a soft white bottom bar pinned to the screen edge (rounded top corners, upward shadow).
 

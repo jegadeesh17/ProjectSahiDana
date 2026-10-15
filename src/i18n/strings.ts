@@ -57,7 +57,7 @@ export const strings = {
   notice_next_balance: { hi: 'तैयार: राशन संतुलित करें दबाएँ', en: 'Ready: tap Balance ration' },
 
   // ---- demo presets ---------------------------------------------------------------------------
-  label_demo: { hi: 'एक-टैप डेमो', en: 'One-tap demo' },
+  label_try_example: { hi: 'उदाहरण आज़माएँ', en: 'Try an example' },
   action_demo_buffalo: { hi: 'दुधारू भैंस', en: 'Lactating buffalo' },
   note_demo_solved: { hi: 'हल होता है', en: 'Solves' },
   action_demo_straw: { hi: 'सिर्फ़ भूसा', en: 'Straw only' },

@@ -678,33 +678,37 @@ select.input {
 .sep {
   color: var(--c-text-2);
 }
+/* "Try an example": a quiet row under the Balance button, no card, hairline pills. Below 1024px the page
+   is a flex column where the bar is order 3, so the examples share order 3 and follow it in the DOM. */
 .presets {
+  order: 3;
   display: flex;
   flex-direction: column;
   gap: var(--s-2);
+  padding-bottom: calc(var(--s-6) + env(safe-area-inset-bottom));
 }
 .presets-title {
   padding: 0 var(--s-1);
   font-size: var(--fs-sm);
-  font-weight: var(--fw-strong);
+  font-weight: var(--fw-regular);
   color: var(--c-text-2);
 }
 .presets-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--s-3);
+  gap: var(--s-2);
 }
 .btn-preset {
   flex-direction: column;
   align-items: flex-start;
-  justify-content: flex-start;
-  gap: var(--s-1);
-  min-height: 72px;
-  padding: var(--s-3) var(--s-4);
-  background: var(--c-surface);
+  justify-content: center;
+  gap: 0;
+  min-height: var(--target);
+  padding: var(--s-1) var(--s-3);
+  background: transparent;
   color: var(--c-text);
+  border: 1px solid var(--c-line-strong);
   border-radius: var(--r-inner);
-  box-shadow: var(--shadow-card);
   text-align: left;
 }
 .btn-preset:hover:not(:disabled),
@@ -713,7 +717,7 @@ select.input {
   color: var(--c-text);
 }
 .preset-name {
-  font-size: var(--fs-base);
+  font-size: var(--fs-sm);
   text-align: left;
 }
 .preset-note {
@@ -721,6 +725,12 @@ select.input {
   font-weight: var(--fw-regular);
   color: var(--c-text-2);
   text-align: left;
+}
+@media (min-width: 1024px) {
+  .presets {
+    order: 0;
+    padding-bottom: 0;
+  }
 }
 
 /* ---------- extractor -------------------------------------------------------------------- */

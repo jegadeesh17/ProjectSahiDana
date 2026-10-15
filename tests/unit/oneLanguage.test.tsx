@@ -135,6 +135,26 @@ describe.each(['mock', 'live'] as const)('one language at a time (%s adapter)', 
     expect(banner?.textContent).not.toContain('How to use:');
   });
 
+  it('titles the demo section "Try an example" below the balance bar, one language at a time (AC-C3-1.6)', () => {
+    const { container } = render(<App />);
+    const section = container.querySelector<HTMLElement>('.presets');
+    const bar = container.querySelector('.balancebar');
+    expect(section).toBeTruthy();
+    expect(bar).toBeTruthy();
+    expect(Boolean(bar!.compareDocumentPosition(section!) & Node.DOCUMENT_POSITION_FOLLOWING), 'section follows the balance bar').toBe(true);
+    expect(section!.querySelector('.presets-title')?.textContent).toBe('Try an example');
+    expect(section!.querySelectorAll('[data-preset]')).toHaveLength(2);
+    expect(nonExemptText(section!).match(DEVA) ?? []).toEqual([]);
+
+    act(() => {
+      fireEvent.click(container.querySelector<HTMLElement>('.langtoggle-btn[lang="hi"]')!);
+    });
+    expect(section!.querySelector('.presets-title')?.textContent).toBe('उदाहरण आज़माएँ');
+    expect(section!.textContent).not.toContain('Try an example');
+    const latinWords = (nonExemptText(section!).match(/[A-Za-z]{2,}/g) ?? []).filter((w) => !ALLOWED_HI_LATIN.has(w));
+    expect(latinWords).toEqual([]);
+  });
+
   it('reactively translates an active toast when switching languages and gates .frame-foot to mock mode', () => {
     const { container } = render(<App />);
     balanceBuffalo(container);
