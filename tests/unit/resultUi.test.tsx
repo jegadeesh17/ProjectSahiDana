@@ -880,5 +880,102 @@ describe('farmer-first UI: tags, buy ladder, not needed, budget prompt and short
     expect(container.querySelector('[data-testid="budget-increase-prompt"]')).toBeTruthy();
     unmount();
   });
+
+  it('Rung 0 milk/cost audit drawer shows ONLY owned feeds and 0 library feeds when own feeds balance alone', () => {
+    setRationAdapterMode('live');
+    const { container, unmount } = render(<App />);
+    const presetsSection = container.querySelector('.presets')!;
+    act(() => {
+      fireEvent.click(presetsSection.querySelector<HTMLElement>('[data-preset="buffalo"]')!);
+    });
+
+    // Set all owned feed prices to 0.1 and budget to 200 so own feeds are strictly cheaper than any library feed
+    const budgetInput = [...container.querySelectorAll<HTMLInputElement>('input.input')].find((i) => i.value === '251.2')!;
+    act(() => {
+      fireEvent.change(budgetInput, { target: { value: '200' } });
+    });
+    const priceInputs = container.querySelectorAll<HTMLInputElement>('.feedrow input[id$="-price"]');
+    act(() => {
+      priceInputs.forEach((input) => {
+        fireEvent.change(input, { target: { value: '0.1' } });
+        fireEvent.blur(input);
+      });
+      fireEvent.click(container.querySelector<HTMLButtonElement>('.balancebar button')!);
+    });
+
+    const ladder = container.querySelector('[data-testid="buy-ladder"]')!;
+    expect(ladder).toBeTruthy();
+
+    const rung0 = ladder.querySelector('[data-rung="0"]')!;
+    expect(rung0.textContent).toContain('Your feeds alone');
+    expect(rung0.textContent).not.toContain('not balanced');
+    // Own feeds balance alone -> no buy rungs exist
+    expect(ladder.querySelector('[data-rung="1"]')).toBeNull();
+
+    // 1. Milk figure audit
+    const milkFig = rung0.querySelector<HTMLButtonElement>('.rung-milk .fig')!;
+    expect(milkFig).toBeTruthy();
+    act(() => {
+      fireEvent.click(milkFig);
+    });
+
+    const milkDialog = container.querySelector('[role="dialog"]')!;
+    expect(milkDialog).toBeTruthy();
+    expect(milkDialog.getAttribute('data-audit-id')).toMatch(/^rung-milk-/);
+
+    // Verify all 7 owned feeds are present
+    const ownedFeeds = [
+      'Wheat straw',
+      'Maize fodder (green)',
+      'Pearl millet grain (bajra)',
+      'Wheat bran',
+      'Mustard cake',
+      'Mineral mixture',
+      'Common salt',
+    ];
+    for (const feedName of ownedFeeds) {
+      expect(milkDialog.textContent).toContain(feedName);
+    }
+
+    // Verify 0 unowned library candidate feeds leaked into the audit
+    const unownedLibraryFeeds = [
+      'Barley grain',
+      'Cottonseed cake',
+      'Groundnut cake',
+      'Berseem',
+      'Green sorghum (Jowar)',
+      'Green oats',
+      'Sugarcane molasses',
+    ];
+    for (const feedName of unownedLibraryFeeds) {
+      expect(milkDialog.textContent).not.toContain(feedName);
+    }
+
+    // Close dialog
+    act(() => {
+      fireEvent.click(milkDialog.querySelector<HTMLButtonElement>('.fp-head button')!);
+    });
+
+    // 2. Cost figure audit
+    const costFig = rung0.querySelector<HTMLButtonElement>('.rung-cost .fig')!;
+    expect(costFig).toBeTruthy();
+    act(() => {
+      fireEvent.click(costFig);
+    });
+
+    const costDialog = container.querySelector('[role="dialog"]')!;
+    expect(costDialog).toBeTruthy();
+    expect(costDialog.getAttribute('data-audit-id')).toMatch(/^rung-cost-/);
+
+    for (const feedName of ownedFeeds) {
+      expect(costDialog.textContent).toContain(feedName);
+    }
+    for (const feedName of unownedLibraryFeeds) {
+      expect(costDialog.textContent).not.toContain(feedName);
+    }
+
+    unmount();
+  });
 });
+
 

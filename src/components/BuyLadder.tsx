@@ -23,11 +23,7 @@ export function BuyLadder({ plan, profile, library, ownedFeedIds }: BuyLadderPro
   // If there are no owned feeds and no buy rungs, nothing to render
   if (!hasOwned && !hasRungs) return null;
 
-  const resolvedOwnedIds =
-    ownedFeedIds ??
-    (hasRungs && plan.rungs[0].prefixFeedIds.length > plan.rungs[0].addedFeedIds.length
-      ? plan.rungs[0].prefixFeedIds.slice(0, plan.rungs[0].prefixFeedIds.length - plan.rungs[0].addedFeedIds.length)
-      : plan.candidates.filter((c) => !plan.buyFeedIds.includes(c.feedId)).map((c) => c.feedId));
+  const resolvedOwnedIds = ownedFeedIds ?? plan.ownedFeedIds ?? [];
 
   // Check if rung 0 shows more milk than rung 1 (AC-C3-2.8)
   const rung0Optimal = plan.ownedOnly?.status === 'optimal';

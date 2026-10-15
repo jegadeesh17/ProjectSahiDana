@@ -158,6 +158,14 @@
     "exit_code": 0,
     "summary": "16 unit test files passed (275 tests, including 49 tests in tests/unit/resultUi.test.tsx and 21 tests in tests/unit/oneLanguage.test.tsx), 30 Playwright E2E tests passed (in tests/e2e/ration-journey.spec.ts and tests/e2e/language.spec.ts), production build succeeded (zero type errors, 16 Workbox precache entries), compile:data succeeded (31 feeds, 16 breeds, requirements), and eval:dump + eval:scipy passed across all 18 benchmark animals (100% constraint satisfaction, 23 SciPy agreement tests passed)",
     "failure_output": ""
+  },
+  {
+    "task_id": "C3-M2-FIX-1",
+    "attempt": 1,
+    "command": "npm test && npx playwright test",
+    "exit_code": 0,
+    "summary": "npm test: 16 unit test files passed, 276 tests passed (including 50 tests in tests/unit/resultUi.test.tsx with Rung 0 audit drawer verifying only owned feeds and zero library candidates). npx playwright test: 30 passed in 54.6s.",
+    "failure_output": ""
   }
 ]
 

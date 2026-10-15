@@ -40,6 +40,8 @@ export interface RationPlan {
   candidates: SelectedFeedInput[];
   /** Addition: the month used for the in-season filter (ADR-0016). */
   month: number;
+  /** Feeds owned by the farmer, in entry order. */
+  ownedFeedIds: string[];
 }
 
 /** Feeds the solver always includes at a minimum kg/day when offered (mineral-supplement rows in solver.ts). */
@@ -137,6 +139,7 @@ export function planRation(
       budgetIncrease: null,
       candidates,
       month,
+      ownedFeedIds: owned.map((f) => f.feedId),
     };
   }
 
@@ -232,5 +235,6 @@ export function planRation(
     budgetIncrease,
     candidates,
     month,
+    ownedFeedIds: owned.map((f) => f.feedId),
   };
 }

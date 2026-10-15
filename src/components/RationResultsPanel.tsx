@@ -385,7 +385,7 @@ function SolvedBody({
       </div>
 
       {plan && (
-        <BuyLadder plan={plan} profile={profile} library={library} />
+        <BuyLadder plan={plan} profile={profile} library={library} ownedFeedIds={plan.ownedFeedIds} />
       )}
 
       <Accordion

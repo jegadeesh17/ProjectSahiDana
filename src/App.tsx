@@ -214,22 +214,26 @@ function Workspace() {
   const onDemo = (key: DemoKey) => {
     const found = DEMO_CASES.find((c) => c.key === key);
     if (!found) return;
-    scrollToResult.current = true;
-    setPrefill(null);
-    setAnimal(found.preset.animal);
-    setFeeds(found.preset.feeds);
-    const checked = validateAnimal(found.preset.animal, todayCostInr(found.preset.feeds));
-    const { inputs: selected } = toInputs(found.preset.feeds);
-    if (!checked.profile) return;
-    const profile: AnimalProfile = { ...checked.profile, isConfirmed: true };
-    const outcome = rationService.solveRation(profile, selected);
-    const forMilk = outcome.status === 'optimal' ? outcome.supportedMilkLPerDay : 0;
-    const requirement = rationService.computeRequirements({ ...profile, milkYieldLitersPerDay: forMilk });
-    explainAbort.current?.abort();
-    setExplain({ kind: 'idle' });
-    setResult({ profile: checked.profile, requirement, outcome, plan: null });
-    setAnimalOpen(false);
-    setFeedsOpen(false);
+    if (key === 'below_no' || key === 'same' || key === 'shortfall' || key === 'roughage') {
+      scrollToResult.current = true;
+      setPrefill(null);
+      setAnimal(found.preset.animal);
+      setFeeds(found.preset.feeds);
+      const checked = validateAnimal(found.preset.animal, todayCostInr(found.preset.feeds));
+      const { inputs: selected } = toInputs(found.preset.feeds);
+      if (!checked.profile) return;
+      const profile: AnimalProfile = { ...checked.profile, isConfirmed: true };
+      const outcome = rationService.solveRation(profile, selected);
+      const forMilk = outcome.status === 'optimal' ? outcome.supportedMilkLPerDay : 0;
+      const requirement = rationService.computeRequirements({ ...profile, milkYieldLitersPerDay: forMilk });
+      explainAbort.current?.abort();
+      setExplain({ kind: 'idle' });
+      setResult({ profile: checked.profile, requirement, outcome, plan: null });
+      setAnimalOpen(false);
+      setFeedsOpen(false);
+      return;
+    }
+    applyPreset(found.preset);
   };
 
   const editAnimal = (next: AnimalDraft) => {
