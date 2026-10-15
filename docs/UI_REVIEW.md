@@ -101,3 +101,21 @@ Screenshots: .ui-review/M3/home-desktop-1440.png, .ui-review/M3/home-desktop-128
 - **`src/components/FeedSelector.tsx` (Feed library sticky vertical headers):** At narrow mobile viewports, the sticky headers (`Indigenous forage 10 feeds`) have `position: sticky; top: 0`. They remain clean and readable, but consider adding a subtle `border-bottom: 1px solid var(--c-line)` when scrolling within the feed library container on low-DPI displays for enhanced visual separation.
 - **`src/i18n/strings.ts` (`audit_source_feeds_v1`):** In Hindi mode, dataset citations in the fine-print sheet show `'NDDB 2012'`. This is completely acceptable under the proper-noun and citation exemption in `DESIGN.md`, but adding an optional localized footnote explaining the survey publication year could offer additional clarity for rural users.
 
+
+## Change 3 (farmer-first flow), C3-M1 UI Review 1 (2026-10-15)
+
+**Verdict: APPROVED.** Base `d28d90a`. Checked at 375 px and 1280 px, English and Hindi, idle / buffalo demo / straw demo, against screenshots of `d28d90a`. Screenshots: `.ui-review/c3-m1-review/` (not committed).
+
+All of AC-C3-1.1 to 1.6 observed as passing:
+- order is cow or buffalo, budget, feeds, button, examples;
+- the title follows the species;
+- no farmer-facing "animal" or "पशु" (the only "पशु" is the feed brand "सरस पशु आहार");
+- equal side-by-side tiles with aligned 40 px figures and no overflow;
+- a quiet "Try an example" with 44 px+ targets, not covered by the pinned bar on phones.
+
+Findings (non-blocking):
+1. Major (UX): on desktop, "Try an example" sits at the foot of the left column, below the fold (~1750 px idle). Taken to the user at UAT.
+2. Minor: at 320 px, two 4-digit figures overflow the tile background by ~5 px (fine at 360 and 375 px).
+3. Minor: the example pills' hairline border is ~1.4:1 against the ground, a deliberately quiet style; the label and focus ring identify the control.
+4. Minor: the "Infeasible"/"Solves" notes are jargon; the straw note is relabelled in C3-M2.
+5. Minor: DESIGN.md Layout line still names the old card order; to fix in C3-M2.
