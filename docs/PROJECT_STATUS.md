@@ -28,3 +28,11 @@
 - [x] C3-M2: farmer-first solve built, verified, reviewed (code and UI), UAT accepted
 - [x] C3 close-out: README/CLAUDE.md/CHANGELOG updated, merged to main with the user's yes, full tests green on main
 
+## Change 4: Herd and 3-step flow (branch `feat/herd-flow`, base `2134ab6`)
+
+- [x] C4 Phase 0/1: scope approved by the user (2026-10-15), branch created
+- [ ] C4 Phase 2: SPEC amendment, ADRs and Change 4 architecture section, prototype accepted, tasks in docs/internal/TASKS.json
+- [ ] C4-M1: 3 screens, breed prefill, home feed at ₹0, plain result; verified, reviewed (code and UI), UAT accepted, merged and deployed
+- [ ] C4-M2: herd (fair-share joint LP, buying steps with per-animal split); verified, reviewed (code and UI), UAT accepted, merged and deployed
+- [ ] C4 close-out: README/CLAUDE.md/CHANGELOG updated, full tests green on main
+
