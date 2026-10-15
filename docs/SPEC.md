@@ -358,3 +358,257 @@ Questions keep their original numbers so that references to them stay stable.
 - **OQ8 (breed part) → AC-L1.7:** Breed Hindi names come from `data/breeds.csv` (team-asserted, reviewed 2026-10-14), not the strings file.
 - **OQ15 → shared definitions (effective cap), AC-5.3, AC-5.4, AC-5.5, AC-5.7, AC-5.11:** The effective cap is `max(breed cap, T)`. An animal above its breed cap whose budget keeps `T` gets "Above the breed level; same milk for ₹`Z` less", and the audit shows the breed cap and "today's milk is higher, so it is used as the cap".
 - **OQ16 → shared definitions:** `data/breeds.csv`, after the human data check, is the authority for the breed list and peaks (Nili-Ravi peak is the cited mean `9.4`; `7.2–11.8` is an individual range; a Bhadawari row was added to [DATA_SOURCES §5](DATA_SOURCES.md)). A cited breed peak is a mean, or the top of a range of study means, never an individual-animal range. The journey's breed list is illustrative.
+
+---
+
+## Change 3: Farmer-first flow
+
+This section specifies Change 3 (started 2026-10-15, branch `feat/farmer-flow`, base commit `d28d90a`) from [PROJECT_MENTAL_MODEL.md](PROJECT_MENTAL_MODEL.md) "Change 3" and [FEEDBACK.md](internal/FEEDBACK.md) Round 5. It specifies only what is new or different. Everything in sections 1–5 above still holds unless a criterion below says it is superseded.
+
+### C3.1 Summary
+
+- **Change:** make the input flow farmer-first. The farmer describes their cow or buffalo, sets a daily budget and taps **Calculate ration**; picking feeds becomes optional. The solver chooses from the farmer's own feeds plus the regional library feeds in season this month, and the result says which feeds to buy as a cheapest-first upgrade ladder, plus how much more budget would reach the breed's best milk.
+- **Change type:** Feature. **Posture:** Prototype; the solver and the number-honesty checks keep thorough tests.
+- **Persona:** unchanged (field paravet at the farmer's doorstep), with the wording aimed at the farmer looking at the same screen.
+- **Milestones:** **C3-M1** layout and wording (UI only, no logic change); **C3-M2** farmer-first solve.
+- **Constraint restated:** every displayed number comes from the solver, a cited source row, or the user's input, and is tappable to its audit. No per-feed inclusion cap is invented for library feeds: the only limits on a library feed are the cited roughage minimum, the dry-matter intake ceiling and the nutrient requirements already in the LP. The two-stage LP formulation is unchanged.
+
+**Shared definitions for Change 3** (in addition to the shared definitions in section 3):
+
+- **Own feeds (`O`)**: the feeds the farmer adds under "Feeds you already have (optional)", each with the farmer's price in `₹/kg` (the cited default is prefilled; `0` is allowed for home-grown feed) and an optional "how much you have" cap in `kg/day` (as fed). May be empty.
+- **Current month (`m`)**: the device's current month.
+- **Candidate set (`C`)**: `O` exactly as entered (including own feeds out of season in `m`), plus every library feed not in `O` whose `availableMonths` includes `m` and that has a cited default price, at that default price with no per-feed cap. Library feeds with no default price (e.g., molasses) and library feeds out of season in `m` are never in `C` unless the farmer adds them as own feeds.
+- **Final solve (`F`)**: the existing two-stage solve over `C` with the animal, breed and budget as entered.
+- **Supplements**: `mineral_mix` and `common_salt`, the two feeds the solver always includes in a fixed minimum daily amount when they are on offer ([ADR-0012](DECISIONS.md#adr-0012-cheapest-first-upgrade-ladder-from-nested-prefix-solves)).
+- **Buy list (`Bu`)**: the feed lines of `F` with `kg/day > 0` whose feed is not in `O`. Supplements on the list come first, cheapest `₹/day` first; the rest follow by that line's cost in `₹/day` ascending. Ties are broken by feed id in both groups.
+- **Own-feed cap:** an own feed's "how much you have" cap also limits the total of that feed in every solve. The app never buys extra of an own feed on top of the cap, because an own feed is a single entry in `C` (OQ-C3-3). Leaving the cap blank allows any amount.
+- **Prefix `k`**: `O ∪ Bu[1..k]` (the own feeds plus the first `k` feeds of `Bu`), solved with the same animal, breed and budget. Prefix `0` is `O` alone.
+- **Ladder rule:**
+  - **Rung 0** "Your feeds alone" is shown only when `O` is non-empty. It shows its status: balanced, with its supported milk and cost; or "not balanced".
+  - **Rung 1** is the smallest prefix `k ≥ s` whose solve is optimal (balanced), where `s` (0, 1 or 2) is the number of supplements on `Bu` (`k ≥ 1` when `s = 0`). All feeds `Bu[1..k]` are grouped in rung 1 ("buy these together to balance"), so any supplements on `Bu` are always in rung 1 ("the basics needed to balance").
+  - Each later prefix is its own rung, adding one feed.
+  - Each rung shows the added feed name(s), its supported milk in `L/day` and its ration cost in `₹/day`, both from that rung's solver output.
+  - The last rung's supported milk and cost equal `F`'s within `1e-6` (relative). Every rung from rung 1 on is balanced, and supported milk never goes down from rung 1 to the last rung.
+  - Rung 0 is outside that guarantee: it skips the supplements' fixed cost, so it may show slightly more milk than rung 1. The UI labels this on the ladder card.
+- **Cost at cap (`costAtCap`)**: the cost in `₹/day` of the least-cost ration from `C` that supports `effCap`, with no budget limit (Stage 2 at `effCap`, no budget row). It is null when that LP is infeasible or the animal is dry.
+- **Budget-prompt rule:** the prompt "Add ₹`X`/day to your budget to reach `Y` L/day (breed best)" is shown only when all of these hold: `F` is optimal; the budget is among `F`'s tight constraints; `Y* < effCap − 1e-6`; and `costAtCap` is not null. Then `X = costAtCap − budget` and `Y = effCap`.
+
+### C3.2 User Journeys
+
+#### Journey C3-A: Farmer-first layout (C3-M1, starts from the existing input column, Step 2–5 above)
+
+1. The user opens the app. The left input column shows, top to bottom: the free-text extractor, the "Your cow or buffalo" card, the daily budget, the feeds, and the **Balance ration** button. The one-tap demo is no longer at the top of the column.
+2. The card for the animal is titled "Your cow or buffalo" (Hindi: "आपकी गाय या भैंस"). Once the species is picked, the title becomes "Your cow" or "Your buffalo" (Hindi: "आपकी गाय" or "आपकी भैंस"). The word "Animal" no longer appears anywhere the farmer reads.
+3. Below the **Balance ration** button, a quieter "Try an example" (Hindi: "उदाहरण आज़माएँ") section holds the demo buttons, which work as before.
+4. After balancing, the result shows two equal tiles side by side: "Today" with today's milk, and "This ration supports" with the supported milk. The breed benchmark sits on a small line below the tiles. Both tiles keep their audits.
+
+#### Journey C3-B: Farmer-first solve (C3-M2, replaces the feed-first path of Steps 3–5 above)
+
+1. The user fills in "Your cow or buffalo" and the daily budget. "Feeds you already have (optional)" is collapsed.
+2. The user taps **Calculate ration** (Hindi: "राशन निकालें") without adding any feeds. The solver balances the ration from the in-season regional library within the budget.
+3. Optionally, before calculating, the user opens "Feeds you already have (optional)" and adds own feeds, each with "your price" (default prefilled, `0` allowed) and an optional "how much you have" in `kg/day`.
+4. The result shows the existing headline, tiles, verdict and cost line, and:
+   - the ration table, each row tagged "You have" or "Buy";
+   - a "Feeds to buy, cheapest first" card following the ladder rule;
+   - a "Not needed" line naming own feeds the solver left at `0 kg/day`;
+   - when the budget-prompt rule holds, "Add ₹`X`/day to your budget to reach `Y` L/day (breed best)".
+5. When the budget is below the maintenance cost, the existing alert also says "Raise the budget by at least ₹`X`/day".
+6. The user taps any number on the ladder, the prompt or the alert to open its audit.
+7. Below the button, "Try an example" offers three demos: the existing lactating buffalo demo, the straw demo now labelled "Needs feeds to buy" (Hindi: "चारा ख़रीदना ज़रूरी"), and a new "Tight budget" demo that shows the budget prompt.
+
+### C3.3 Acceptance Criteria
+
+Quoted strings are the English-mode text unless stated; the Hindi text comes from the strings file (AC-L1.2 still applies).
+
+#### C3-M1: Layout and wording
+
+- **AC-C3-1.1 (Input column order):**
+  - **Given** the app is open at any width (375 px and desktop), in either language,
+  - **When** the left input column is rendered,
+  - **Then** its sections appear in DOM and visual order: free-text extractor, "Your cow or buffalo" card, daily budget, feeds, the balance button; and no demo section appears above the free-text extractor or between these sections.
+- **AC-C3-1.2 (Card title before a species is picked):**
+  - **Given** no species is selected,
+  - **When** the card is rendered,
+  - **Then** its title is "Your cow or buffalo" in English mode and "आपकी गाय या भैंस" in Hindi mode.
+- **AC-C3-1.3 (Card title after a species is picked):**
+  - **Given** the card is rendered,
+  - **When** the user selects `cow`, then `buffalo`,
+  - **Then** the title reads "Your cow" (Hindi "आपकी गाय") after the first selection and "Your buffalo" (Hindi "आपकी भैंस") after the second, without a reload and without losing other inputs.
+- **AC-C3-1.4 (No "Animal" for the farmer):**
+  - **Given** the app in any state listed in AC-L1.2,
+  - **When** the visible text is inspected,
+  - **Then** in English mode no visible text contains the word "animal" (case-insensitive) outside the exempt elements of section 3 and the `audit_*` technical labels inside the audit drawer; in Hindi mode no visible text uses "पशु" to name the farmer's cow or buffalo; and the "How to use" line reads in the new order (cow or buffalo, then budget, then feeds).
+- **AC-C3-1.5 (Milk tiles side by side):**
+  - **Given** a feasible result with `T > 0`,
+  - **When** the result is rendered at 375 px wide and at desktop width,
+  - **Then** two tiles of equal width sit in one row (same top offset, neither wrapping below the other): "Today" with `T` L/day and "This ration supports" with `S` L/day; both values are tappable and open the same audits as before the change (input for `T`, solver output with the binding constraint for `S`); the breed benchmark (`cap` with its basis label) appears on one line below the tiles and stays tappable to its source; and the element keeps `data-testid="supports"`.
+- **AC-C3-1.6 (Demo below the button as "Try an example"):**
+  - **Given** the app is open,
+  - **When** the input column is rendered and the user taps a demo button,
+  - **Then** the demo section appears after the balance button, titled "Try an example" (Hindi "उदाहरण आज़माएँ"), its buttons keep their `data-preset` attributes, and tapping one fills the form exactly as before the change.
+- **AC-C3-1.7 (M1 changes no logic):**
+  - **Given** the C3-M1 build and the pre-change build (`d28d90a`) with the same inputs,
+  - **When** the ration is balanced,
+  - **Then** the solver output (every feed's `kg/day`, `S`, `Y*`, cost, verdict and binding constraint) is identical, and **Balance ration** is still disabled without at least 1 feed (AC-E1.2 holds through C3-M1).
+
+#### C3-M2: Farmer-first solve
+
+- **AC-C3-2.1 (Calculate with cow and budget only):** *(supersedes AC-E1.2 from C3-M2 on)*
+  - **Given** a valid profile (species, breed, weight, milk, fat per AC-E1.1) and a valid budget, and no own feeds,
+  - **When** the input column is rendered,
+  - **Then** the button reads "Calculate ration" (Hindi "राशन निकालें") and is enabled, and no "add at least one feed" hint is shown.
+- **AC-C3-2.2 (Own feeds section collapsed and optional):**
+  - **Given** the app opens,
+  - **When** the feeds section is rendered,
+  - **Then** it is collapsed and titled "Feeds you already have (optional)" (Hindi "आपके पास पहले से मौजूद चारा (वैकल्पिक)"); when expanded, each added feed shows a price field labelled "your price" (cited default prefilled with its date, source and reliability per AC-3.6) and an optional field labelled "how much you have" in `kg/day`.
+- **AC-C3-2.3 (Candidate set):**
+  - **Given** own feeds `O` (possibly empty) and the device month `m`,
+  - **When** the user taps **Calculate ration**,
+  - **Then** the feeds passed to the solver are exactly `C`: every feed in `O` with the farmer's price and "how much you have" cap (an own feed out of season in `m` is kept); plus every library feed not in `O` that is in season in `m` and has a cited default price, at that price with no cap; and no library feed that is out of season in `m` or has no default price is included unless it is in `O`.
+- **AC-C3-2.4 (Own feeds used at the farmer's price and cap):**
+  - **Given** an own feed `f` with price `p` (including `p = 0`) and "how much you have" `q`,
+  - **When** the ration is calculated,
+  - **Then** the solver costs `f` at `p` (not the library default), `f`'s `kg/day` in the ration is `≤ q + 1e-6`, and when `q` is blank `f` has no per-feed cap.
+- **AC-C3-2.5 (Final ration is the existing two-stage solve over `C`):**
+  - **Given** valid inputs and a budget at or above the maintenance cost over `C`,
+  - **When** the ration is calculated,
+  - **Then** the displayed ration, `S`, cost, verdict and binding constraint equal the output of the existing two-stage solver run on `C` (AC-5.1 to AC-5.13 hold with "selected feeds" read as `C`), and every library feed in the ration has a `kg/day` limited only by the intake ceiling, the roughage minimum, the nutrient requirements and the budget (no other per-feed cap).
+- **AC-C3-2.6 ("You have" and "Buy" tags):**
+  - **Given** a feasible result,
+  - **When** the ration table is rendered,
+  - **Then** every row with `kg/day > 0` carries exactly one tag: "You have" when its feed is in `O`, "Buy" otherwise; the "Buy" rows are exactly the feeds of `Bu`.
+- **AC-C3-2.7 (Ladder card: order and grouping):**
+  - **Given** a feasible result with `Bu` non-empty,
+  - **When** the "Feeds to buy, cheapest first" card is rendered,
+  - **Then** rung 0 "Your feeds alone" appears only when `O` is non-empty; rung 1 lists all feeds `Bu[1..k]` for the smallest `k ≥ s` (`k ≥ 1` when `s = 0`) whose prefix solve is optimal, so `mineral_mix` and `common_salt`, when on `Bu`, are always in rung 1; each later rung adds exactly the next feed of `Bu`; the feeds of `Bu` appear across the rungs once each, supplements first, then the rest in `₹/day` ascending order (ties by feed id in both groups).
+- **AC-C3-2.8 (Ladder rung figures and invariants):**
+  - **Given** the ladder card is rendered,
+  - **When** each rung's figures are inspected,
+  - **Then** each balanced rung shows its supported milk (`L/day`, rounded down to `0.1` like `S`) and its ration cost (`₹/day`), both equal to that prefix's solver output; every rung from rung 1 on is balanced; supported milk never decreases from rung 1 to the last rung; the last rung's supported milk and cost equal `F`'s `S` and cost within `1e-6` (relative); and rung 0 is not part of the non-decreasing check: when rung 0 shows more milk than rung 1, the card shows a label saying rung 1 includes the basics (mineral mixture, salt) needed to balance.
+- **AC-C3-2.9 (Rung 0 status):**
+  - **Given** `O` is non-empty,
+  - **When** rung 0 is rendered,
+  - **Then** if `O` alone gives an optimal solve, rung 0 shows "Your feeds alone" with its supported milk and cost; otherwise it shows "Your feeds alone: not balanced" with no milk or cost figure.
+- **AC-C3-2.10 (Every ladder figure is auditable):**
+  - **Given** the ladder card is rendered,
+  - **When** the user taps a rung's milk or cost,
+  - **Then** the audit drawer opens with "Solver output", the feeds in that rung's prefix, the stage it came from (stage 1 milk, stage 2 cost at that milk), and the binding constraint for that rung's milk.
+- **AC-C3-2.11 ("Not needed" line):**
+  - **Given** a feasible result,
+  - **When** some own feeds have `0 kg/day` in `F`,
+  - **Then** a line "Not needed" names exactly those own feeds (in the active language); when every own feed has `kg/day > 0`, or `O` is empty, the line is not shown.
+- **AC-C3-2.12 (Budget prompt shown):**
+  - **Given** a result where the budget-prompt rule holds (`F` optimal, budget tight, `Y* < effCap − 1e-6`, `costAtCap` not null),
+  - **When** the result is rendered,
+  - **Then** it shows "Add ₹`X`/day to your budget to reach `Y` L/day (breed best)" with `X = costAtCap − budget` and `Y = effCap` (rounded down to `0.1`); tapping `X` opens the audit drawer with "Solver output", `costAtCap`, the budget and the subtraction; tapping `Y` opens the effective-cap audit (breed cap with basis and source, or "today's milk is higher, so it is used as the cap" when `T > cap`).
+- **AC-C3-2.13 (`costAtCap` agrees with an independent solver):**
+  - **Given** the benchmark animals in `eval/test_animals.json`,
+  - **When** `npm run eval:dump && npm run eval:scipy` runs,
+  - **Then** for each animal, `costAtCap` equals the SciPy HiGHS minimum cost at `effCap` with no budget row within the suite's tolerance, and both are null/infeasible together; and in unit tests, whenever the budget is tight, `costAtCap ≥` the final cost.
+- **AC-C3-2.14 (Budget below maintenance: raise by X):** *(extends AC-E7.1)*
+  - **Given** `C` can meet the requirements at `0 L/day` but the budget is below the maintenance cost `M` over `C`,
+  - **When** the user taps **Calculate ration**,
+  - **Then** AC-E7.1 holds (no ration, no supported milk, "Budget below the maintenance cost ₹`M`/day"), except that a suggested library feed that is out of season in `m` or has no cited default price is removed and never named (no number changes; when no suggestion is left, the alert states that no library feed brings maintenance within this budget); the alert adds "Raise the budget by at least ₹`X`/day" with `X = M − budget`, `X` is tappable and its audit shows `M`, the budget and the subtraction, and no ladder or budget prompt is shown.
+- **AC-C3-2.15 (Three demos):**
+  - **Given** the "Try an example" section,
+  - **When** the user taps each demo and then **Calculate ration**,
+  - **Then** there are exactly three demos: the lactating buffalo demo gives a feasible ration as before; the straw demo, labelled "Needs feeds to buy" (Hindi "चारा ख़रीदना ज़रूरी"), gives a feasible ration with at least one "Buy" row and rung 0 "Your feeds alone: not balanced"; the "Tight budget" demo gives a result in which the budget prompt (AC-C3-2.12) is shown. The demo inputs are fixed values whose outcomes are asserted by tests against real solver output.
+
+#### C3-M2: Edge cases
+
+- **AC-C3-E1 (No own feeds):**
+  - **Given** `O` is empty,
+  - **When** a feasible ration is calculated,
+  - **Then** every ration row is tagged "Buy", rung 0 and the "Not needed" line are absent, and the ladder starts at rung 1.
+- **AC-C3-E2 (Own feeds cover only part of the need):**
+  - **Given** own feeds that cannot balance the ration alone (e.g., wheat straw only) and `C` that can,
+  - **When** the ration is calculated,
+  - **Then** rung 0 shows "Your feeds alone: not balanced"; rung 1 groups the supplements on `Bu` (`mineral_mix`, `common_salt`) plus the fewest following `Bu` feeds, in buy-list order, that balance the ration; the own feed used appears in the ration tagged "You have"; and no partial ration is presented as balanced.
+- **AC-C3-E3 (Invalid own feed row):**
+  - **Given** a valid profile and budget and an own feed with an empty, negative or non-numeric price, or a negative or non-numeric "how much you have",
+  - **When** the input column is rendered,
+  - **Then** **Calculate ration** is disabled and the hint "Next: enter a valid price for every feed" (the existing `notice_next_price` text) is shown, until the row is fixed or removed.
+- **AC-C3-E4 (Budget not limiting):**
+  - **Given** a feasible result where the budget is not among `F`'s tight constraints (e.g., `Y* = effCap`),
+  - **When** the result is rendered,
+  - **Then** no "Add ₹`X`/day" prompt is shown.
+- **AC-C3-E5 (Least-cost ration at the cap infeasible):**
+  - **Given** a result where the budget is tight and `Y* < effCap − 1e-6`, but no ration from `C` supports `effCap` at any cost (`costAtCap` is null),
+  - **When** the result is rendered,
+  - **Then** no "Add ₹`X`/day" prompt is shown and no other budget figure is substituted.
+- **AC-C3-E6 (Dry animal):**
+  - **Given** `T = 0` and a budget at or above `M` over `C`,
+  - **When** the ration is calculated,
+  - **Then** AC-5.13 holds; `costAtCap` is null; no budget prompt is shown; the ladder rungs show only cost (no supported-milk figure or milk gain on any rung); and the ration rows keep their "You have"/"Buy" tags.
+- **AC-C3-E7 (Infeasible at maintenance even with the library):**
+  - **Given** `C` cannot meet the requirements at `0 L/day` (AC-E2.1 or AC-E2.2),
+  - **When** the user taps **Calculate ration**,
+  - **Then** the existing infeasibility alert is shown with no ration, no ladder, no "Not needed" line and no budget prompt; the limiting nutrient(s) or "roughage" are named as before, and any suggested library feed that is out of season in `m` or has no cited default price is removed and never named (no number changes).
+- **AC-C3-E8 (Offline):**
+  - **Given** the device is offline,
+  - **When** the user calculates a ration with and without own feeds,
+  - **Then** the candidate set, the final solve, the ladder, the tags, the "Not needed" line, the budget prompt, the raise-by alert, all three demos and every audit work with no network request; only the LLM actions are disabled per AC-E3.1.
+- **AC-C3-E9 (One language per screen for the new UI):**
+  - **Given** Hindi mode,
+  - **When** any C3 element is rendered (card titles, "Try an example", the milk tiles, "Calculate ration", the own-feeds section and its labels, the "You have"/"Buy" tags, the ladder card and rung 0, "Not needed", the budget prompt, the raise-by line, the demo labels),
+  - **Then** AC-L1.2 and AC-L1.3 hold: no Latin-letter words outside the exempt elements, Latin digits only, and every new string has both an English and a Hindi entry in the strings file.
+
+### C3.4 Regression Criteria
+
+- **AC-C3-R1 (Solver formulation unchanged):**
+  - **Given** the 18 benchmark animals and the existing SciPy agreement cases,
+  - **When** `npm run eval:dump && npm run eval:scipy` runs on the C3-M2 build,
+  - **Then** every pre-existing case still agrees 100%, and stage 1, stage 2 and Stage 2′ outputs for the same feed set equal the pre-change output.
+- **AC-C3-R2 (Existing verdicts and audits):**
+  - **Given** a result,
+  - **When** it is rendered,
+  - **Then** AC-5.3 to AC-5.13 (headline, verdicts, caveat, fat line, roughage) and AC-6.1 to AC-6.3 (audit drawer, Show details) hold unchanged, read over `C`.
+- **AC-C3-R3 (Validation unchanged for the profile and budget):**
+  - **Given** invalid weight, milk, fat, breed or budget,
+  - **When** the input column is rendered,
+  - **Then** AC-E1.1 holds and **Calculate ration** is disabled.
+- **AC-C3-R4 (Free-text extraction still fills the form):**
+  - **Given** the device is online and the user uses **Fill from description** naming feeds,
+  - **When** the extraction returns,
+  - **Then** AC-2.3, AC-E5.1 and AC-L1.5 hold, with matched feeds landing in "Feeds you already have (optional)" as own feeds at their default prices.
+- **AC-C3-R5 (Today's ration and cost comparison):**
+  - **Given** own feeds with today's quantities entered,
+  - **When** a result is displayed,
+  - **Then** AC-4.1, AC-4.2 and AC-5.2 hold, with today's cost computed over own feeds only.
+- **AC-C3-R6 (Explain, copy summary, language toggle):**
+  - **Given** a result,
+  - **When** the user taps **Explain**, **Copy summary** or the language toggle,
+  - **Then** AC-7.1, AC-E4.2, AC-E6.1, AC-8.1 and AC-L1.1 hold, and every number in the summary and explanation still traces to the solver, an input or a cited row.
+- **AC-C3-R7 (Existing test suites stay green):**
+  - **Given** the C3-M1 and the C3-M2 builds,
+  - **When** `npm run test:full`, `npm run build` and `npm run compile:data` run,
+  - **Then** all exit 0; expected values changed by this change are updated only from real solver output.
+
+### C3.5 Non-Goals
+
+- No change to the LP formulation, requirement tables, feed or breed data, citations or prices.
+- No invented per-feed inclusion caps for library feeds.
+- No buying advice for out-of-season feeds or feeds with no cited price.
+- No change to the LLM prompts, the verifier logic or the explanation card.
+- No forced minimum use of own feeds.
+
+### C3.6 Open Questions
+
+- **OQ-C3-1. Meaning of "used first":**
+  - *Assumption:* own feeds are "used first" only in the sense that they enter `C` at the farmer's price (often lower, or `0`) and cap and are shown first; the LP is free to leave one at `0 kg/day` (then it is listed under "Not needed"). No minimum use is forced (plan decision).
+- **OQ-C3-2. Month used for the candidate set:**
+  - *Assumption:* the device's current month, not the picker's month selector. The month selector still only changes the "in season" marks (AC-3.4 holds).
+- **OQ-C3-3. Own feed that is also a library feed:**
+  - *Assumption:* the own entry replaces the library entry in `C` (one row, farmer's price and cap), and its row is tagged "You have".
+- **OQ-C3-4. Feeds to buy when own feeds already give the final ration (`Bu` empty):**
+  - *Assumption:* the ladder card shows rung 0 only, with no buy rungs; no new text with numbers is added.
+- **OQ-C3-5. Rounding of `X` in the prompts:**
+  - *Assumption:* `X` uses the app's existing `₹` display format; the audit shows the unrounded subtraction. If the existing format rounds to a whole rupee, `X` is rounded up so that adding it always reaches `Y`.
+- **OQ-C3-6. "(breed best)" when `T > cap`:**
+  - *Assumption:* `Y = effCap = T` and the label still reads "(breed best)"; the audit for `Y` explains that today's milk is used as the cap. In that case AC-5.11's `B` equals `costAtCap`, and both are shown.
+- **OQ-C3-7. AC-E7.1 feed suggestion under the library-wide candidate set:**
+  - *Assumption:* the suggestion search runs over library feeds not in `C`; since `C` already holds every in-season priced feed, the alert usually states that no library feed brings maintenance within this budget, and the new "Raise the budget by at least ₹`X`/day" line is the actionable message.
+- **OQ-C3-8. Ladder rungs that are not optimal after rung 1 (resolved, user 2026-10-15, ADR-0012):**
+  - *Resolution:* cannot happen. From rung 1 on, prefixes are nested and each step adds only a feed the solver may leave at 0 kg/day, so every rung is balanced and milk never goes down; tests assert both. The fixed-minimum supplements (`mineral_mix`, `common_salt`) are always in rung 1, because adding one later would add a fixed cost and could lower milk. Rung 0 is outside this chain and may show slightly more milk than rung 1; the UI labels it.
+- **OQ-C3-9. Hindi strings for new labels not given in the plan ("You have", "Buy", "Feeds to buy, cheapest first", "Not needed", the prompt and raise-by lines, "Tight budget"):**
+  - *Assumption:* the frontend task writes them in the strings file; they stay unverified until a native-speaker review, as in OQ8.

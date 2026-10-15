@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-Key technical, hosting, solver, AI integration, data and language decisions for SahiDana, referenced by [ARCHITECTURE.md](ARCHITECTURE.md) and [SPEC.md](SPEC.md). Last updated: 2026-10-12 (frozen after Round 4 prototype acceptance).
+Key technical, hosting, solver, AI integration, data and language decisions for SahiDana, referenced by [ARCHITECTURE.md](ARCHITECTURE.md) and [SPEC.md](SPEC.md). Last updated: 2026-10-15 (ADR-0010 to ADR-0017 added for Change 3, farmer-first flow; ADR-0001 to ADR-0009 unchanged since the freeze on 2026-10-12).
 
 | ID | Title | Status | Date |
 |---|---|---|---|
@@ -13,6 +13,14 @@ Key technical, hosting, solver, AI integration, data and language decisions for 
 | [ADR-0007](#adr-0007-two-stage-budget-max-milk-lp) | Two-Stage Budget Max-Milk LP | Accepted | 2026-10-12 |
 | [ADR-0008](#adr-0008-breed-based-milk-cap-body-weight-sets-intake-not-milk) | Breed-Based Milk Cap; Body Weight Sets Intake, Not Milk | Accepted | 2026-10-12 |
 | [ADR-0009](#adr-0009-language-toggle-one-language-per-screen) | Language Toggle, One Language per Screen | Accepted | 2026-10-12 |
+| [ADR-0010](#adr-0010-farmer-first-candidate-set-own-feeds-plus-in-season-priced-library-feeds) | Farmer-First Candidate Set: Own Feeds Plus In-Season Priced Library Feeds | Accepted | 2026-10-15 |
+| [ADR-0011](#adr-0011-own-feeds-used-first-at-the-farmers-price-and-cap-never-forced) | Own Feeds Used First at the Farmer's Price and Cap, Never Forced | Accepted | 2026-10-15 |
+| [ADR-0012](#adr-0012-cheapest-first-upgrade-ladder-from-nested-prefix-solves) | Cheapest-First Upgrade Ladder from Nested Prefix Solves | Accepted | 2026-10-15 |
+| [ADR-0013](#adr-0013-cost-at-cap-solver-field) | Cost-at-Cap Solver Field | Accepted | 2026-10-15 |
+| [ADR-0014](#adr-0014-budget-increase-prompt-with-rupee-amounts-rounded-up) | Budget-Increase Prompt with Rupee Amounts Rounded Up | Accepted | 2026-10-15 |
+| [ADR-0015](#adr-0015-no-invented-per-feed-inclusion-caps-for-library-feeds) | No Invented Per-Feed Inclusion Caps for Library Feeds | Accepted | 2026-10-15 |
+| [ADR-0016](#adr-0016-candidate-month-is-the-devices-current-month) | Candidate Month Is the Device's Current Month | Accepted | 2026-10-15 |
+| [ADR-0017](#adr-0017-two-milestone-delivery-layout-first-then-farmer-first-solve) | Two-Milestone Delivery: Layout First, Then Farmer-First Solve | Accepted | 2026-10-15 |
 
 ---
 
@@ -318,3 +326,259 @@ This supersedes ADR-0005 decision 1, and with it the side-by-side display in ADR
 
 - **Positive:** Cleaner, shorter screens; the paravet chooses once per device. The solver and the number check are unaffected, because numbers never change script.
 - **Negative:** The language is a hidden state, so the tests check every screen state in both modes. Team-written notes shown to users (season notes, price notes) need both a Hindi and an English text. Judges see one language per screenshot, so the demo should show the toggle.
+
+---
+
+## ADR-0010: Farmer-First Candidate Set: Own Feeds Plus In-Season Priced Library Feeds
+
+Date: 2026-10-15
+Status: Accepted
+
+### Context
+
+In Change 3 (FEEDBACK Round 5, [SPEC.md](SPEC.md) "Change 3: Farmer-first flow") the farmer describes the cow or buffalo, sets a daily budget and taps **Calculate ration** without picking any feeds. The solver therefore needs a list of feeds to choose from. The solver already balances whatever list it is given ([ADR-0007](#adr-0007-two-stage-budget-max-milk-lp)). The regional library holds about 30 feeds, each with the months it is available near Jaipur and, for most, a dated default price with its source ([ADR-0006](#adr-0006-regional-three-vertical-seasonal-library-with-cited-dated-editable-prices)). Some feeds have no price at all (for example molasses). The farmer may also add feeds they already have.
+
+### Decision
+
+1. **The candidate set** is:
+   - the farmer's own feeds exactly as entered, at the farmer's price and with the farmer's "how much you have" limit. An own feed is kept even when it is out of season this month, because the farmer already has it;
+   - plus every library feed that the farmer has not added, that is in season this month ([ADR-0016](#adr-0016-candidate-month-is-the-devices-current-month)) and that has a cited default price. These enter at that default price, with no limit and no "today's amount".
+2. **One entry per feed.** If an own feed is also a library feed, it appears once, at the farmer's price and limit, and is tagged "You have".
+3. `buildCandidates` in `src/domain/rationPlan.ts` builds this list. The existing two-stage solver runs on it unchanged.
+4. **No buying advice for feeds the farmer cannot buy.** The solver's own suggestions can name a feed outside the candidate set: the "add this feed" hint when the budget is below the maintenance cost, and the suggested feeds when no ration is possible. In the farmer-first flow, any suggestion for a feed that is out of season this month or has no cited price is dropped before the result is shown (SPEC C3.5).
+
+### Alternatives considered
+
+- **The whole library, including out-of-season feeds (Rejected):** The app would tell the farmer to buy feed that is not available locally this month.
+- **Unpriced feeds at ₹0 or at a team-estimated price (Rejected):** ₹0 would make the solver choose them as "free" feed, and an estimated price is a number with no citation.
+- **Own feeds only, as before (Rejected):** The user asked to calculate without picking feeds first.
+- **Listing an owned feed twice, once as the farmer's and once from the library (Rejected):** Two rows for one feed would confuse the table and the tags. It would also let the solver buy more of a feed than the farmer said they have, at a different price, so "how much you have" would not mean what the farmer expects.
+
+### Consequences
+
+- **Positive:** The ration is built only from feed that is either on hand or can be bought this month at a cited price. Every price on the screen is the farmer's own or a cited, dated default.
+- **Negative:**
+  - The result depends on the device's month and on default prices that can be out of date (each shows its date).
+  - A good feed that has no cited price is never suggested.
+  - A farmer who has some straw and could buy more must either leave "how much you have" blank or enter the market price, because an owned feed has only one entry.
+  - The solver now sees about 30 feeds instead of a handful; each run still takes milliseconds.
+
+---
+
+## ADR-0011: Own Feeds Used First at the Farmer's Price and Cap, Never Forced
+
+Date: 2026-10-15
+Status: Accepted
+
+### Context
+
+The user wants feeds the farmer already has to be "used first" (FEEDBACK Round 5 #5, user choice). In a linear program, "first" can mean several things: force the solver to use them, rank them ahead of cost, or simply price them as the farmer sees them.
+
+### Decision
+
+"Used first" means that own feeds enter the candidate set at the **farmer's price** (the cited default is prefilled; ₹0 is allowed for home-grown feed) and with the farmer's optional **"how much you have"** limit. Because home-grown or already-bought feed is usually cheaper, the cheapest-ration search prefers it on its own. Own feeds are also **shown first**: rung 0 "Your feeds alone" on the ladder, a "You have" tag in the ration table, and a "Not needed" line for any own feed the solver left at 0 kg/day. No minimum amount of an own feed is forced, and the solver's objective is not changed.
+
+### Alternatives considered
+
+- **Force a minimum, such as all of "how much you have" (Rejected):** It can make the ration impossible (too much straw breaks the intake limit) or more expensive than needed, and it hides the cheaper ration.
+- **A third solver stage that first uses as much own feed as possible, then minimises cost (Rejected):** It changes the solver formulation and would break the 100% agreement with the SciPy cross-check.
+- **Price every own feed at ₹0 automatically (Rejected):** Feed the farmer has still has a value (it could be sold). The farmer's own price is more honest, and ₹0 remains available when the farmer chooses it.
+
+### Consequences
+
+- **Positive:** The solver formulation is untouched. The farmer controls the result through the price and the amount they enter.
+- **Negative:** An own feed can be left unused, for example when the farmer's price is above the market price. The "Not needed" line makes this visible, but a farmer who expected "use my straw" may be surprised.
+
+---
+
+## ADR-0012: Cheapest-First Upgrade Ladder from Nested Prefix Solves
+
+Date: 2026-10-15
+Status: Accepted
+
+### Context
+
+The user chose an upgrade ladder from cheapest to best (FEEDBACK Round 5 #6) to show which feeds to buy. Every number on the ladder must be a real solver result, the order must be the same every time, and a paravet must be able to explain it in one sentence. The real solver also adds two feeds in a fixed minimum daily amount whenever they are on offer: mineral mixture (`mineral_mix`) and common salt (`common_salt`) (the mineral-supplement rows in `src/domain/solver.ts`). Both are priced and available all year, so in the farmer-first flow they are almost always on the buy list.
+
+### Decision
+
+1. **The buy list** contains the feeds in the final ration with more than 0 kg/day that the farmer does not have. It is sorted by each feed's cost in ₹/day in the final ration, cheapest first. Ties are broken by feed id.
+2. **Supplements go first (refinement of the plan).** Feeds that the solver always includes in a minimum amount (`mineral_mix`, `common_salt`) are moved to the front of the buy list, cheapest first, and always fall into rung 1. Without this, adding one of them partway up the ladder adds a fixed cost. When the budget is what limits milk, the supported milk could then go **down** at that rung.
+3. **Steps of the ladder.** Step `k` is the own feeds plus the first `k` feeds of the buy list. Each step is solved with the same animal, breed and budget, using the full existing solver.
+4. **Rungs:**
+   - **Rung 0, "Your feeds alone"**, is the own feeds solved without any purchases. It appears only when the farmer added feeds and shows either "balanced" (with its milk and cost) or "not balanced".
+   - **Rung 1** is the first step that gives a balanced ration (counting from at least the number of supplements on the buy list). It groups every feed up to that step: "buy these together to balance".
+   - **Each later step** is its own rung and adds exactly one feed.
+5. **Guarantees, checked by tests:**
+   - The last rung equals the final ration: the exact supported milk and the cost agree within `1e-6` (relative).
+   - Supported milk never goes down from rung 1 to the last rung.
+   - Every rung from rung 1 on is balanced.
+
+   These hold because, after rung 1, each step only adds a feed that the solver may leave at 0 kg/day. Rung 0 is a reference point and is not part of this chain. It can show slightly more milk than rung 1 when the supplements' fixed cost uses part of the budget.
+
+### Alternatives considered
+
+- **Re-optimise at every rung, adding the feed that gives the most milk per rupee (Rejected):** It needs many more solver runs, the order is hard to explain, and the last rung might not equal the final ration.
+- **A flat list of feeds to buy (Rejected, user choice):** It does not show what each purchase adds.
+- **Sort by price per kg (Rejected):** A feed that is cheap per kg but used in large amounts is not the cheapest to add. ₹/day is what the farmer actually pays.
+- **Strict ₹/day order with the supplements wherever their cost puts them (Rejected):** Milk could go down between rungs, which breaks SPEC AC-C3-2.8 and OQ-C3-8.
+
+### Consequences
+
+- **Positive:** The order is fixed and explainable ("cheapest spend first"). Every rung figure is a real solver result with an audit, and the last rung matches the ration shown.
+- **Negative:**
+  - One tap now runs the solver 1 + (1 if the farmer added feeds) + (length of the buy list) times. Each run is up to about 6 small LPs, plus about 30 more for any step whose budget is below the maintenance cost. This is still expected to take well under a second and is measured at UAT.
+  - The ₹/day order has an exception for supplements, so SPEC AC-C3-2.7 should mention it.
+  - "Cheapest first" means cheapest spend, not best value per rupee.
+
+---
+
+## ADR-0013: Cost-at-Cap Solver Field
+
+Date: 2026-10-15
+Status: Accepted
+
+### Context
+
+The new prompt "Add ₹X/day to your budget to reach Y L/day (breed best)" needs one number the solver does not report today: the cost of the cheapest ration that supports the milk cap (the breed cap, or today's milk if higher) when there is no budget limit. Like every number shown, it must come from the solver and be checked by the SciPy cross-check.
+
+### Decision
+
+1. **New field.** `RationSolution` gets a required field `costAtCapInrPerDay: number | null`.
+2. **Where it is computed.** `solveRation` computes it in Step 6, next to the existing stage 2′ run, as `solveFixedMilk(inputs, reqModel, effectiveCap, null)?.totalCost ?? null`. This is the same "cheapest ration at a fixed milk level" calculation already used for the maintenance cost and stage 2′, run at the effective cap with the budget row removed; the roughage and mineral rows stay.
+3. **When it is null.** The field is `null` when that calculation has no solution, and always `null` in the dry-animal branch (Step 3).
+4. **Scope of the change.** This is the only change to `src/domain/solver.ts`. Steps 1–5 and 7 and every existing output stay exactly as they are.
+5. **Today's milk above the breed cap.** In that case the effective cap is today's milk, so the field equals `costAtTodayMilkInrPerDay`.
+6. **Mock and cross-check.**
+   - The mock solver (`src/services/mockSolver.ts`) sets the field to `null`.
+   - `eval/cross_check_solver.py` computes the same quantity with SciPy HiGHS.
+   - `scripts/dump_solver_results.ts` writes it out.
+   - `eval/test_scipy_agreement.py` checks that both solvers agree on it and are null together.
+
+### Alternatives considered
+
+- **Re-run the whole solver with a very large budget (Rejected):** That gives the cost at the supported milk rounded down to 0.1 L, not at the cap, and needs an arbitrary "large" number.
+- **Search for the budget step by step (Rejected):** Many runs, and only as accurate as the step.
+- **Read it from the solver's shadow prices (Rejected):** `javascript-lp-solver` does not report them reliably, and the SciPy cross-check could not confirm them.
+
+### Consequences
+
+- **Positive:** One extra small LP per solve; the figure is exact, auditable and cross-checked.
+- **Negative:** Every place that builds a `RationSolution` by hand (the mock solver, test fixtures) must set the field; `npm run build` (type check) finds any that are missed. The extra LP also runs on every ladder step.
+
+---
+
+## ADR-0014: Budget-Increase Prompt with Rupee Amounts Rounded Up
+
+Date: 2026-10-15
+Status: Accepted
+
+### Context
+
+SPEC Change 3 shows "Add ₹X/day to your budget to reach Y L/day (breed best)" when the budget is what holds milk back. When the budget is below the maintenance cost, it shows "Raise the budget by at least ₹X/day". The app shows rupees with two decimals (`formatInr`). SPEC OQ-C3-5 asks that adding the shown X must always be enough.
+
+### Decision
+
+1. **When the prompt appears.** All four must hold:
+   - the final ration is balanced;
+   - the budget is among its tight constraints;
+   - the exact supported milk is below the effective cap by more than `1e-6`;
+   - `costAtCapInrPerDay` is not null.
+2. **The figures.**
+   - `X = roundUpInr(costAtCapInrPerDay − budget)`. `roundUpInr` rounds **up** to the paise that `formatInr` shows: `Math.ceil(value × 100 − 1e-7) / 100`. So budget + X is always at least the cost at the cap.
+   - `Y` is the effective cap, displayed rounded down to 0.1 L like the supported milk.
+   - When these conditions hold, the cost at the cap is always above the budget (otherwise stage 1 would already have reached the cap), so X is positive.
+3. **The audit for X** shows the cost at the cap, the budget, the exact subtraction and the words "rounded up". Tapping Y opens the existing effective-cap audit.
+4. **The same rounding is used for "Raise the budget by at least ₹X/day"**, with X = maintenance cost − budget.
+5. **Where it is computed.** `planRation` computes the prompt (`budgetIncrease`). `BudgetShortfallAlert` computes the raise-by amount with the same exported `roundUpInr`.
+
+### Alternatives considered
+
+- **Round to the nearest paisa (Rejected):** It can be up to half a paisa short, so "add X" would not quite reach Y.
+- **Whole rupees (Rejected):** Every other rupee figure shows two decimals. Rounding up to a whole rupee also overstates X by up to ₹1.
+- **Show the prompt whenever milk is below the cap (Rejected):** When intake, roughage or a nutrient is the limit, more money does not raise milk, so the prompt would be false.
+
+### Consequences
+
+- **Positive:** The promise "add X to reach Y" is always true to the paisa, and the audit shows the exact working.
+- **Negative:** X can be up to 1 paisa above the exact difference, and the target is shown rounded down (for example 9.64 shows as 9.6 L).
+
+---
+
+## ADR-0015: No Invented Per-Feed Inclusion Caps for Library Feeds
+
+Date: 2026-10-15
+Status: Accepted
+
+### Context
+
+With the whole in-season library on offer, the cheapest ration could lean heavily on one cheap feed. Nutritionists usually apply per-feed limits (for example "molasses at most 10–15% of the ration"), but the cited data has no per-feed limit table. Such remarks exist only as text notes on a few feeds.
+
+### Decision
+
+Library feeds enter the candidate set with **no per-feed limit**. The only limits are those already in the LP: the cited roughage minimum, the intake ceiling, the nutrient requirements, the mineral and salt minimums, and the budget. A limit the farmer types for an own feed is still respected. UAT checks that the rations look sensible. If a library-wide ration is clearly unrealistic (for example one concentrate is more than half the ration) and fixing it would need uncited limits, the work stops and the user is asked.
+
+### Alternatives considered
+
+- **Team-chosen limits, such as "at most 3 kg of oilcake" (Rejected):** These are numbers without a citation, which breaks the rule that every number is cited.
+- **Turning the text notes into limits (Rejected):** Only a few feeds have them, molasses is not a candidate anyway (it has no price), and adding a data column is out of scope for Change 3.
+- **A general "maximum concentrate share" rule (Rejected):** No citation was found, and it changes the solver formulation.
+
+### Consequences
+
+- **Positive:** No uncited number enters the calculation, and the solver formulation and its SciPy agreement are unchanged.
+- **Negative:** A ration may use more of one cheap feed than a nutritionist would advise. The paravet can see this in the ration table. The risk is accepted for the prototype.
+
+---
+
+## ADR-0016: Candidate Month Is the Device's Current Month
+
+Date: 2026-10-15
+Status: Accepted
+
+### Context
+
+The candidate set ([ADR-0010](#adr-0010-farmer-first-candidate-set-own-feeds-plus-in-season-priced-library-feeds)) needs a month to decide which library feeds are in season. The app already has a month selector in the feed picker, but by the frozen rule it changes only the "in season" marks and never what the solver sees (SPEC AC-3.4).
+
+### Decision
+
+The candidate month is the device's current month, `currentMonth()` from `src/i18n/months.ts`, read when the farmer taps **Calculate ration**. `rationService.planRation` passes it explicitly to `planRation`, so tests can set any month, and the `RationPlan` records which month was used. The month selector keeps changing the marks only.
+
+### Alternatives considered
+
+- **The picker's month selector (Rejected):** It would break the frozen rule that the selector is never a solver input. A paravet browsing next season's feeds would also silently change today's advice.
+- **A new month field on the form (Rejected):** It adds an input the farmer does not need for today's ration. Planning for a future month is out of scope.
+
+### Consequences
+
+- **Positive:** No new input. The advice matches what is in season today.
+- **Negative:** A device with the wrong date gives the wrong season, and the same inputs can give a different ration after the month changes.
+
+---
+
+## ADR-0017: Two-Milestone Delivery: Layout First, Then Farmer-First Solve
+
+Date: 2026-10-15
+Status: Accepted
+
+### Context
+
+Change 3 mixes a layout and wording pass (order of the input column, "Your cow or buffalo", side-by-side milk tiles, moving the demo) with a new way of solving. The user wants to review the layout before the logic lands. Judges read `main`, and Vercel deploys from `main`. The deadline moved to Sun 18 Oct 2026, 11:59 PM IST.
+
+### Decision
+
+1. Change 3 is built on branch `feat/farmer-flow`, from commit `d28d90a`, in two milestones:
+   - **C3-M1** is UI only: wording, order, milk tiles and demo position. It changes no solver code, no types and no results, and feeds stay required (SPEC AC-C3-1.7).
+   - **C3-M2** adds the cost-at-cap field, `src/domain/rationPlan.ts`, `rationService.planRation` and the new result UI.
+2. Each milestone ends with the full test run, build, reviews and the user's UAT.
+3. The branch is merged to `main` only after both milestones are accepted and the user confirms.
+
+### Alternatives considered
+
+- **One milestone (Rejected):** Layout feedback and logic feedback would arrive together, and a layout change found late would hold up the logic.
+- **Work directly on `main` (Rejected):** Judges and the live Vercel site would see half-finished work.
+
+### Consequences
+
+- **Positive:** The user sees the layout early, and `main` always shows a finished app.
+- **Negative:** Two review and UAT rounds. Between the milestones, the new layout still requires at least one feed.

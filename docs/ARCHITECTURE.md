@@ -906,3 +906,309 @@ Plain-English list for the freeze. Each item is costly to change after M1 becaus
 ### Local services
 
 None. All data is bundled as static versioned JSON cached by the Service Worker.
+
+## Change 3: Farmer-first flow (2026-10-15)
+
+This section is a **superseding addition** to the frozen architecture above, for Change 3 ([SPEC.md](SPEC.md) "Change 3: Farmer-first flow", [ADR-0010](DECISIONS.md#adr-0010-farmer-first-candidate-set-own-feeds-plus-in-season-priced-library-feeds) to [ADR-0017](DECISIONS.md#adr-0017-two-milestone-delivery-layout-first-then-farmer-first-solve)). The frozen sections are not edited. Where this section differs from them, this section applies from C3-M1 (layout) or C3-M2 (solve) onward, as marked. Change type: Feature. Posture: Prototype. Branch `feat/farmer-flow` from `d28d90a`.
+
+### C3 overview
+
+- **C3-M1, layout and wording (UI only).**
+  - The input column order becomes: free-text extractor, "Your cow or buffalo", budget, feeds, balance button, then "Try an example".
+  - The farmer's animal is called "Your cow or buffalo", then "Your cow" or "Your buffalo" once the species is picked.
+  - Today's milk and supported milk sit side by side, with the breed benchmark on one line below.
+  - No type, solver, service or result changes.
+- **C3-M2, farmer-first solve.**
+  - The farmer enters the animal and the budget and taps **Calculate ration**. Feeds are optional.
+  - `rationService.planRation` builds the candidate set (own feeds plus in-season, priced library feeds) and runs the **unchanged** two-stage solver on it, then once more per ladder step.
+  - It returns a `RationPlan`: the final ration, rung 0, the cheapest-first ladder, the buy and not-needed lists, and the budget-increase prompt.
+  - The only solver change is the new output `costAtCapInrPerDay` ([ADR-0013](DECISIONS.md#adr-0013-cost-at-cap-solver-field)).
+
+The stack, hosting, data files, `/api/llm`, the language layer and the LP formulation (Steps 1–5 and 7 of `solveRation`) are unchanged. No new dependency.
+
+### C3 components
+
+New and changed parts only (additions to the [Components](#components) diagram):
+
+```mermaid
+flowchart TD
+    App["App.tsx: Calculate ration (profile + budget valid; own feeds optional)"]
+    Svc["rationService.planRation(profile, owned) (src/services/rationService.ts)"]
+    Lib["getInitialFeeds(): live v1 library or prototype fixtures"]
+    Month["currentMonth() (src/i18n/months.ts)"]
+    Plan["planRation + buildCandidates (src/domain/rationPlan.ts, pure)"]
+    Solve["selectAdapter().solveRation (live: solver.ts; mock: mockSolver.ts)"]
+    Solver["solveRation Step 6: + costAtCapInrPerDay"]
+    Results["RationResultsPanel: You have / Buy tags, Not needed line"]
+    Ladder["BuyLadder.tsx: rung 0 + rungs 1..n"]
+    Prompt["BudgetIncreasePrompt.tsx: Add ₹X/day to reach Y L/day"]
+    Shortfall["BudgetShortfallAlert.tsx: Raise the budget by at least ₹X/day"]
+    Audit["auditMilk.ts: auditRung, auditBudgetIncrease, auditRaiseToMaintenance"]
+
+    App --> Svc
+    Svc --> Lib
+    Svc --> Month
+    Svc --> Plan
+    Plan -->|"final, rung 0, each ladder step"| Solve
+    Solve --> Solver
+    Plan -->|"RationPlan"| App
+    App --> Results
+    App --> Ladder
+    App --> Prompt
+    App --> Shortfall
+    Ladder --> Audit
+    Prompt --> Audit
+    Shortfall --> Audit
+```
+
+- **`src/domain/rationPlan.ts` (new, C3-M2):** a pure module with no React, no i18n and no adapter imports. It builds the candidate set, runs the final solve, rung 0 and the ladder steps through an injected `solve` function, and applies the ladder and budget-prompt rules. It also exports `roundUpInr`.
+- **`rationService.planRation` (C3-M2):** wires `planRation` to the active adapter's `solveRation`, the same adapter's feed library (`getInitialFeeds()`) and `currentMonth()`.
+- **`src/domain/solver.ts` (C3-M2):** Step 6 adds `costAtCapInrPerDay`; nothing else changes.
+- **UI (C3-M1 and C3-M2):**
+  - Changed: `src/App.tsx`, `src/components/AnimalProfileForm.tsx`, `src/components/VerdictCard.tsx` (`SupportsHeadline` tiles), `src/components/FeedSelector.tsx`, `src/components/RationResultsPanel.tsx`, `src/components/BudgetShortfallAlert.tsx`, `src/domain/presets.ts`, `src/i18n/strings.ts`, `src/index.css`.
+  - New: `src/components/BuyLadder.tsx` and `src/components/BudgetIncreasePrompt.tsx`.
+
+### C3 data models
+
+**`RationSolution` gains one field** (`src/domain/types.ts`, C3-M2). All other fields are unchanged.
+
+| Field | Type | Rule |
+|---|---|---|
+| `costAtCapInrPerDay` | `number \| null` | Required. Cost in ₹/day of the least-cost ration from the solved feeds that supports `effectiveCapLPerDay`, with no budget row: `solveFixedMilk(inputs, reqModel, effectiveCap, null)?.totalCost ?? null`, computed in Step 6 next to `stage2AtT`. `null` when that LP is infeasible, and always `null` in the dry-animal branch (Step 3). Equals `costAtTodayMilkInrPerDay` when `effectiveCapSource` is `'today_milk'`. The mock solver sets `null`. |
+
+**Plan types** (`src/domain/rationPlan.ts`, C3-M2). The plan's fields are kept as approved. Three fields are additions, marked below: `candidates`, `month` and `RationRung.prefixFeedIds`.
+
+```ts
+import type { AnimalProfile, FeedItem, RationSolveOutcome, SelectedFeedInput } from './types';
+
+/** The active adapter's solveRation, injected so the module stays pure and testable. */
+export type SolveFn = (profile: AnimalProfile, feeds: SelectedFeedInput[]) => RationSolveOutcome;
+
+export interface RationRung {
+  /** Feeds bought at this rung; rung 1 may group several ("buy these together to balance"). */
+  addedFeedIds: string[];
+  /** Addition: every feed in this rung's step (own feeds + bought so far), for the rung audit (AC-C3-2.10). */
+  prefixFeedIds: string[];
+  /** The step's solve. Status 'optimal' for every rung by construction (ADR-0012). */
+  outcome: RationSolveOutcome;
+}
+
+export interface BudgetIncrease {
+  /** X = roundUpInr(costAtCapInrPerDay − budgetInrPerDay); > 0 whenever this object exists. */
+  extraInrPerDay: number;
+  /** Y = final.effectiveCapLPerDay (displayed rounded down to 0.1 like S). */
+  targetMilkLPerDay: number;
+  /** The final solve's costAtCapInrPerDay, kept for the audit of X. */
+  costAtCapInrPerDay: number;
+}
+
+export interface RationPlan {
+  /** The existing two-stage solve over the candidate set, with unbuyable suggestions removed (ADR-0010 decision 4). */
+  final: RationSolveOutcome;
+  /** Rung 0: the own feeds alone; null when no own feeds or when final is not 'optimal'. */
+  ownedOnly: RationSolveOutcome | null;
+  /** Rungs 1..n; empty when final is not 'optimal' or nothing is bought. */
+  rungs: RationRung[];
+  /** The buy list in ladder order (supplements first, then ₹/day ascending, ties by feed id). */
+  buyFeedIds: string[];
+  /** Own feeds with no line above 0 kg/day in final, in the order entered. */
+  notNeededFeedIds: string[];
+  budgetIncrease: BudgetIncrease | null;
+  /** Addition: exactly the feeds passed to the final solve (AC-C3-2.3). */
+  candidates: SelectedFeedInput[];
+  /** Addition: the month used for the in-season filter (ADR-0016). */
+  month: number;
+}
+
+/** Feeds the solver always includes at a minimum kg/day when offered (mineral-supplement rows in solver.ts). */
+export const MANDATORY_SUPPLEMENT_IDS: readonly string[] = ['mineral_mix', 'common_salt'];
+```
+
+### C3 interfaces
+
+```ts
+// src/domain/rationPlan.ts
+export function buildCandidates(
+  owned: SelectedFeedInput[],
+  library: readonly FeedItem[],
+  month: number,
+): SelectedFeedInput[];
+
+export function planRation(
+  profile: AnimalProfile,
+  owned: SelectedFeedInput[],
+  library: readonly FeedItem[],
+  month: number,
+  solve: SolveFn,
+): RationPlan;
+
+/** Round a rupee amount up to the 2 decimals formatInr shows: Math.ceil(value * 100 - 1e-7) / 100. */
+export function roundUpInr(value: number): number;
+
+// src/services/rationService.ts
+export interface RationService extends RationAppAdapter {
+  planRation(profile: AnimalProfile, owned: SelectedFeedInput[]): RationPlan;
+}
+export const rationService: RationService; // planRation: (profile, owned) =>
+//   planRation(profile, owned, getInitialFeeds(), currentMonth(), (p, f) => selectAdapter().solveRation(p, f))
+
+// src/domain/auditMilk.ts (new builders; same AuditMeta shape as auditKeepCost / auditMaintenance)
+export function auditRung(solution: RationSolution, prefixFeedIds: string[], figure: 'milk' | 'cost', byId: Map<string, FeedItem>): AuditMeta;
+export function auditBudgetIncrease(solution: RationSolution, increase: BudgetIncrease): AuditMeta;
+export function auditRaiseToMaintenance(report: BudgetShortfallReport, extraInrPerDay: number): AuditMeta;
+```
+
+`RationAppAdapter` is **unchanged**: both adapters keep the frozen interface. `planRation` lives on the service, not the adapter, so `mockAdapter.ts` and `liveAdapter.ts` need no new method. `rationService.solveRation` stays; it is still used by the C3-M1 flow, the adapter contract tests and `scripts/dump_solver_results.ts`.
+
+**`buildCandidates(owned, library, month)`:**
+1. Returns every entry of `owned` unchanged, in order. This includes own feeds out of season in `month` and keeps the farmer's price, cap and today's amount.
+2. Then, in library order, it adds every `FeedItem` whose `id` is not an owned `feedId`, for which `inSeason(feed, month)` holds (`src/domain/feedGroups.ts`) and whose `defaultPriceInrPerKgAsFed !== null`. Each enters as `{ feedId, priceInrPerKgAsFed: defaultPriceInrPerKgAsFed, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null }`.
+3. It does not validate own feeds; the UI validates them before calling (`validateFeed`, AC-C3-E3).
+
+**`planRation(profile, owned, library, month, solve)`, in order:**
+1. **Candidates.** `candidates = buildCandidates(owned, library, month)`.
+2. **Final solve.** `final = solve(profile, candidates)`, then remove unbuyable suggestions:
+   - `budget_below_maintenance`: when `fixFeedId` names a feed that is not in season in `month` or has no default price, return a copy with `fixFeedId`, `fixFeed` and `maintenanceWithFixInrPerDay` set to `null`.
+   - `infeasible`: keep only those `suggestedFeeds` whose feed is in season in `month` and has a default price.
+   - No number is changed; only advice is removed.
+3. **Final not balanced.** If `final.status !== 'optimal'`, return `{ final, ownedOnly: null, rungs: [], buyFeedIds: [], notNeededFeedIds: [], budgetIncrease: null, candidates, month }` (AC-C3-2.14, AC-C3-E7).
+4. **Rung 0.** `ownedOnly = owned.length > 0 ? solve(profile, owned) : null`.
+5. **Buy list.** Take the lines of `final.feeds` with `kgAsFed > 0` whose `feedId` is not owned. Sort them by:
+   1. `MANDATORY_SUPPLEMENT_IDS` members first;
+   2. then `costInr` ascending;
+   3. then `feedId` by plain code-unit comparison (not `localeCompare`).
+
+   The result is `buyFeedIds`.
+6. **Ladder.** Let `nSup` be the number of supplements in `buyFeedIds`. For `k` from `max(1, nSup)` to `buyFeedIds.length`:
+   - Solve step `k`: the `owned` entries followed by the `candidates` entries for `buyFeedIds.slice(0, k)`.
+   - Until the first balanced (`'optimal'`) step, skip unbalanced steps.
+   - The first balanced step becomes rung 1, with `addedFeedIds = buyFeedIds.slice(0, k)`.
+   - Every later step becomes one rung, with `addedFeedIds = [buyFeedIds[k - 1]]`.
+   - `prefixFeedIds` is the owned ids followed by `buyFeedIds.slice(0, k)`.
+   - When `buyFeedIds` is empty, `rungs` is `[]` and rung 0 is the answer (SPEC OQ-C3-4).
+7. **Not needed.** `notNeededFeedIds` lists the owned `feedId`s (in the order entered) that have no line with `kgAsFed > 0` in `final.feeds`.
+8. **Budget prompt.** `budgetIncrease` is set only when all of these hold:
+   - `final.tightConstraints.includes('budget')`;
+   - `(final.supportedMilkExactLPerDay ?? final.supportedMilkLPerDay) < final.effectiveCapLPerDay − 1e-6`;
+   - `final.costAtCapInrPerDay !== null`.
+
+   Then `budgetIncrease = { extraInrPerDay: roundUpInr(costAtCap − budget), targetMilkLPerDay: effectiveCapLPerDay, costAtCapInrPerDay }`. Otherwise it is `null`. It is always `null` for a dry animal, because the cost at the cap is `null`.
+
+**Invariants (unit-tested in `tests/unit/rationPlan.test.ts`):**
+- The last rung's exact supported milk and total cost equal `final`'s within `1e-6 × max(1, |value|)`.
+- Every rung is `'optimal'`.
+- `supportedMilkExactLPerDay` never decreases from rung 1 to the last rung (within `1e-6`).
+- Rung 0 is outside this chain ([ADR-0012](DECISIONS.md#adr-0012-cheapest-first-upgrade-ladder-from-nested-prefix-solves)).
+
+**Cost.** One tap runs `solve` 1 + (1 if own feeds) + up to `buyFeedIds.length` times. Each run is about 6 small LPs, plus about 30 for a step whose budget is below the maintenance cost (the frozen fix-feed search). The work is synchronous on the main thread and is expected to stay well under 1 second; measure it at C3-M2 UAT on a phone-width preview.
+
+### C3 data flow (C3-M2)
+
+1. **Inputs.** `App.tsx` validates the profile and budget (`validateAnimal`) and the own-feed rows (`toInputs`).
+   - **Calculate ration** is enabled when the profile and budget are valid and every own-feed row is valid.
+   - The `notice_next_feeds` gate is removed; `notice_next_price` stays for an invalid own-feed row.
+2. **Plan.** `balance()` calls `rationService.planRation(profile, owned)`. It stores `{ profile, requirement, outcome: plan.final, plan }`, so `SolveResult` gains `plan: RationPlan`.
+   - `outcome` stays `plan.final`, so the existing headline, tiles, verdict, cost line, alerts, Explain and Copy summary read the same object as before.
+   - `requirement` is computed at `plan.final`'s supported milk, as today.
+3. **Results.** The results column renders:
+   - the existing cards from `plan.final`;
+   - in `RationResultsPanel`, a "You have" tag on rows whose `feedId` is owned and "Buy" on rows in `plan.buyFeedIds`, plus the "Not needed" line from `plan.notNeededFeedIds`;
+   - `BuyLadder` from `plan.ownedOnly` and `plan.rungs` (milk figures hidden for a dry animal, AC-C3-E6);
+   - `BudgetIncreasePrompt` from `plan.budgetIncrease`. X uses `auditBudgetIncrease`; Y uses the existing effective-cap audit (`auditBreedCap(breed, todayMilk)`);
+   - for `plan.final.status === 'budget_below_maintenance'`, `BudgetShortfallAlert` with "Raise the budget by at least ₹X/day", where `X = roundUpInr(maintenanceCostInrPerDay − budget)` with `auditRaiseToMaintenance`.
+4. **Audits and offline.** Every new figure is a `Fig` with an audit built from that rung's or the final solve's output. Everything runs offline; no network call is added.
+
+### C3 mock mode
+
+With `VITE_USE_MOCK_ADAPTER=true`:
+- `rationService.planRation` uses `PROTOTYPE_FEEDS` (from `getInitialFeeds()`) and `mockAdapter.solveRation`. The candidate, ladder, tag and not-needed rules behave the same.
+- The mock solver returns `costAtCapInrPerDay: null`, so **the budget-increase prompt never appears in mock mode**.
+- The mock has no mineral-supplement rows. `MANDATORY_SUPPLEMENT_IDS` ordering still applies if those ids appear, and it is harmless there.
+- Tests of the prompt (AC-C3-2.12, the "Tight budget" demo in AC-C3-2.15) use the live adapter, or a fake `SolveFn` in `rationPlan.test.ts`.
+
+### C3 compatibility
+
+**Must stay unchanged:**
+- `RationAppAdapter` and `solveRation(animal, selectedFeeds, feedLibrary?, breedLibrary?)`.
+- Steps 1–5 and 7 of the LP and every existing `RationSolution` field value for the same feed set (AC-C3-R1).
+- `POST /api/llm` and its prompts, the verifier and the template.
+- `ExplanationRequestContext`.
+- `data/*` and `src/data/*.v1.json`.
+- String ids (only English and Hindi texts change in C3-M1).
+- The `data-testid="supports"` and `data-preset` hooks.
+
+**Other compatibility facts:**
+- There is no stored state to migrate; the only device value is still `sahidana.lang`.
+- Today's cost and the reference cost come from own feeds only, because library candidates have `currentKgAsFedPerDay: null` (AC-C3-R5).
+- Free-text extraction lands matched feeds as own feeds (AC-C3-R4).
+
+### C3 directory layout (delta)
+
+```text
+src/
+├── components/
+│   ├── BudgetIncreasePrompt.tsx      # NEW (C3-M2): Add ₹X/day to reach Y L/day (breed best)
+│   └── BuyLadder.tsx                 # NEW (C3-M2): Feeds to buy, cheapest first; rung 0 + rungs 1..n
+├── domain/
+│   ├── auditMilk.ts                  # + auditRung, auditBudgetIncrease, auditRaiseToMaintenance (C3-M2)
+│   ├── rationPlan.ts                 # NEW (C3-M2): buildCandidates, planRation, roundUpInr, types
+│   ├── solver.ts                     # Step 6 only: costAtCapInrPerDay (C3-M2)
+│   └── types.ts                      # RationSolution.costAtCapInrPerDay (C3-M2)
+└── services/
+    ├── mockSolver.ts                 # costAtCapInrPerDay: null (C3-M2)
+    └── rationService.ts              # RationService type + planRation (C3-M2)
+scripts/dump_solver_results.ts        # writes costAtCapInrPerDay (C3-M2)
+eval/cross_check_solver.py            # HiGHS cost at effective cap, no budget row (C3-M2)
+eval/test_scipy_agreement.py          # costAtCap agreement + null together (C3-M2)
+tests/unit/rationPlan.test.ts         # NEW (C3-M2)
+```
+
+### C3 tests
+
+**C3-M1** (selectors and text only; no expected solver values change):
+- `tests/unit/resultUi.test.tsx`: side-by-side tiles and benchmark line; card title by species.
+- `tests/unit/oneLanguage.test.tsx`: new strings in both modes; no "animal" or "पशु" for the farmer's animal (AC-C3-1.4).
+- `tests/e2e/ration-journey.spec.ts`: column order, "Try an example" below the button, `data-preset` demos still fill the form.
+- `tests/e2e/language.spec.ts`: renamed texts.
+
+**C3-M2:**
+- `tests/unit/solver.test.ts`:
+  - `costAtCapInrPerDay >= totalCostInr` when the budget is tight;
+  - `null` when the cap is infeasible;
+  - `null` for a dry animal;
+  - equal to `costAtTodayMilkInrPerDay` when `T > cap`.
+- `tests/unit/rationPlan.test.ts` (new), using the real solver with `LIVE_FEEDS` and a fixed month, plus a fake `SolveFn` for pure-rule cases. It covers:
+  - the candidate rules: out-of-season and unpriced library feeds are excluded; an owned out-of-season feed is kept; an owned library feed appears once at the farmer's price and cap;
+  - the buy list order, including supplements first;
+  - rung 1 is the first balanced step; every rung is balanced; milk never decreases from rung 1; the last rung equals `final`;
+  - a non-balanced `final` gives an empty plan; an empty buy list gives `rungs: []` with rung 0;
+  - `notNeededFeedIds`;
+  - `budgetIncrease`: null when the budget is not tight, null when the cost at the cap is null, and for a dry animal; otherwise `budget + X >= costAtCap`;
+  - out-of-season or unpriced fix-feed and suggested feeds are removed;
+  - `roundUpInr` boundaries.
+- `tests/unit/adapter.test.ts`: both adapters return `costAtCapInrPerDay` (`number | null`); `rationService.planRation` works in mock and live modes.
+- `tests/unit/resultUi.test.tsx`, `tests/unit/oneLanguage.test.tsx`: tags, ladder, rung 0 states, Not needed, prompt, raise-by line, three demos, both languages, every new figure opens its audit.
+- `tests/e2e/ration-journey.spec.ts`, `tests/e2e/language.spec.ts`: calculate with no feeds, with own straw, tight-budget demo prompt, below-maintenance raise-by, offline.
+- `scripts/dump_solver_results.ts`, `eval/cross_check_solver.py`, `eval/test_scipy_agreement.py`: `costAtCap` agreement on all 18 benchmark animals (AC-C3-2.13); every existing case still agrees (AC-C3-R1). `eval/test_animals.json` needs no change, though an `expected.costAtCapFeasible` flag may be added per animal.
+- Demo and expected values are taken from real solver output only. If `rationPlan.test.ts` takes more than about 1 second, its real-library cases move to `tests/unit/rationPlan.slow.test.ts` so the fast suite stays under 15 seconds.
+
+**Test commands** (unchanged from [Test commands](#test-commands)):
+- **Fast** (after every task): `npm test`
+- **Full** (milestone end): `npm run test:full`
+- **One file:** `npx vitest run tests/unit/rationPlan.test.ts`
+- **Also at C3-M2 end:** `npm run build` (type check catches any `RationSolution` without `costAtCapInrPerDay`), `npm run compile:data`, `npm run eval:dump && npm run eval:scipy`.
+
+### C3 setup requirements
+
+None beyond [Setup requirements](#setup-requirements). No new tool, account, environment variable or local service.
+
+### Expensive to change
+
+Plain-English list for Change 3. Each item is costly to change after C3-M2 because code, tests and the SPEC criteria depend on it.
+
+1. **Which feeds the solver may choose.** The farmer's own feeds plus library feeds that are in season this month and have a cited price. This rule decides what the farmer is told to buy. Changing it (for example, allowing out-of-season feeds) changes every result, the demos and their tests.
+2. **The ladder rule.** Supplements first, then the cheapest ₹/day first; rung 1 groups the feeds needed to balance. The tests check that milk never goes down and that the last rung matches the final ration. A different order means new rules, new invariants and new expected results.
+3. **The new solver number, the cost at the milk cap.** It is part of the solver's output and is checked by the Python cross-check. Renaming or redefining it touches the solver, the mock, the cross-check, the dump script and the tests.
+4. **The shape of `RationPlan`.** The app, the ladder card, the prompt, the table tags and their tests all read it. Adding a field is cheap; renaming or removing one is not.
+5. **The solver itself stays unchanged.** This keeps the 100% agreement with SciPy. Any later wish to force own feeds, add per-feed limits or rank feeds inside the solver reopens that agreement and the frozen formulation.
+6. **Calculating without picking feeds.** The button rules, the hints, the demos and the end-to-end tests all assume feeds are optional. Going back to "feeds first" would undo most of C3-M2.
