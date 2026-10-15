@@ -46,10 +46,10 @@ export const strings = {
   // ---- wayfinding (next decision) -------------------------------------------------------------
   label_how_to_use: { hi: 'कैसे इस्तेमाल करें:', en: 'How to use:' },
   notice_how_to_use: {
-    hi: 'पशु चुनें, फ़ीड और रोज़ का बजट भरें, फिर “राशन संतुलित करें” दबाएँ — किसी भी संख्या को दबाकर उसका स्रोत देखें।',
-    en: 'Enter the animal, pick feeds and set a daily budget, then tap “Balance ration” — tap any number to see its source.',
+    hi: 'गाय या भैंस चुनें, फ़ीड और रोज़ का बजट भरें, फिर “राशन संतुलित करें” दबाएँ — किसी भी संख्या को दबाकर उसका स्रोत देखें।',
+    en: 'Enter your cow or buffalo, pick feeds and set a daily budget, then tap “Balance ration” — tap any number to see its source.',
   },
-  notice_next_animal: { hi: 'अगला कदम: पशु की जानकारी भरें', en: 'Next: enter the animal details' },
+  notice_next_animal: { hi: 'अगला कदम: गाय या भैंस की जानकारी भरें', en: 'Next: enter your cow or buffalo details' },
   notice_next_fix: { hi: 'अगला कदम: लाल निशान वाले खाने ठीक करें', en: 'Next: fix the fields marked in red' },
   notice_next_feeds: { hi: 'अगला कदम: कम से कम एक फ़ीड जोड़ें', en: 'Next: add at least one feed' },
   notice_next_price: { hi: 'अगला कदम: हर फ़ीड की सही कीमत भरें', en: 'Next: enter a valid price for every feed' },
@@ -64,10 +64,12 @@ export const strings = {
   note_demo_infeasible: { hi: 'नहीं बनता', en: 'Infeasible' },
 
   // ---- animal ---------------------------------------------------------------------------------
-  label_animal: { hi: 'पशु', en: 'Animal' },
-  label_animal_line: { hi: 'पशु की जानकारी', en: 'Animal details' },
-  label_animal_empty: { hi: 'पशु की जानकारी भरें', en: 'Enter the animal details' },
-  label_species: { hi: 'पशु का प्रकार', en: 'Species' },
+  label_animal: { hi: 'आपकी गाय या भैंस', en: 'Your cow or buffalo' },
+  label_animal_cow: { hi: 'आपकी गाय', en: 'Your cow' },
+  label_animal_buffalo: { hi: 'आपकी भैंस', en: 'Your buffalo' },
+  label_animal_line: { hi: 'आपकी गाय या भैंस की जानकारी', en: 'Your cow or buffalo details' },
+  label_animal_empty: { hi: 'गाय या भैंस की जानकारी भरें', en: 'Enter your cow or buffalo details' },
+  label_species: { hi: 'प्रकार', en: 'Species' },
   label_cow: { hi: 'गाय', en: 'Cow' },
   label_buffalo: { hi: 'भैंस', en: 'Buffalo' },
   label_weight: { hi: 'शरीर का वज़न', en: 'Body weight' },
@@ -90,7 +92,7 @@ export const strings = {
 
   // ---- free-text extraction -------------------------------------------------------------------
   action_fill_from_description: { hi: 'विवरण से भरें', en: 'Fill from description' },
-  label_describe: { hi: 'पशु और फ़ीड का विवरण', en: 'Describe the animal and feeds' },
+  label_describe: { hi: 'गाय या भैंस और फ़ीड का विवरण', en: 'Describe your cow or buffalo and feeds' },
   notice_openrouter: {
     hi: 'आपका लिखा विवरण OpenRouter को भेजा जाता है। मुफ़्त मॉडल प्रॉम्प्ट लॉग कर सकते हैं।',
     en: 'Your text is sent to OpenRouter. Free models may log prompts.',
@@ -231,10 +233,10 @@ export const strings = {
   stamp_unconfirmed: { hi: 'अपुष्ट', en: 'Unconfirmed' },
   state_idle_title: { hi: 'अभी राशन नहीं बना', en: 'No ration yet' },
   notice_idle_body: {
-    hi: 'पशु और फ़ीड भरें, फिर “राशन संतुलित करें” दबाएँ। नतीजा यहाँ छपेगा।',
-    en: 'Fill in the animal and the feeds, then tap “Balance ration”. The analysis prints here.',
+    hi: 'गाय या भैंस और फ़ीड भरें, फिर “राशन संतुलित करें” दबाएँ। नतीजा यहाँ छपेगा।',
+    en: 'Fill in your cow or buffalo and the feeds, then tap “Balance ration”. The analysis prints here.',
   },
-  label_requirement_only: { hi: 'पशु की रोज़ की ज़रूरत', en: 'Daily requirement of this animal' },
+  label_requirement_only: { hi: 'इस गाय या भैंस की रोज़ की ज़रूरत', en: 'Daily requirement of this cow or buffalo' },
   hint_tap_figure: {
     hi: 'किसी भी संख्या को दबाएँ: स्रोत या सॉल्वर की शर्त दिखेगी',
     en: 'Tap any figure to see its source or solver constraint',
@@ -277,8 +279,8 @@ export const strings = {
   },
   label_english_only: { hi: 'AI का पाठ सिर्फ़ अंग्रेज़ी में है', en: 'The AI text is in English only' },
   template_animal: {
-    hi: 'पशु: {species}, वज़न {weight}, दूध {milk}/दिन, फैट {fat}।',
-    en: 'Animal: {species}, body weight {weight}, milk {milk}/day, fat {fat}.',
+    hi: '{species}: वज़न {weight}, दूध {milk}/दिन, फैट {fat}।',
+    en: '{species}: body weight {weight}, milk {milk}/day, fat {fat}.',
   },
   template_feed_line: {
     hi: '{feed}: रोज़ {kg}, लागत {cost}।',
@@ -416,8 +418,8 @@ export const strings = {
     en: 'Cited lactation yield divided by the lactation length (our own division)',
   },
   basis_dahd_average_explain: {
-    hi: 'प्रति दुधारू पशु राष्ट्रीय औसत (DAHD); नस्ल तय न होने पर यही लिया गया',
-    en: 'National average per in-milk animal (DAHD), used because the breed is not known',
+    hi: 'प्रति दुधारू गाय या भैंस राष्ट्रीय औसत (DAHD); नस्ल तय न होने पर यही लिया गया',
+    en: 'National average per in-milk cow or buffalo (DAHD), used because the breed is not known',
   },
   note_milk_kg_l: { hi: '1 kg दूध ≈ 1 L (मान्यता)', en: '1 kg of milk ≈ 1 L (assumption)' },
   audit_label_breed_cap: { hi: 'दूध की सीमा: {breed}', en: 'Milk cap: {breed}' },
@@ -564,8 +566,8 @@ export const strings = {
   // ---- budget below maintenance (AC-E7.1) -----------------------------------------------------
   stamp_budget_low: { hi: 'बजट कम', en: 'Budget too low' },
   notice_shortfall_body: {
-    hi: 'कोई राशन या दूध का आँकड़ा नहीं दिखाया जा रहा। गुज़ारे की लागत वह सबसे सस्ता राशन है जो इन फ़ीड से 0 L दूध पर पशु की ज़रूरतें पूरी करे।',
-    en: 'No ration or milk figure is shown. Maintenance is the cheapest ration from these feeds that meets the animal’s needs at 0 L of milk.',
+    hi: 'कोई राशन या दूध का आँकड़ा नहीं दिखाया जा रहा। गुज़ारे की लागत वह सबसे सस्ता राशन है जो इन फ़ीड से 0 L दूध पर आपकी गाय या भैंस की ज़रूरतें पूरी करे।',
+    en: 'No ration or milk figure is shown. Maintenance is the cheapest ration from these feeds that meets your cow or buffalo’s needs at 0 L of milk.',
   },
   label_cheaper_feed: { hi: 'यह फ़ीड जोड़कर देखें', en: 'Try adding this feed' },
   notice_shortfall_fix: {
@@ -637,7 +639,7 @@ export const strings = {
     hi: '{budget} प्रति दिन के बजट में {milk} दूध संभव है, नस्ल की सीमा {cap} से ऊपर नहीं।',
     en: 'A budget of {budget} per day supports {milk} of milk a day, never above the cap of {cap}.',
   },
-  verdict_dry: { hi: 'सूखा पशु: गुज़ारे का राशन', en: 'Dry animal: maintenance ration' },
+  verdict_dry: { hi: 'सूखी गाय या भैंस: गुज़ारे का राशन', en: 'Dry cow or buffalo: maintenance ration' },
   nutrient_roughage: { hi: 'रेशेदार चारे का हिस्सा', en: 'Roughage share' },
   bind_roughage: { hi: 'रेशेदार चारे का न्यूनतम हिस्सा', en: 'roughage minimum' },
   label_roughage_row: { hi: 'रेशेदार चारे का हिस्सा (शुष्क पदार्थ में)', en: 'Roughage share of dry matter' },
@@ -662,15 +664,15 @@ export const strings = {
   },
   label_roughage_feed_why: { hi: 'रेशेदार चारा', en: 'A roughage feed' },
   demo_roughage: { hi: 'सिर्फ़ दाना (रेशा नहीं)', en: 'Concentrates only' },
-  demo_dry: { hi: 'सूखा पशु', en: 'Dry animal' },
+  demo_dry: { hi: 'सूखी भैंस', en: 'Dry buffalo' },
   template_verdict: { hi: 'नतीजा: {verdict}', en: 'Verdict: {verdict}' },
   warning_mineral_missing_title: {
     hi: 'सलाह: दैनिक खनिज मिश्रण एवं नमक शामिल नहीं है',
     en: 'Advisory: Daily mineral mixture and salt not included',
   },
   warning_mineral_missing_body: {
-    hi: 'NDDB के दिशानिर्देशों के अनुसार दुधारू पशुओं को प्रतिदिन 100g खनिज मिश्रण और 50g साधारण नमक देना आवश्यक है ताकि सूक्ष्म पोषक तत्वों की कमी न हो। कृपया चारे की सूची में इन्हें जोड़ें।',
-    en: 'NDDB RBP guidelines recommend daily basal supplementation of 100g mineral mixture and 50g common salt for milking animals to prevent trace mineral deficiencies. Please add them to your feed selection.',
+    hi: 'NDDB के दिशानिर्देशों के अनुसार दुधारू गायों और भैंसों को प्रतिदिन 100g खनिज मिश्रण और 50g साधारण नमक देना आवश्यक है ताकि सूक्ष्म पोषक तत्वों की कमी न हो। कृपया चारे की सूची में इन्हें जोड़ें।',
+    en: 'NDDB RBP guidelines recommend daily basal supplementation of 100g mineral mixture and 50g common salt for milking cows and buffaloes to prevent trace mineral deficiencies. Please add them to your feed selection.',
   },
   action_add_mineral_salt: {
     hi: '+ खनिज मिश्रण और नमक जोड़ें',

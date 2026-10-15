@@ -48,7 +48,7 @@ describe('result card per verdict case', () => {
     ['below_cost', 'below_today', /This budget supports [\d.]+\sL\/day, less than today’s 6\.5\sL\/day\. Keeping 6\.5\sL needs ₹[\d.]+\/day\./],
     ['below_no', 'below_today', /Keeping 6\sL is not possible with these feeds: CP limits it\./],
     ['same', 'same_as_today', /This budget supports 5\.0\sL\/day, the same as today\./],
-    ['dry', 'dry_animal', /Dry animal: maintenance ration/],
+    ['dry', 'dry_animal', /Dry cow or buffalo: maintenance ration/],
   ];
   for (const [key, kind, text] of cases) {
     it(`${key}: shows the ${kind} verdict`, () => {

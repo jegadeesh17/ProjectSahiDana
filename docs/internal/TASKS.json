@@ -241,7 +241,7 @@
             "tests/e2e/language.spec.ts"
           ],
           "acceptance_criteria": "SPEC AC-C3-1.2, AC-C3-1.3, AC-C3-1.4, AC-C3-1.7; regression AC-C3-R7: tests/unit/oneLanguage.test.tsx asserts the card title is 'Your cow or buffalo' / 'आपकी गाय या भैंस' with no species and switches to 'Your cow' then 'Your buffalo' (and Hindi equivalents) on species change without losing inputs, and that no visible English text contains 'animal' outside exempt elements and audit_* labels; tests/unit/i18n.test.ts confirms every new string id has en and hi entries. Verify: npm test exits 0.",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "C3-M1-T2",

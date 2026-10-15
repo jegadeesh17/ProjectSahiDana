@@ -90,7 +90,7 @@ export function AnimalProfileForm({ draft, errors, breeds, onChange, prefilled }
   return (
     <fieldset className="block" aria-describedby={errorList.length > 0 ? errId : undefined}>
       <legend className="block-title">
-        <Bi id="label_animal" />
+        <Bi id={draft.species === 'cow' ? 'label_animal_cow' : draft.species === 'buffalo' ? 'label_animal_buffalo' : 'label_animal'} />
       </legend>
 
       <div className="field">

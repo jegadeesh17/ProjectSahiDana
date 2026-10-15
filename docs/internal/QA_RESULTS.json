@@ -85,6 +85,7 @@
     "command": "npm test && npx playwright test tests/e2e/language.spec.ts",
     "exit_code": 0,
     "summary": "14 unit test files passed (168 tests, including 13 tests in tests/unit/oneLanguage.test.tsx) and 8 Playwright E2E tests passed in tests/e2e/language.spec.ts (strict EN/HI language isolation across 10 screens/modals, WCAG 2.2 AA contrast >= 4.5:1, 44x44px touch targets, focus restoration, reduced motion, cross-lingual search parity, breed/season/price note active language, Latin digits, and offline Noto Sans Devanagari font check)",
+    "failure_output": ""
   },
   {
     "task_id": "M3-TASK-04",
@@ -92,6 +93,14 @@
     "command": "cmd.exe /c \"npm run test:full && python -m pytest -q eval/\"",
     "exit_code": 0,
     "summary": "14 unit test files passed (174 tests, including 29 tests in tests/unit/compileData.test.ts auditing data citations, verification gates, and zero prototype fixtures), 13 Playwright E2E tests passed (19.2s across language isolation and full ration journey), and 68 pytest tests passed in eval/ (23 solver SciPy cross-check tests and 45 multilingual extraction evaluation tests)",
+    "failure_output": ""
+  },
+  {
+    "task_id": "C3-M1-T1",
+    "attempt": 1,
+    "command": "npm test",
+    "exit_code": 0,
+    "summary": "15 unit test files passed, 233 tests passed (including 25 tests in tests/unit/farmerWording.test.tsx, 19 tests in tests/unit/oneLanguage.test.tsx and 12 tests in tests/unit/i18n.test.ts)",
     "failure_output": ""
   }
 ]

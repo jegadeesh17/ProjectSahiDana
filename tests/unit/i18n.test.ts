@@ -28,6 +28,20 @@ describe('strings', () => {
     }
   });
 
+  it('has English and Hindi entries for the cow-or-buffalo card titles (AC-C3-1.2, AC-C3-1.3)', () => {
+    expect(strings.label_animal).toEqual({ en: 'Your cow or buffalo', hi: 'आपकी गाय या भैंस' });
+    expect(strings.label_animal_cow).toEqual({ en: 'Your cow', hi: 'आपकी गाय' });
+    expect(strings.label_animal_buffalo).toEqual({ en: 'Your buffalo', hi: 'आपकी भैंस' });
+  });
+
+  it('never calls the farmer’s cow or buffalo an animal or पशु outside audit_* labels (AC-C3-1.4)', () => {
+    for (const [id, v] of entries) {
+      if (id.startsWith('audit_')) continue;
+      expect(/animal/i.test(v.en), `${id} en`).toBe(false);
+      expect(v.hi.includes('पशु'), `${id} hi`).toBe(false);
+    }
+  });
+
   it('keeps the Hindi review status unverified until 2026-10-14', () => {
     expect(HINDI_REVIEW.status).toBe('unverified');
   });

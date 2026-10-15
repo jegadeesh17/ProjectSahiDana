@@ -182,6 +182,82 @@ describe.each(['mock', 'live'] as const)('one language at a time (%s adapter)', 
     expect(errorMsg).toBeNull();
   });
 
+  it('titles the cow-or-buffalo card by species and keeps other inputs (AC-C3-1.2, AC-C3-1.3)', () => {
+    const { container } = render(<App />);
+    const title = () => container.querySelector('fieldset:has(.seg) > legend')?.textContent;
+    const segBtn = (i: number) => container.querySelectorAll<HTMLElement>('.seg-btn')[i]!;
+    const weightInput = container.querySelector<HTMLInputElement>('input[id*="weight"]')!;
+    expect(title()).toBe('Your cow or buffalo');
+
+    act(() => {
+      fireEvent.change(weightInput, { target: { value: '420' } });
+    });
+    act(() => {
+      fireEvent.click(segBtn(0));
+    });
+    expect(title()).toBe('Your cow');
+    act(() => {
+      fireEvent.click(segBtn(1));
+    });
+    expect(title()).toBe('Your buffalo');
+    expect(weightInput.value).toBe('420');
+
+    act(() => {
+      fireEvent.click(container.querySelector<HTMLElement>('.langtoggle-btn[lang="hi"]')!);
+    });
+    expect(title()).toBe('आपकी भैंस');
+    act(() => {
+      fireEvent.click(segBtn(0));
+    });
+    expect(title()).toBe('आपकी गाय');
+    expect(weightInput.value).toBe('420');
+    act(() => {
+      fireEvent.click(container.querySelector<HTMLElement>('.langtoggle-btn[lang="en"]')!);
+    });
+    expect(title()).toBe('Your cow');
+  });
+
+  it('titles the card "Your cow or buffalo" / "आपकी गाय या भैंस" before a species is picked (AC-C3-1.2)', () => {
+    const { container } = render(<App />);
+    const title = () => container.querySelector('fieldset:has(.seg) > legend')?.textContent;
+    expect(title()).toBe('Your cow or buffalo');
+    act(() => {
+      fireEvent.click(container.querySelector<HTMLElement>('.langtoggle-btn[lang="hi"]')!);
+    });
+    expect(title()).toBe('आपकी गाय या भैंस');
+  });
+
+  it('never calls the farmer’s cow or buffalo an animal or पशु outside the audit drawer (AC-C3-1.4)', () => {
+    const { container } = render(<App />);
+    const states: [string, string][] = [['idle', '']];
+    for (const preset of ['buffalo', 'straw']) {
+      states.push([preset, preset]);
+    }
+    for (const lang of ['en', 'hi'] as const) {
+      act(() => {
+        fireEvent.click(container.querySelector<HTMLElement>(`.langtoggle-btn[lang="${lang}"]`)!);
+      });
+      for (const [name, preset] of states) {
+        if (preset) {
+          const btn = container.querySelector<HTMLElement>(`[data-preset="${preset}"]`);
+          expect(btn, preset).toBeTruthy();
+          act(() => {
+            fireEvent.click(btn!);
+          });
+        }
+        const details = container.querySelector<HTMLElement>('.details-toggle');
+        if (details) {
+          act(() => {
+            fireEvent.click(details);
+          });
+        }
+        // “पशु आहार” (cattle feed) is a cited feed-library name, not the farmer's cow or buffalo.
+        const text = nonExemptText(container).replace(/पशु आहार/g, '');
+        expect(text.match(lang === 'en' ? /.{30}animal.{30}/i : /.{30}पशु.{30}/) ?? [], `${lang} ${name}`).toEqual([]);
+      }
+    }
+  });
+
   it('preserves strict language isolation on infeasible and budget shortfall states', () => {
     const { container } = render(<App />);
     const strawBtn = container.querySelector<HTMLElement>('[data-preset="straw"]');
