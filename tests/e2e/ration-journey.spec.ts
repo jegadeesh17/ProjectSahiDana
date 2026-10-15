@@ -312,11 +312,24 @@ test.describe('SahiDana M1 offline vertical-slice journey', () => {
       expect(afterBar.afterBar, 'section follows the balance bar in the DOM').toBe(true);
       expect(afterBar.afterExtractor, 'section is not above the extractor').toBe(true);
 
-      // Visually under the button at every width; on phones the pinned bar then sits above it and does not cover it.
       await section.scrollIntoViewIfNeeded();
       const presetBox = (await section.boundingBox())!;
-      const barBox = (await page.locator('.inputs .balancebar').boundingBox())!;
-      expect(presetBox.y, 'section sits below the balance button').toBeGreaterThanOrEqual(barBox.y + barBox.height - 1);
+      if (viewport.width >= 1024) {
+        // Desktop: visually under the Balance button.
+        const barBox = (await page.locator('.inputs .balancebar').boundingBox())!;
+        expect(presetBox.y, 'section sits below the balance button').toBeGreaterThanOrEqual(barBox.y + barBox.height - 1);
+      } else {
+        // Phones: before the result card, and the pinned bar does not cover it once scrolled to.
+        const analysisBox = (await page.locator('#analysis').boundingBox())!;
+        expect(presetBox.y, 'section is above the result card').toBeLessThan(analysisBox.y);
+        await section.evaluate((el) => el.scrollIntoView({ block: 'end' }));
+        const covered = await page.evaluate(() => {
+          const bar = document.querySelector('.inputs .balancebar')!.getBoundingClientRect();
+          const row = document.querySelector('.inputs .presets')!.getBoundingClientRect();
+          return row.bottom > bar.top;
+        });
+        expect(covered, 'pinned bar does not cover the examples').toBe(false);
+      }
 
       for (const key of ['buffalo', 'straw']) {
         const button = section.locator(`[data-preset="${key}"]`);

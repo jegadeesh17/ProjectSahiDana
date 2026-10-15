@@ -678,14 +678,15 @@ select.input {
 .sep {
   color: var(--c-text-2);
 }
-/* "Try an example": a quiet row under the Balance button, no card, hairline pills. Below 1024px the page
-   is a flex column where the bar is order 3, so the examples share order 3 and follow it in the DOM. */
+/* "Try an example": a quiet row under the Balance button, no card, hairline pills. Below 1024px the page is a
+   flex column where the pinned bar is order 3 and the result card order 2; the examples share order 2 and come
+   first in the DOM, so they sit after the feeds and before the result. scroll-margin keeps them clear of the bar. */
 .presets {
-  order: 3;
+  order: 2;
   display: flex;
   flex-direction: column;
   gap: var(--s-2);
-  padding-bottom: calc(var(--s-6) + env(safe-area-inset-bottom));
+  scroll-margin-bottom: 120px;
 }
 .presets-title {
   padding: 0 var(--s-1);
@@ -729,7 +730,7 @@ select.input {
 @media (min-width: 1024px) {
   .presets {
     order: 0;
-    padding-bottom: 0;
+    scroll-margin-bottom: 0;
   }
 }
 

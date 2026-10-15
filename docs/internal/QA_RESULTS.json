@@ -126,5 +126,13 @@
     "exit_code": 0,
     "summary": "npm test: 15 test files passed, 239 tests passed (including 1 new-section title test in tests/unit/oneLanguage.test.tsx for 'Try an example' / 'उदाहरण आज़माएँ'). npx playwright test: 27 passed, 0 failed (8 C3-M1-T4 tests: 'Try an example' after the balance bar with each data-preset still filling the form at 375 px and desktop in en and hi, and 'Straw only' filling the form and showing the infeasible state at 375 px and desktop in en and hi; 5 of these 8 were added in this QA pass)",
     "failure_output": ""
+  },
+  {
+    "task_id": "C3-M1-FIX-1",
+    "attempt": 1,
+    "command": "npm test && npx playwright test",
+    "exit_code": 0,
+    "summary": "npm test: 15 test files passed, 239 tests passed. npx playwright test: 27 passed, 0 failed (includes the 'Try an example' tests at 375 px and desktop in en and hi; the 375 px branch now asserts the section sits above #analysis and is not covered by the pinned bar once scrolled to). Throwaway probe with the pre-fix .presets rules (order 3, no scroll margin) failed both new mobile assertions; probe deleted.",
+    "failure_output": ""
   }
 ]

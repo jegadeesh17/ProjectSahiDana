@@ -57,3 +57,15 @@ Non-blocking, open:
 2. Basal-minimum row ignores the farmer's own max kg/day cap, which the solver honours (`solver.ts:244,252`).
 3. Roughage-minimum sheet no longer shows the source note (it was English-only).
 4. BRAINSTORM pending-flag wording: fixed in the same push.
+
+## Change 3 (farmer-first flow), C3-M1 Review 1 (2026-10-15)
+
+**Verdict: APPROVED.** Base `d28d90a`. Evidence: `npm run test:full` exit 0 (239 vitest, 27 Playwright), `npm run build` exit 0. Reviewer probes: verifier/wording/oneLanguage/resultUi/i18n unit tests 104/104; `git diff --stat d28d90a..HEAD -- src/domain src/services src/data` empty.
+
+Confirmed: no logic change (AC-C3-1.7); `template_animal` keeps one language and the verifier passes; no "animal"/"पशु" left in strings (now enforced by `tests/unit/i18n.test.ts`); heading ids and aria refs consistent; 44 px preset targets; tests not weakened.
+
+Findings (non-blocking):
+1. Major: below 1024 px, "Try an example" rendered after the whole result card (`.presets { order: 3 }` vs `.frame { order: 2 }`), contradicting DESIGN.md. Sent as a fix to frontend-developer with a 375 px e2e position check.
+2. Minor: for `below_today` / `same_as_today` the verdict sentence repeats the tile figures, and the tile says "ration" while the sentence says "budget". Deferred to UAT.
+3. Minor: `grid-template-rows: subgrid` is ignored by WebViews older than about Chrome 117, so the figures may not line up if a label wraps. Accepted.
+4. Minor: sticky bar covers nothing new.
