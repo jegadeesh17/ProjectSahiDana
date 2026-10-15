@@ -221,6 +221,142 @@
           "status": "completed"
         }
       ]
+    },
+    {
+      "milestone_id": "C3-M1",
+      "name": "Change 3: layout and wording (UI only, no logic change)",
+      "tasks": [
+        {
+          "id": "C3-M1-T1",
+          "title": "Wording: 'Your cow or buffalo' card title by species and no 'Animal' for the farmer",
+          "owner": "frontend-developer",
+          "description": "Text-only change; no solver, type, service or result change (ADR-0017, AC-C3-1.7). In src/i18n/strings.ts: change label_animal to en 'Your cow or buffalo' / hi 'आपकी गाय या भैंस'; add label_animal_cow (en 'Your cow' / hi 'आपकी गाय') and label_animal_buffalo (en 'Your buffalo' / hi 'आपकी भैंस'). In src/components/AnimalProfileForm.tsx, the card title uses label_animal when no species is selected, label_animal_cow when species is 'cow' and label_animal_buffalo when species is 'buffalo', updating live without losing other inputs. Replace every other user-visible English 'animal' with 'cow or buffalo' (or the species) in label_animal_line, label_animal_empty, notice_how_to_use, notice_next_animal, action_edit_animal and any other entry found by grep -in \"animal\" src/i18n/strings.ts; change the matching Hindi so 'पशु' reads 'गाय/भैंस' where it names the farmer's animal. Leave string ids, code identifiers, audit_* technical labels and LLM prompts unchanged. Keep Latin digits and one language per screen (ADR-0009). Update tests/unit/oneLanguage.test.tsx (and tests/unit/i18n.test.ts if new ids need both languages asserted) to check the new titles in both modes and the absence of 'animal' / 'पशु' for the farmer's animal; update text selectors in tests/e2e/ration-journey.spec.ts and tests/e2e/language.spec.ts that match the renamed texts.",
+          "files_to_create": [],
+          "files_to_modify": [
+            "src/i18n/strings.ts",
+            "src/components/AnimalProfileForm.tsx",
+            "tests/unit/oneLanguage.test.tsx",
+            "tests/unit/i18n.test.ts",
+            "tests/e2e/ration-journey.spec.ts",
+            "tests/e2e/language.spec.ts"
+          ],
+          "acceptance_criteria": "SPEC AC-C3-1.2, AC-C3-1.3, AC-C3-1.4, AC-C3-1.7; regression AC-C3-R7: tests/unit/oneLanguage.test.tsx asserts the card title is 'Your cow or buffalo' / 'आपकी गाय या भैंस' with no species and switches to 'Your cow' then 'Your buffalo' (and Hindi equivalents) on species change without losing inputs, and that no visible English text contains 'animal' outside exempt elements and audit_* labels; tests/unit/i18n.test.ts confirms every new string id has en and hi entries. Verify: npm test exits 0.",
+          "status": "pending"
+        },
+        {
+          "id": "C3-M1-T2",
+          "title": "Input column order: cow or buffalo, then budget, then feeds",
+          "owner": "frontend-developer",
+          "description": "In src/App.tsx, render the left input column in this DOM and visual order: FreeTextExtractor, AnimalProfileForm, BudgetField, FeedSelector, then the balance bar. Do not change validation, the balance() call or any result logic; feeds remain required in C3-M1 (Balance ration stays disabled without at least 1 feed, AC-E1.2). In src/i18n/strings.ts update notice_how_to_use to the new order, en 'Enter your cow or buffalo, set a daily budget, add feeds, then tap Balance ration…' with the matching Hindi; keep data-testid=\"how-to-use\". Update tests/e2e/ration-journey.spec.ts to assert the section order and the how-to-use text, and adjust any unit selectors in tests/unit/resultUi.test.tsx that depend on the old order.",
+          "files_to_create": [],
+          "files_to_modify": [
+            "src/App.tsx",
+            "src/i18n/strings.ts",
+            "tests/unit/resultUi.test.tsx",
+            "tests/e2e/ration-journey.spec.ts"
+          ],
+          "acceptance_criteria": "SPEC AC-C3-1.1, AC-C3-1.4 (how-to-use line in new order), AC-C3-1.7; regression AC-C3-R3, AC-C3-R7: tests/e2e/ration-journey.spec.ts checks that the extractor, 'Your cow or buffalo' card, budget, feeds and balance button appear in that DOM order at 375 px and desktop, and that Balance ration is still disabled with no feeds; solver expected values are unchanged. Verify: npm test exits 0.",
+          "status": "pending"
+        },
+        {
+          "id": "C3-M1-T3",
+          "title": "Side-by-side milk tiles: Today and This ration supports, benchmark line below",
+          "owner": "frontend-developer",
+          "description": "In SupportsHeadline in src/components/VerdictCard.tsx, render two equal-width tiles in one row: 'Today' with today's milk T and 'This ration supports' with the supported milk S, both large Fig components using the same audits as now (input audit for T, solver-output audit with binding constraint for S). Move the breed benchmark (cap with its basis label, still a tappable Fig to its source) to one small line below the tiles. Keep data-testid=\"supports\" on the element. Add the tile CSS in src/index.css so the tiles stay side by side (same top offset, no wrap) at 375 px and on desktop. Add any new tile label strings to src/i18n/strings.ts in English and Hindi. No change to the values or the verdict. Update tests/unit/resultUi.test.tsx to assert both tiles, their audits and the benchmark line.",
+          "files_to_create": [],
+          "files_to_modify": [
+            "src/components/VerdictCard.tsx",
+            "src/index.css",
+            "src/i18n/strings.ts",
+            "tests/unit/resultUi.test.tsx"
+          ],
+          "acceptance_criteria": "SPEC AC-C3-1.5, AC-C3-1.7; regression AC-C3-R2, AC-C3-R7: tests/unit/resultUi.test.tsx renders a feasible result with T > 0 and asserts the 'Today' and 'This ration supports' tiles inside data-testid=\"supports\", that tapping each opens the same audit as before, and that the breed benchmark line sits below the tiles and opens its source audit; the 375 px side-by-side check is covered in the milestone-end e2e run. Verify: npm test exits 0.",
+          "status": "pending"
+        },
+        {
+          "id": "C3-M1-T4",
+          "title": "Move the demo below the balance button as a quieter 'Try an example'",
+          "owner": "frontend-developer",
+          "description": "In src/App.tsx, move the presets section out of the top of the input column to directly after the balance bar. Retitle it with a new string id (e.g. label_try_example) en 'Try an example' / hi 'उदाहरण आज़माएँ' in src/i18n/strings.ts; keep label_demo if any test still uses it. Make it visually quieter in src/index.css: smaller buttons, no card background, touch targets still >= 44 px. Keep the data-preset attributes and the preset fill behaviour exactly as before; src/domain/presets.ts is not changed in C3-M1. Update tests/e2e/ration-journey.spec.ts to assert the section is after the balance button and each data-preset demo still fills the form, and tests/unit/oneLanguage.test.tsx for the new title in both languages.",
+          "files_to_create": [],
+          "files_to_modify": [
+            "src/App.tsx",
+            "src/i18n/strings.ts",
+            "src/index.css",
+            "tests/unit/oneLanguage.test.tsx",
+            "tests/e2e/ration-journey.spec.ts"
+          ],
+          "acceptance_criteria": "SPEC AC-C3-1.1 (no demo above or between the input sections), AC-C3-1.6, AC-C3-1.7; regression AC-C3-R7: tests/e2e/ration-journey.spec.ts asserts 'Try an example' follows the balance button and that tapping each data-preset button fills the form as before; tests/unit/oneLanguage.test.tsx asserts 'Try an example' / 'उदाहरण आज़माएँ' with no script leakage. Verify: npm test exits 0 (milestone end: npm run test:full and npm run build exit 0).",
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "milestone_id": "C3-M2",
+      "name": "Change 3: farmer-first solve",
+      "tasks": [
+        {
+          "id": "C3-M2-T1",
+          "title": "Solver field costAtCapInrPerDay with SciPy cross-check",
+          "owner": "backend-developer",
+          "description": "Per ADR-0013. In src/domain/types.ts add the required field costAtCapInrPerDay: number | null to RationSolution. In src/domain/solver.ts Step 6 only (next to stage2AtT), compute solveFixedMilk(inputs, reqModel, effectiveCap, null)?.totalCost ?? null; set null in the dry-animal branch (Step 3). Do not touch Steps 1-5 or 7. In src/services/mockSolver.ts set costAtCapInrPerDay: null. Fix any test fixture that builds a RationSolution by hand (npm run build type check finds them). In scripts/dump_solver_results.ts write costAtCapInrPerDay for every benchmark animal. In eval/cross_check_solver.py compute the HiGHS minimum cost at effCap with no budget row (roughage and mineral rows kept), null when infeasible or dry. In eval/test_scipy_agreement.py assert both solvers agree on it within the suite tolerance and are null together; eval/test_animals.json needs no change. Add tests in tests/unit/solver.test.ts: costAtCapInrPerDay >= totalCostInr when the budget is tight; null when the cap is infeasible; null for a dry animal; equal to costAtTodayMilkInrPerDay when T > cap. Extend tests/unit/adapter.test.ts so both adapters return the field as number | null.",
+          "files_to_create": [],
+          "files_to_modify": [
+            "src/domain/types.ts",
+            "src/domain/solver.ts",
+            "src/services/mockSolver.ts",
+            "scripts/dump_solver_results.ts",
+            "eval/cross_check_solver.py",
+            "eval/test_scipy_agreement.py",
+            "tests/unit/solver.test.ts",
+            "tests/unit/adapter.test.ts"
+          ],
+          "acceptance_criteria": "SPEC AC-C3-2.13, AC-C3-E5 (null when the cap LP is infeasible), AC-C3-E6 (null for a dry animal); regression AC-C3-R1, AC-C3-R7: tests/unit/solver.test.ts covers the four costAtCap cases above and every existing solver expected value is unchanged; eval/test_scipy_agreement.py asserts costAtCap agreement on all 18 benchmark animals and that every pre-existing case still agrees 100%. Verify: npm test, then npm run eval:dump && npm run eval:scipy, then npm run build all exit 0.",
+          "status": "pending"
+        },
+        {
+          "id": "C3-M2-T2",
+          "title": "Pure plan module rationPlan.ts and rationService.planRation",
+          "owner": "backend-developer",
+          "description": "Create src/domain/rationPlan.ts (no React, i18n or adapter imports) exporting SolveFn, RationRung { addedFeedIds, prefixFeedIds, outcome }, BudgetIncrease, RationPlan { final, ownedOnly, rungs, buyFeedIds, notNeededFeedIds, budgetIncrease, candidates, month }, MANDATORY_SUPPLEMENT_IDS = ['mineral_mix', 'common_salt'], roundUpInr(value) = Math.ceil(value * 100 - 1e-7) / 100, buildCandidates(owned, library, month) and planRation(profile, owned, library, month, solve), exactly as in ARCHITECTURE.md 'Change 3' C3 data models and C3 interfaces. buildCandidates: owned entries unchanged and in order (own out-of-season feeds kept), then in library order every non-owned feed that is inSeason(feed, month) (src/domain/feedGroups.ts) with defaultPriceInrPerKgAsFed !== null, at that price with maxKgAsFedPerDay: null and currentKgAsFedPerDay: null (ADR-0010). planRation steps: (1) candidates; (2) final = solve(profile, candidates), then remove unbuyable advice without changing any number (ADR-0010 decision 4): for budget_below_maintenance null out fixFeedId, fixFeed and maintenanceWithFixInrPerDay when the fix feed is out of season in month or unpriced; for infeasible keep only suggestedFeeds that are in season and priced; (3) if final is not 'optimal' return the empty plan; (4) ownedOnly = owned.length > 0 ? solve(profile, owned) : null; (5) buyFeedIds = final lines with kgAsFed > 0 not owned, sorted supplements first (MANDATORY_SUPPLEMENT_IDS), then costInr ascending, then feedId by code-unit comparison (ADR-0012); (6) ladder for k from max(1, nSup) to buyFeedIds.length over owned + candidate entries for buyFeedIds.slice(0, k): skip unbalanced steps until the first optimal one (rung 1, groups buyFeedIds.slice(0, k), so supplements are always in rung 1), then one rung per later step; prefixFeedIds = owned ids + buyFeedIds.slice(0, k); empty buy list gives rungs: []; (7) notNeededFeedIds = owned ids with no line > 0 kg in final, in entry order; (8) budgetIncrease only when final.tightConstraints includes 'budget', (supportedMilkExactLPerDay ?? supportedMilkLPerDay) < effectiveCapLPerDay - 1e-6 and costAtCapInrPerDay !== null, with extraInrPerDay = roundUpInr(costAtCap - budget), targetMilkLPerDay = effectiveCapLPerDay (ADR-0014). In src/services/rationService.ts add the RationService type extending RationAppAdapter with planRation(profile, owned) = planRation(profile, owned, getInitialFeeds(), currentMonth(), (p, f) => selectAdapter().solveRation(p, f)); RationAppAdapter and both adapters stay unchanged (ADR-0016 for the month). Create tests/unit/rationPlan.test.ts using the real solver with LIVE_FEEDS and a fixed month plus a fake SolveFn for pure-rule cases, covering the list in ARCHITECTURE.md 'C3 tests'; if it takes more than about 1 second, move the real-library cases to tests/unit/rationPlan.slow.test.ts. Extend tests/unit/adapter.test.ts so rationService.planRation works in mock and live modes.",
+          "files_to_create": [
+            "src/domain/rationPlan.ts",
+            "tests/unit/rationPlan.test.ts"
+          ],
+          "files_to_modify": [
+            "src/services/rationService.ts",
+            "tests/unit/adapter.test.ts"
+          ],
+          "acceptance_criteria": "SPEC AC-C3-2.3, AC-C3-2.4, AC-C3-2.5, AC-C3-2.7, AC-C3-2.8, AC-C3-2.11 (notNeededFeedIds), AC-C3-2.12 (budget-prompt rule), AC-C3-2.14 (unbuyable fix feed removed), AC-C3-E1, AC-C3-E2, AC-C3-E4, AC-C3-E5, AC-C3-E6, AC-C3-E7, AC-C3-E8 (no network in planRation); regression AC-C3-R1, AC-C3-R5: tests/unit/rationPlan.test.ts asserts candidates exclude out-of-season and unpriced library feeds, keep owned out-of-season feeds and list an owned library feed once at the farmer's price and cap; buy list puts supplements first then INR/day ascending with feed-id ties; rung 1 is the first optimal step and contains the supplements; every rung is optimal; supported milk never decreases from rung 1; last rung equals final within 1e-6 relative; non-optimal final gives an empty plan; empty buy list gives rungs: [] with rung 0; budgetIncrease null when the budget is not tight, when costAtCap is null and for a dry animal, otherwise budget + X >= costAtCap; unbuyable fix-feed and suggested feeds are removed; roundUpInr boundaries. Verify: npm test exits 0.",
+          "status": "pending"
+        },
+        {
+          "id": "C3-M2-T3",
+          "title": "Farmer-first UI: Calculate ration, own feeds optional, tags, buy ladder, budget prompts, three demos",
+          "owner": "frontend-developer",
+          "description": "src/App.tsx: enable the button once the profile and budget are valid and every own-feed row is valid; remove the notice_next_feeds gate but keep notice_next_price for an invalid own-feed row; rename the button en 'Calculate ration' / hi 'राशन निकालें'; balance() calls rationService.planRation(profile, owned) and stores { profile, requirement, outcome: plan.final, plan } (SolveResult gains plan: RationPlan; outcome stays plan.final so headline, tiles, verdict, cost line, Explain and Copy summary are unchanged). src/components/FeedSelector.tsx: starts collapsed, titled en 'Feeds you already have (optional)' / hi 'आपके पास पहले से मौजूद चारा (वैकल्पिक)'; price label 'your price', cap label 'how much you have'. src/components/RationResultsPanel.tsx: each row with kg > 0 tagged 'You have' (owned) or 'Buy' (in plan.buyFeedIds); add a 'Not needed' line from plan.notNeededFeedIds, hidden when empty. Create src/components/BuyLadder.tsx: card 'Feeds to buy, cheapest first' with rung 0 'Your feeds alone' (balanced with milk and cost, or 'Your feeds alone: not balanced' with no figures) when owned feeds exist, then rungs 1..n with added feed names, supported milk (rounded down to 0.1) and cost as Fig components; a label when rung 0 shows more milk than rung 1 explaining rung 1 includes the basics (mineral mixture, salt); hide milk figures for a dry animal. Create src/components/BudgetIncreasePrompt.tsx: 'Add ₹X/day to your budget to reach Y L/day (breed best)', X audited by auditBudgetIncrease, Y by the existing auditBreedCap(breed, todayMilk). src/components/BudgetShortfallAlert.tsx: add 'Raise the budget by at least ₹X/day' with X = roundUpInr(maintenanceCostInrPerDay - budget) and auditRaiseToMaintenance; when no suggestion is left, state that no library feed brings maintenance within this budget. src/domain/auditMilk.ts: add auditRung(solution, prefixFeedIds, figure, byId), auditBudgetIncrease(solution, increase) (shows costAtCap, budget, exact subtraction, 'rounded up') and auditRaiseToMaintenance(report, extraInrPerDay). src/domain/presets.ts: straw demo note becomes en 'Needs feeds to buy' / hi 'चारा ख़रीदना ज़रूरी'; add a third 'Tight budget' preset whose numbers are chosen by running the live solver (never by hand) so the budget prompt shows. All new strings in src/i18n/strings.ts in English and Hindi with Latin digits; tag and ladder styles in src/index.css. Update tests/unit/resultUi.test.tsx and tests/unit/oneLanguage.test.tsx (tags, ladder, rung 0 states, Not needed, prompt, raise-by line, three demos, both languages, every new figure opens its audit) and tests/e2e/ration-journey.spec.ts and tests/e2e/language.spec.ts (calculate with no feeds, with own straw, tight-budget demo prompt, below-maintenance raise-by, offline).",
+          "files_to_create": [
+            "src/components/BuyLadder.tsx",
+            "src/components/BudgetIncreasePrompt.tsx"
+          ],
+          "files_to_modify": [
+            "src/App.tsx",
+            "src/components/FeedSelector.tsx",
+            "src/components/RationResultsPanel.tsx",
+            "src/components/BudgetShortfallAlert.tsx",
+            "src/domain/auditMilk.ts",
+            "src/domain/presets.ts",
+            "src/i18n/strings.ts",
+            "src/index.css",
+            "tests/unit/resultUi.test.tsx",
+            "tests/unit/oneLanguage.test.tsx",
+            "tests/e2e/ration-journey.spec.ts",
+            "tests/e2e/language.spec.ts"
+          ],
+          "acceptance_criteria": "SPEC AC-C3-2.1, AC-C3-2.2, AC-C3-2.6, AC-C3-2.7, AC-C3-2.8, AC-C3-2.9, AC-C3-2.10, AC-C3-2.11, AC-C3-2.12, AC-C3-2.14, AC-C3-2.15, AC-C3-E1, AC-C3-E2, AC-C3-E3, AC-C3-E4, AC-C3-E6, AC-C3-E7, AC-C3-E8, AC-C3-E9; regression AC-C3-R2, AC-C3-R3, AC-C3-R4, AC-C3-R5, AC-C3-R6, AC-C3-R7: tests/unit/resultUi.test.tsx asserts the button is enabled with no feeds and disabled with an invalid own-feed row (notice_next_price shown), every ration row has exactly one 'You have'/'Buy' tag, the ladder renders rung 0 states and rungs 1..n with figures equal to the plan's solver outputs, every new figure opens its audit, the budget prompt appears only when plan.budgetIncrease is set, and the raise-by line appears for budget_below_maintenance; tests/unit/oneLanguage.test.tsx checks all new strings in both languages with no leakage; tests/e2e/ration-journey.spec.ts covers calculate with no feeds, own straw (rung 0 'not balanced', 'Buy' rows), the Tight budget demo prompt, the raise-by alert and offline. Verify: npm test exits 0 (milestone end: npm run test:full, npm run build, npm run compile:data, npm run eval:dump && npm run eval:scipy all exit 0).",
+          "status": "pending"
+        }
+      ]
     }
   ]
 }
