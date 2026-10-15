@@ -14,9 +14,9 @@ test.describe('SahiDana M1 offline vertical-slice journey', () => {
     const howToUse = page.getByTestId('how-to-use');
     await expect(howToUse).toBeVisible();
     await expect(howToUse).toContainText('How to use:');
-    await expect(howToUse).toContainText('Balance ration');
+    await expect(howToUse).toContainText('Calculate ration');
     await expect(howToUse).toContainText(
-      'Enter your cow or buffalo, set a daily budget, add feeds, then tap “Balance ration”',
+      'Enter your cow or buffalo, set a daily budget, add feeds, then tap “Calculate ration”',
     );
 
     // 2. Toggle English -> Hindi, verify persistence across reload, and switch back to English (AC-L1.1)

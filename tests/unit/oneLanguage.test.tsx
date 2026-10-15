@@ -135,7 +135,7 @@ describe.each(['mock', 'live'] as const)('one language at a time (%s adapter)', 
     expect(banner).toBeTruthy();
     expect(main?.firstElementChild).toBe(banner);
     expect(banner?.textContent).toContain('How to use:');
-    expect(banner?.textContent).toContain('Balance ration');
+    expect(banner?.textContent).toContain('Calculate ration');
     expect(banner?.textContent?.match(DEVA) ?? []).toEqual([]);
 
     const hiToggle = container.querySelector<HTMLElement>('.langtoggle-btn[lang="hi"]');

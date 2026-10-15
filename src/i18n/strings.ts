@@ -46,8 +46,8 @@ export const strings = {
   // ---- wayfinding (next decision) -------------------------------------------------------------
   label_how_to_use: { hi: 'कैसे इस्तेमाल करें:', en: 'How to use:' },
   notice_how_to_use: {
-    hi: 'अपनी गाय या भैंस की जानकारी भरें, रोज़ का बजट तय करें, फ़ीड जोड़ें, फिर “राशन संतुलित करें” दबाएँ — किसी भी संख्या को दबाकर उसका स्रोत देखें।',
-    en: 'Enter your cow or buffalo, set a daily budget, add feeds, then tap “Balance ration” — tap any number to see its source.',
+    hi: 'अपनी गाय या भैंस की जानकारी भरें, रोज़ का बजट तय करें, फ़ीड जोड़ें, फिर “राशन निकालें” दबाएँ — किसी भी संख्या को दबाकर उसका स्रोत देखें।',
+    en: 'Enter your cow or buffalo, set a daily budget, add feeds, then tap “Calculate ration” — tap any number to see its source.',
   },
   notice_next_animal: { hi: 'अगला कदम: गाय या भैंस की जानकारी भरें', en: 'Next: enter your cow or buffalo details' },
   notice_next_fix: { hi: 'अगला कदम: लाल निशान वाले खाने ठीक करें', en: 'Next: fix the fields marked in red' },
@@ -237,8 +237,8 @@ export const strings = {
   stamp_unconfirmed: { hi: 'अपुष्ट', en: 'Unconfirmed' },
   state_idle_title: { hi: 'अभी राशन नहीं बना', en: 'No ration yet' },
   notice_idle_body: {
-    hi: 'गाय या भैंस और फ़ीड भरें, फिर “राशन संतुलित करें” दबाएँ। नतीजा यहाँ छपेगा।',
-    en: 'Fill in your cow or buffalo and the feeds, then tap “Balance ration”. The analysis prints here.',
+    hi: 'गाय या भैंस और फ़ीड भरें, फिर “राशन निकालें” दबाएँ। नतीजा यहाँ छपेगा।',
+    en: 'Fill in your cow or buffalo and the feeds, then tap “Calculate ration”. The analysis prints here.',
   },
   label_requirement_only: { hi: 'इस गाय या भैंस की रोज़ की ज़रूरत', en: 'Daily requirement of this cow or buffalo' },
   hint_tap_figure: {

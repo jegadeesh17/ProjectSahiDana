@@ -47,8 +47,8 @@ describe('strings', () => {
       expect(positions.every((p) => p >= 0), `${text} contains ${marks.join(' | ')}`).toBe(true);
       expect(positions).toEqual([...positions].sort((a, b) => a - b));
     };
-    inOrder(strings.notice_how_to_use.en, ['cow or buffalo', 'daily budget', 'add feeds', 'Balance ration']);
-    inOrder(strings.notice_how_to_use.hi, ['गाय या भैंस', 'रोज़ का बजट', 'फ़ीड', 'राशन संतुलित करें']);
+    inOrder(strings.notice_how_to_use.en, ['cow or buffalo', 'daily budget', 'add feeds', 'Calculate ration']);
+    inOrder(strings.notice_how_to_use.hi, ['गाय या भैंस', 'रोज़ का बजट', 'फ़ीड', 'राशन निकालें']);
   });
 
   it('keeps the Hindi review status unverified until 2026-10-14', () => {
