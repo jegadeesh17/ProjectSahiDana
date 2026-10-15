@@ -142,6 +142,15 @@
     "exit_code": 0,
     "summary": "npm test: 15 test files passed, 243 tests passed (including 4 costAtCapInrPerDay tests in tests/unit/solver.test.ts and adapter contract checks in tests/unit/adapter.test.ts). eval:dump + eval:scipy: 18 benchmark animals dumped (14 optimal, 2 below_maintenance, 2 infeasible), 100% constraint satisfaction, 23 pytest tests passed in eval/test_scipy_agreement.py confirming SciPy HiGHS agreement within 1e-4 on costAtCap and null-together matching (AC-C3-2.13, AC-C3-E5, AC-C3-E6, AC-C3-R1). npm run build: tsc --noEmit && vite build passed with 0 errors.",
     "failure_output": ""
+  },
+  {
+    "task_id": "C3-M2-T2",
+    "attempt": 1,
+    "command": "npm test",
+    "exit_code": 0,
+    "summary": "16 unit test files passed, 264 tests passed (including 19 tests in tests/unit/rationPlan.test.ts and 21 tests in tests/unit/adapter.test.ts)",
+    "failure_output": ""
   }
 ]
+
 

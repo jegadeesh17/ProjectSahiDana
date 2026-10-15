@@ -328,7 +328,7 @@
             "tests/unit/adapter.test.ts"
           ],
           "acceptance_criteria": "SPEC AC-C3-2.3, AC-C3-2.4, AC-C3-2.5, AC-C3-2.7, AC-C3-2.8, AC-C3-2.11 (notNeededFeedIds), AC-C3-2.12 (budget-prompt rule), AC-C3-2.14 (unbuyable fix feed removed), AC-C3-E1, AC-C3-E2, AC-C3-E4, AC-C3-E5, AC-C3-E6, AC-C3-E7, AC-C3-E8 (no network in planRation); regression AC-C3-R1, AC-C3-R5: tests/unit/rationPlan.test.ts asserts candidates exclude out-of-season and unpriced library feeds, keep owned out-of-season feeds and list an owned library feed once at the farmer's price and cap; buy list puts supplements first then INR/day ascending with feed-id ties; rung 1 is the first optimal step and contains the supplements; every rung is optimal; supported milk never decreases from rung 1; last rung equals final within 1e-6 relative; non-optimal final gives an empty plan; empty buy list gives rungs: [] with rung 0; budgetIncrease null when the budget is not tight, when costAtCap is null and for a dry animal, otherwise budget + X >= costAtCap; unbuyable fix-feed and suggested feeds are removed; roundUpInr boundaries. Verify: npm test exits 0.",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "C3-M2-T3",

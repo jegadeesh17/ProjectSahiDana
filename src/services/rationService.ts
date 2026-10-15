@@ -1,5 +1,8 @@
 // Adapter factory and singleton. Components import `rationService` and never a concrete adapter.
-import type { BreedStandard, FeedItem, RationAppAdapter } from '../domain/types';
+import type { AnimalProfile, BreedStandard, FeedItem, RationAppAdapter, SelectedFeedInput } from '../domain/types';
+import { planRation } from '../domain/rationPlan';
+import type { RationPlan } from '../domain/rationPlan';
+import { currentMonth } from '../i18n/months';
 import { LIVE_BREEDS, LIVE_FEEDS, liveAdapter } from './liveAdapter';
 import { FEEDS as PROTOTYPE_FEEDS, PROTOTYPE_BREEDS, mockAdapter, mockControls } from './mockAdapter';
 
@@ -43,13 +46,19 @@ export const ADAPTERS = {
   live: liveAdapter,
 } as const;
 
-export const rationService: RationAppAdapter = {
+export interface RationService extends RationAppAdapter {
+  planRation(profile: AnimalProfile, owned: SelectedFeedInput[]): RationPlan;
+}
+
+export const rationService: RationService = {
   getFeedLibrary: () => selectAdapter().getFeedLibrary(),
   getBreedLibrary: () => selectAdapter().getBreedLibrary(),
   computeRequirements: (animal) => selectAdapter().computeRequirements(animal),
   solveRation: (animal, selectedFeeds) => selectAdapter().solveRation(animal, selectedFeeds),
   extractFromText: (freeText, options) => selectAdapter().extractFromText(freeText, options),
   explainRation: (context, options) => selectAdapter().explainRation(context, options),
+  planRation: (profile, owned) =>
+    planRation(profile, owned, getInitialFeeds(), currentMonth(), (p, f) => selectAdapter().solveRation(p, f)),
 };
 
 export { LIVE_BREEDS, LIVE_FEEDS, PROTOTYPE_BREEDS, PROTOTYPE_FEEDS, liveAdapter, mockAdapter, mockControls };

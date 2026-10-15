@@ -272,6 +272,18 @@ describe('rationService & RationAppAdapter contract (mockAdapter and liveAdapter
           }
         }
       });
+
+      it('rationService.planRation works under this mode', () => {
+        setRationAdapterMode(mode);
+        const plan = rationService.planRation(SAMPLE_ANIMAL, [SAMPLE_FEEDS[0]]);
+        expect(plan.final.status).toBe('optimal');
+        expect(plan.candidates.length).toBeGreaterThan(0);
+        expect(plan.month).toBeGreaterThanOrEqual(1);
+        expect(plan.month).toBeLessThanOrEqual(12);
+        if (mode === 'mock') {
+          expect(plan.budgetIncrease).toBeNull();
+        }
+      });
     });
   }
 });
