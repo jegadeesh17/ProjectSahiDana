@@ -128,7 +128,7 @@ export function FeedSelector({
     <section className="block" aria-labelledby={`${uid}-h`}>
       <div className="block-head">
         <h2 id={`${uid}-h`} className="block-title">
-          <Bi id="label_feeds" />
+          <Bi id="label_own_feeds_optional" />
         </h2>
         <div className="block-head-actions">
           {!collapsed && drafts.length > 0 && (
@@ -137,21 +137,19 @@ export function FeedSelector({
             </Button>
           )}
           {collapsed ? (
-            <Button size="sm" className="lg:hidden" onClick={onOpen}>
-              <Bi id="action_edit_feeds" />
+            <Button size="sm" onClick={onOpen}>
+              <Bi id={drafts.length > 0 ? 'action_edit_feeds' : 'action_add_feeds'} />
             </Button>
           ) : (
-            drafts.length > 0 && (
-              <Button size="sm" className="lg:hidden" onClick={onCollapse}>
-                <Bi id="action_done" />
-              </Button>
-            )
+            <Button size="sm" onClick={onCollapse}>
+              <Bi id="action_done" />
+            </Button>
           )}
         </div>
       </div>
 
       {collapsed && drafts.length > 0 && (
-        <ul className="chips lg:hidden" aria-label={bi('label_selected_feeds')}>
+        <ul className="chips" aria-label={bi('label_selected_feeds')}>
           {drafts.map((d) => {
             const feed = byId.get(d.feedId);
             if (!feed) return null;
@@ -208,30 +206,30 @@ export function FeedSelector({
                   <div className={`grid gap-2 ${details ? 'grid-cols-3' : 'grid-cols-2'}`}>
                     <RowField
                       id={`${uid}-${d.feedId}-price`}
-                      labelId="label_price"
+                      labelId="label_your_price"
                       value={d.price}
                       error={show('price')}
                       onChange={(v) => update(d.feedId, { price: v })}
                       onBlur={() => touch(`${d.feedId}-price`)}
                     />
                     <RowField
-                      id={`${uid}-${d.feedId}-cur`}
-                      labelId="label_today_kg"
-                      value={d.current}
-                      error={show('current')}
+                      id={`${uid}-${d.feedId}-cap`}
+                      labelId="label_how_much_you_have"
+                      value={d.cap}
+                      error={show('cap')}
                       optional
-                      onChange={(v) => update(d.feedId, { current: v })}
-                      onBlur={() => touch(`${d.feedId}-current`)}
+                      onChange={(v) => update(d.feedId, { cap: v })}
+                      onBlur={() => touch(`${d.feedId}-cap`)}
                     />
                     {details && (
                       <RowField
-                        id={`${uid}-${d.feedId}-cap`}
-                        labelId="label_max_cap"
-                        value={d.cap}
-                        error={show('cap')}
+                        id={`${uid}-${d.feedId}-cur`}
+                        labelId="label_today_kg"
+                        value={d.current}
+                        error={show('current')}
                         optional
-                        onChange={(v) => update(d.feedId, { cap: v })}
-                        onBlur={() => touch(`${d.feedId}-cap`)}
+                        onChange={(v) => update(d.feedId, { current: v })}
+                        onBlur={() => touch(`${d.feedId}-current`)}
                       />
                     )}
                   </div>

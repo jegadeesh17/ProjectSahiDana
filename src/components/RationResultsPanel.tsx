@@ -45,6 +45,9 @@ import { SupportsHeadline, VerdictCard } from './VerdictCard';
 import { useAudit } from './AuditDrawer';
 import { Button } from './ui/button';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from './ui/accordion';
+import { BuyLadder } from './BuyLadder';
+import { BudgetIncreasePrompt } from './BudgetIncreasePrompt';
+import type { RationPlan } from '../domain/rationPlan';
 
 type Profile = Omit<AnimalProfile, 'isConfirmed'>;
 
@@ -52,6 +55,7 @@ interface Props {
   profile: Profile | null;
   requirement: RequirementResult | null;
   outcome: RationSolveOutcome | null;
+  plan?: RationPlan | null;
   library: FeedItem[];
   breeds?: BreedStandard[];
   online: boolean;
@@ -188,12 +192,14 @@ function SolvedBody({
   solution,
   profile,
   requirement,
+  plan = null,
   library,
   breeds = BREEDS,
 }: {
   solution: RationSolution;
   profile: Profile;
   requirement: RequirementResult;
+  plan?: RationPlan | null;
   library: FeedItem[];
   breeds?: BreedStandard[];
 }) {
@@ -212,6 +218,13 @@ function SolvedBody({
     <div className="solved" key={`solved-${solution.totalCostInr}-${solution.supportedMilkLPerDay}`}>
       {breed && !dry && <SupportsHeadline solution={solution} profile={profile} breed={breed} library={library} />}
       {breed && <VerdictCard solution={solution} profile={profile} breed={breed} library={library} />}
+
+      <BudgetIncreasePrompt
+        increase={plan?.budgetIncrease ?? null}
+        solution={solution}
+        breed={breed}
+        todayMilk={profile.milkYieldLitersPerDay}
+      />
 
       {(!solution.feeds.some((f) => f.feedId === 'mineral_mix' && f.kgAsFed > 0) ||
         !solution.feeds.some((f) => f.feedId === 'common_salt' && f.kgAsFed > 0)) && (
@@ -250,12 +263,24 @@ function SolvedBody({
             {solution.feeds.map((line) => {
               const feed = byId.get(line.feedId);
               if (!feed) return null;
+              const isBuy = plan ? plan.buyFeedIds.includes(line.feedId) : false;
               return (
                 <tr key={line.feedId} data-feed={line.feedId}>
                   <th scope="row">
-                    <span className="rowname">
+                    <span className="rowname flex items-center gap-1.5 flex-wrap">
                       <FeedChip feed={feed} />
                       <FeedName feed={feed} />
+                      {line.kgAsFed > 0 && (
+                        isBuy ? (
+                          <span className="tag tag-buy" data-tag="buy">
+                            <Bi id="tag_buy" />
+                          </span>
+                        ) : (
+                          <span className="tag tag-you-have" data-tag="you-have">
+                            <Bi id="tag_you_have" />
+                          </span>
+                        )
+                      )}
                       {!inSeason(feed, thisMonth) && (
                         <button
                           type="button"
@@ -270,12 +295,18 @@ function SolvedBody({
                     </span>
                   </th>
                   <td className="r">
-                    <Fig audit={auditFeedKg(feed, line.kgAsFed, line.atCap, solution)}>
+                    <Fig
+                      audit={auditFeedKg(feed, line.kgAsFed, line.atCap, solution)}
+                      data-lang-exempt={feed.localNameDeva === null ? 'feed-no-deva' : undefined}
+                    >
                       {formatNumber(line.kgAsFed, kgDecimals(line.kgAsFed))}
                     </Fig>
                   </td>
                   <td className="r">
-                    <Fig audit={auditFeedCost(feed, line.kgAsFed, line.priceInrPerKg, line.costInr, solution)}>
+                    <Fig
+                      audit={auditFeedCost(feed, line.kgAsFed, line.priceInrPerKg, line.costInr, solution)}
+                      data-lang-exempt={feed.localNameDeva === null ? 'feed-no-deva' : undefined}
+                    >
                       {formatNumber(line.costInr, 2)}
                     </Fig>
                   </td>
@@ -333,7 +364,29 @@ function SolvedBody({
             </li>
           )}
         </ul>
+
+        {plan && plan.notNeededFeedIds.length > 0 && (
+          <p className="not-needed" data-testid="not-needed">
+            <strong className="not-needed-label">
+              <Bi id="label_not_needed" />
+            </strong>{' '}
+            {plan.notNeededFeedIds.map((id, idx) => {
+              const feed = byId.get(id);
+              if (!feed) return null;
+              return (
+                <span key={id} className="not-needed-feed">
+                  {idx > 0 && ', '}
+                  <FeedName feed={feed} />
+                </span>
+              );
+            })}
+          </p>
+        )}
       </div>
+
+      {plan && (
+        <BuyLadder plan={plan} profile={profile} library={library} />
+      )}
 
       <Accordion
         type="single"
@@ -359,7 +412,7 @@ function SolvedBody({
 }
 
 export const RationResultsPanel = forwardRef<HTMLElement, Props>(function RationResultsPanel(
-  { profile, requirement, outcome, library, breeds = BREEDS, online, explain, nextStep, onExplain, onCopy, onAddFeed },
+  { profile, requirement, outcome, plan = null, library, breeds = BREEDS, online, explain, nextStep, onExplain, onCopy, onAddFeed },
   ref,
 ) {
   const solved = outcome?.status === 'optimal' ? outcome : null;
@@ -367,7 +420,7 @@ export const RationResultsPanel = forwardRef<HTMLElement, Props>(function Ration
   let state = 'idle';
   if (solved && requirement && profile) {
     state = 'solved';
-    body = <SolvedBody solution={solved} profile={profile} requirement={requirement} library={library} breeds={breeds} />;
+    body = <SolvedBody solution={solved} profile={profile} requirement={requirement} plan={plan} library={library} breeds={breeds} />;
   } else if (outcome?.status === 'infeasible' && requirement) {
     state = 'infeasible';
     body = <InfeasibilityAlert report={outcome} requirement={requirement} library={library} onAddFeed={onAddFeed} />;

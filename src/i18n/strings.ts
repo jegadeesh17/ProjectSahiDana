@@ -54,7 +54,7 @@ export const strings = {
   notice_next_feeds: { hi: 'अगला कदम: कम से कम एक फ़ीड जोड़ें', en: 'Next: add at least one feed' },
   notice_next_price: { hi: 'अगला कदम: हर फ़ीड की सही कीमत भरें', en: 'Next: enter a valid price for every feed' },
   notice_next_confirm: { hi: 'अगला कदम: भरे हुए मान की पुष्टि करें', en: 'Next: confirm the prefilled values' },
-  notice_next_balance: { hi: 'तैयार: राशन संतुलित करें दबाएँ', en: 'Ready: tap Balance ration' },
+  notice_next_balance: { hi: 'तैयार: राशन निकालें दबाएँ', en: 'Ready: tap Calculate ration' },
 
   // ---- demo presets ---------------------------------------------------------------------------
   label_try_example: { hi: 'उदाहरण आज़माएँ', en: 'Try an example' },
@@ -62,6 +62,10 @@ export const strings = {
   note_demo_solved: { hi: 'हल होता है', en: 'Solves' },
   action_demo_straw: { hi: 'सिर्फ़ भूसा', en: 'Straw only' },
   note_demo_infeasible: { hi: 'नहीं बनता', en: 'Infeasible' },
+  note_demo_needs_buy: { hi: 'चारा ख़रीदना ज़रूरी', en: 'Needs feeds to buy' },
+  action_demo_tight_budget: { hi: 'कम बजट', en: 'Tight budget' },
+  note_demo_tight_budget: { hi: 'बजट बढ़ाने का सुझाव', en: 'Shows budget prompt' },
+  demo_tight_budget: { hi: 'कम बजट (बजट सुझाव)', en: 'Tight budget (shows prompt)' },
 
   // ---- animal ---------------------------------------------------------------------------------
   label_animal: { hi: 'आपकी गाय या भैंस', en: 'Your cow or buffalo' },
@@ -182,7 +186,7 @@ export const strings = {
   },
 
   // ---- balance bar ----------------------------------------------------------------------------
-  action_balance_ration: { hi: 'राशन संतुलित करें', en: 'Balance ration' },
+  action_balance_ration: { hi: 'राशन निकालें', en: 'Calculate ration' },
   label_skip: { hi: 'राशन विश्लेषण पर जाएँ', en: 'Skip to ration analysis' },
 
   // ---- analysis box ---------------------------------------------------------------------------
@@ -467,6 +471,9 @@ export const strings = {
   notice_next_budget: { hi: 'अगला कदम: रोज़ का बजट लिखें', en: 'Next: enter a daily budget' },
 
   // ---- feed picker: verticals, months, season, prices ------------------------------------------
+  label_own_feeds_optional: { hi: 'आपके पास पहले से मौजूद चारा (वैकल्पिक)', en: 'Feeds you already have (optional)' },
+  action_add_feeds: { hi: 'चारा जोड़ें', en: 'Add feeds' },
+  label_how_much_you_have: { hi: 'आपके पास कितना है', en: 'how much you have' },
   vertical_indigenous_forage: { hi: 'देशी चारा', en: 'Indigenous forage' },
   vertical_crop_residue: { hi: 'फसल अवशेष', en: 'Crop residues' },
   vertical_agro_byproduct: { hi: 'कृषि उप-उत्पाद', en: 'Agro-byproducts' },
@@ -547,6 +554,21 @@ export const strings = {
     en: 'Today’s fat {today}. Breed fat %: not cited.',
   },
   label_ration: { hi: 'राशन', en: 'Ration' },
+  tag_you_have: { hi: 'आपके पास', en: 'You have' },
+  tag_buy: { hi: 'ख़रीदें', en: 'Buy' },
+  label_not_needed: { hi: 'ज़रूरत नहीं:', en: 'Not needed:' },
+  ladder_title: { hi: 'ख़रीदने के लिए चारा, सबसे सस्ते से शुरू', en: 'Feeds to buy, cheapest first' },
+  ladder_rung_0: { hi: 'सिर्फ़ आपके चारे', en: 'Your feeds alone' },
+  ladder_rung_0_unbalanced: { hi: 'सिर्फ़ आपके चारे: संतुलित नहीं', en: 'Your feeds alone: not balanced' },
+  ladder_rung_0_note: {
+    hi: 'पहले चरण में राशन संतुलित करने के लिए ज़रूरी बुनियादी चीज़ें (खनिज मिश्रण, नमक) शामिल हैं।',
+    en: 'Rung 1 includes the basics (mineral mixture, salt) needed to balance.',
+  },
+  ladder_rung_step: { hi: 'चरण {n}', en: 'Rung {n}' },
+  prompt_budget_increase: {
+    hi: '{target}/दिन (नस्ल का सर्वोत्तम) पाने के लिए अपने बजट में {extra}/दिन और जोड़ें',
+    en: 'Add {extra}/day to your budget to reach {target}/day (breed best)',
+  },
   cost_under_budget: { hi: 'बजट {budget} से {amount} कम', en: '{amount} under your budget of {budget}' },
   cost_at_budget: { hi: 'पूरा बजट {budget} लगता है', en: 'Uses the whole budget of {budget}' },
   cost_vs_today_less: { hi: 'आज के {today} से {amount} ({pct}) कम', en: '{amount} ({pct}) less than today’s {today}' },
@@ -579,9 +601,27 @@ export const strings = {
     en: 'No library feed brings maintenance within this budget.',
   },
   audit_label_maintenance: { hi: 'गुज़ारे की लागत (₹/दिन)', en: 'Maintenance cost (₹/day)' },
+  notice_raise_budget_by: {
+    hi: 'बजट कम से कम {amount}/दिन बढ़ाएँ',
+    en: 'Raise the budget by at least {amount}/day',
+  },
+  audit_label_raise_budget: { hi: 'बजट में आवश्यक बढ़ोतरी (₹/दिन)', en: 'Required budget increase (₹/day)' },
+  audit_constraint_raise_budget: {
+    hi: 'गुज़ारे की लागत − रोज़ का बजट',
+    en: 'Maintenance cost − daily budget',
+  },
+  audit_note_rounded_up: { hi: 'पैसे में राउंड अप किया गया', en: 'Rounded up to the paisa' },
 
   // ---- audit labels and roles for the two-stage result ----------------------------------------
   audit_label_supported: { hi: 'बजट में संभव दूध (L/दिन)', en: 'Milk this budget supports (L/day)' },
+  audit_label_rung_milk: { hi: 'इस चरण पर संभव दूध (L/दिन)', en: 'Milk supported at this step (L/day)' },
+  audit_label_rung_cost: { hi: 'इस चरण का राशन खर्च (₹/दिन)', en: 'Ration cost at this step (₹/day)' },
+  audit_label_feeds_in_step: { hi: 'इस चरण के फ़ीड', en: 'Feeds in this step' },
+  audit_label_budget_increase: { hi: 'बजट में आवश्यक बढ़ोतरी (₹/दिन)', en: 'Required budget increase (₹/day)' },
+  audit_constraint_budget_increase: {
+    hi: 'नस्ल के सर्वोत्तम दूध पर लागत − रोज़ का बजट',
+    en: 'Cost at breed best − daily budget',
+  },
   audit_label_gain: { hi: 'आज से संभावित बढ़त (L/दिन)', en: 'Possible gain over today (L/day)' },
   audit_label_saving: { hi: 'उतने ही दूध पर बचत (₹/दिन)', en: 'Saving for the same milk (₹/day)' },
   audit_label_keep_cost: { hi: 'आज का दूध बनाए रखने की लागत (₹/दिन)', en: 'Cost of keeping today’s milk (₹/day)' },

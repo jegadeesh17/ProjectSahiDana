@@ -58,6 +58,17 @@ function nonExemptText(root: HTMLElement): string {
   return [...textParts, ...attrs].join(' ');
 }
 
+function demo(container: HTMLElement, key: string) {
+  if (!container.querySelector('[data-demo]')) {
+    act(() => {
+      fireEvent.click(container.querySelector<HTMLElement>('.proto-toggle')!);
+    });
+  }
+  act(() => {
+    fireEvent.click(container.querySelector<HTMLElement>(`[data-demo="${key}"]`)!);
+  });
+}
+
 function balanceBuffalo(container: HTMLElement) {
   const button = container.querySelector<HTMLElement>('[data-preset="buffalo"]');
   expect(button).toBeTruthy();
@@ -143,7 +154,7 @@ describe.each(['mock', 'live'] as const)('one language at a time (%s adapter)', 
     expect(bar).toBeTruthy();
     expect(Boolean(bar!.compareDocumentPosition(section!) & Node.DOCUMENT_POSITION_FOLLOWING), 'section follows the balance bar').toBe(true);
     expect(section!.querySelector('.presets-title')?.textContent).toBe('Try an example');
-    expect(section!.querySelectorAll('[data-preset]')).toHaveLength(2);
+    expect(section!.querySelectorAll('[data-preset]')).toHaveLength(3);
     expect(nonExemptText(section!).match(DEVA) ?? []).toEqual([]);
 
     act(() => {
@@ -278,13 +289,16 @@ describe.each(['mock', 'live'] as const)('one language at a time (%s adapter)', 
     }
   });
 
-  it('preserves strict language isolation on infeasible and budget shortfall states', () => {
-    const { container } = render(<App />);
+  it('preserves strict language isolation on straw demo, tight budget, infeasible and shortfall states', () => {
+    // 1. Straw demo: shows buy ladder with rung 0 unbalanced and Buy tags
+    const { container, unmount } = render(<App />);
     const strawBtn = container.querySelector<HTMLElement>('[data-preset="straw"]');
     act(() => {
       fireEvent.click(strawBtn!);
     });
-    expect(container.querySelector('#analysis[data-state="infeasible"]')).toBeTruthy();
+    expect(container.querySelector('#analysis[data-state="solved"]')).toBeTruthy();
+    expect(container.querySelector('[data-testid="buy-ladder"]')).toBeTruthy();
+    expect(container.querySelector('[data-rung="0"]')).toBeTruthy();
 
     // Check English mode
     let text = nonExemptText(container);
@@ -295,11 +309,73 @@ describe.each(['mock', 'live'] as const)('one language at a time (%s adapter)', 
     act(() => {
       fireEvent.click(hiToggle!);
     });
-    expect(container.querySelector('#analysis[data-state="infeasible"]')).toBeTruthy();
     text = nonExemptText(container);
-    const latinWords = (text.match(/[A-Za-z]{2,}/g) ?? []).filter((w) => !ALLOWED_HI_LATIN.has(w));
+    let latinWords = (text.match(/[A-Za-z]{2,}/g) ?? []).filter((w) => !ALLOWED_HI_LATIN.has(w));
     expect(latinWords).toEqual([]);
     expect((container.textContent ?? '').match(DEVA_DIGITS) ?? []).toEqual([]);
+    unmount();
+
+    // 2. Budget shortfall state (raise-by prompt)
+    setActiveLang('en');
+    window.localStorage.setItem(LANG_STORAGE_KEY, 'en');
+    document.documentElement.lang = 'en';
+    const shortfallRender = render(<App />);
+    demo(shortfallRender.container, 'shortfall');
+    expect(shortfallRender.container.querySelector('#analysis[data-state="shortfall"]')).toBeTruthy();
+    expect(shortfallRender.container.querySelector('[data-testid="shortfall-raise"]')).toBeTruthy();
+    text = nonExemptText(shortfallRender.container);
+    expect(text.match(DEVA) ?? []).toEqual([]);
+
+    act(() => {
+      fireEvent.click(shortfallRender.container.querySelector<HTMLElement>('.langtoggle-btn[lang="hi"]')!);
+    });
+    text = nonExemptText(shortfallRender.container);
+    latinWords = (text.match(/[A-Za-z]{2,}/g) ?? []).filter((w) => !ALLOWED_HI_LATIN.has(w));
+    expect(latinWords).toEqual([]);
+    expect((shortfallRender.container.textContent ?? '').match(DEVA_DIGITS) ?? []).toEqual([]);
+    shortfallRender.unmount();
+
+    // 3. Infeasible roughage state
+    setActiveLang('en');
+    window.localStorage.setItem(LANG_STORAGE_KEY, 'en');
+    document.documentElement.lang = 'en';
+    const roughageRender = render(<App />);
+    demo(roughageRender.container, 'roughage');
+    expect(roughageRender.container.querySelector('#analysis[data-state="infeasible"]')).toBeTruthy();
+    text = nonExemptText(roughageRender.container);
+    expect(text.match(DEVA) ?? []).toEqual([]);
+
+    act(() => {
+      fireEvent.click(roughageRender.container.querySelector<HTMLElement>('.langtoggle-btn[lang="hi"]')!);
+    });
+    text = nonExemptText(roughageRender.container);
+    latinWords = (text.match(/[A-Za-z]{2,}/g) ?? []).filter((w) => !ALLOWED_HI_LATIN.has(w));
+    expect(latinWords).toEqual([]);
+    expect((roughageRender.container.textContent ?? '').match(DEVA_DIGITS) ?? []).toEqual([]);
+    roughageRender.unmount();
+
+    // 4. Tight budget preset (prompt appears under live adapter)
+    if (mode === 'live') {
+      setActiveLang('en');
+      window.localStorage.setItem(LANG_STORAGE_KEY, 'en');
+      document.documentElement.lang = 'en';
+      const tightRender = render(<App />);
+      act(() => {
+        fireEvent.click(tightRender.container.querySelector<HTMLElement>('[data-preset="tight-budget"]')!);
+      });
+      expect(tightRender.container.querySelector('[data-testid="budget-increase-prompt"]')).toBeTruthy();
+      text = nonExemptText(tightRender.container);
+      expect(text.match(DEVA) ?? []).toEqual([]);
+
+      act(() => {
+        fireEvent.click(tightRender.container.querySelector<HTMLElement>('.langtoggle-btn[lang="hi"]')!);
+      });
+      text = nonExemptText(tightRender.container);
+      latinWords = (text.match(/[A-Za-z]{2,}/g) ?? []).filter((w) => !ALLOWED_HI_LATIN.has(w));
+      expect(latinWords).toEqual([]);
+      expect((tightRender.container.textContent ?? '').match(DEVA_DIGITS) ?? []).toEqual([]);
+      tightRender.unmount();
+    }
   });
 });
 

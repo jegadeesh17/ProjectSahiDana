@@ -7,6 +7,7 @@ import { t } from '../i18n/strings';
 import { CAP_BASIS_EXPLAIN, CAP_BASIS_STRING, capFromCitedFigures, isNonDescript } from './breeds';
 import { feedNameBi, LIMIT_STRING_ID } from './feedNames';
 import type { AuditMeta, BindingConstraint, BreedStandard, BudgetShortfallReport, FeedItem, RationSolution } from './types';
+import type { BudgetIncrease } from './rationPlan';
 import { litres1 } from './verdict';
 
 const breedNameBi = (breed: BreedStandard): BiText =>
@@ -237,3 +238,113 @@ export function auditUnderBudget(solution: RationSolution): AuditMeta {
     sourceKey: solution.sourceKey,
   };
 }
+
+/** Tapping a ladder rung's milk or cost shows prefix feeds, stage origin, and binding constraint (AC-C3-2.10). */
+export function auditRung(
+  solution: RationSolution,
+  prefixFeedIds: string[],
+  figure: 'milk' | 'cost',
+  byId: Map<string, FeedItem>,
+): AuditMeta {
+  const S = solution.supportedMilkLPerDay;
+  const feedNamesBi = prefixFeedIds
+    .map((id) => byId.get(id))
+    .filter((f): f is FeedItem => Boolean(f))
+    .map(feedNameBi);
+
+  const feedsEn = feedNamesBi.map((f) => f.en).join(', ');
+  const feedsHi = feedNamesBi.map((f) => f.hi).join(', ');
+
+  if (figure === 'milk') {
+    const limitedBy = join(t('label_limited_by'), bindingName(solution.bindingConstraint), ': ');
+    return {
+      id: `rung-milk-${prefixFeedIds.join('-')}`,
+      label: t('audit_label_rung_milk'),
+      formattedValue: litres1(S),
+      numericValue: S,
+      originType: 'solver_output',
+      citation: null,
+      solverConstraint: {
+        role: t('audit_role_stage1'),
+        activeConstraint: join(t('audit_constraint_stage1'), limitedBy, '. '),
+        breakdown: `S = ${formatNumber(S, 2)} L; cap ${formatNumber(solution.effectiveCapLPerDay, 2)} L; cost ${formatInr(solution.totalCostInr)} ≤ ${formatInr(solution.budgetInrPerDay)}`,
+      },
+      sourceKey: solution.sourceKey,
+      extraRows: [
+        {
+          label: t('audit_label_feeds_in_step'),
+          value: { en: feedsEn, hi: feedsHi },
+        },
+      ],
+      notes: [
+        join(t('label_limited_by'), bindingName(solution.bindingConstraint), ': '),
+      ],
+    };
+  }
+
+  return {
+    id: `rung-cost-${prefixFeedIds.join('-')}`,
+    label: t('audit_label_rung_cost'),
+    formattedValue: formatInr(solution.totalCostInr),
+    numericValue: solution.totalCostInr,
+    originType: 'solver_output',
+    citation: null,
+    solverConstraint: {
+      role: t('audit_role_stage2_s'),
+      activeConstraint: t('audit_constraint_stage2_s'),
+      breakdown: `${litres1(S)} → ${formatInr(solution.totalCostInr)}`,
+    },
+    sourceKey: solution.sourceKey,
+    extraRows: [
+      {
+        label: t('audit_label_feeds_in_step'),
+        value: { en: feedsEn, hi: feedsHi },
+      },
+    ],
+  };
+}
+
+/** Tapping X on the budget increase prompt shows costAtCap, budget, exact subtraction, and rounded up note (AC-C3-2.12). */
+export function auditBudgetIncrease(solution: RationSolution, increase: BudgetIncrease): AuditMeta {
+  const costAtCap = increase.costAtCapInrPerDay;
+  const budget = solution.budgetInrPerDay;
+  const exactDiff = costAtCap - budget;
+  return {
+    id: 'budget-increase',
+    label: t('audit_label_budget_increase'),
+    formattedValue: formatInr(increase.extraInrPerDay),
+    numericValue: increase.extraInrPerDay,
+    originType: 'solver_output',
+    citation: null,
+    solverConstraint: {
+      role: t('audit_role_derived'),
+      activeConstraint: t('audit_constraint_budget_increase'),
+      breakdown: `${formatInr(costAtCap)} − ${formatInr(budget)} = ${formatInr(exactDiff)} → ${formatInr(increase.extraInrPerDay)}`,
+    },
+    sourceKey: solution.sourceKey,
+    notes: [t('audit_note_rounded_up')],
+  };
+}
+
+/** Tapping X on below-maintenance alert shows maintenance cost, budget, exact subtraction, and rounded up note (AC-C3-2.14). */
+export function auditRaiseToMaintenance(report: BudgetShortfallReport, extraInrPerDay: number): AuditMeta {
+  const M = report.verdict.maintenanceCostInrPerDay;
+  const budget = report.verdict.budgetInrPerDay;
+  const exactDiff = M - budget;
+  return {
+    id: 'raise-to-maintenance',
+    label: t('audit_label_raise_budget'),
+    formattedValue: formatInr(extraInrPerDay),
+    numericValue: extraInrPerDay,
+    originType: 'solver_output',
+    citation: null,
+    solverConstraint: {
+      role: t('audit_role_derived'),
+      activeConstraint: t('audit_constraint_raise_budget'),
+      breakdown: `${formatInr(M)} − ${formatInr(budget)} = ${formatInr(exactDiff)} → ${formatInr(extraInrPerDay)}`,
+    },
+    sourceKey: report.sourceKey,
+    notes: [t('audit_note_rounded_up')],
+  };
+}
+

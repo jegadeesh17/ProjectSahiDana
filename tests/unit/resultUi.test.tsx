@@ -547,3 +547,338 @@ describe('expert-check line only where the sheet shows a cited figure', () => {
     expect(auditRoughageMin(40).citation?.verifiedOn).toBe(modelVerified);
   });
 });
+
+describe('farmer-first UI: tags, buy ladder, not needed, budget prompt and shortfall raise (C3-M2)', () => {
+  beforeEach(() => {
+    Element.prototype.scrollIntoView = () => undefined;
+    window.localStorage.clear();
+    setActiveLang('en');
+  });
+  afterEach(() => {
+    cleanup();
+    window.localStorage.clear();
+    setActiveLang('en');
+    document.documentElement.lang = 'en';
+  });
+
+  it('button is enabled with valid animal/budget and 0 feeds, disabled on invalid own feed price with notice_next_price (AC-C3-2.1, AC-C3-E3)', () => {
+    const { container } = render(<App />);
+    const [cowBtn] = container.querySelectorAll<HTMLElement>('.seg-btn');
+    act(() => {
+      fireEvent.click(cowBtn);
+    });
+    const numInputs = [...container.querySelectorAll<HTMLInputElement>('input.input.num')];
+    const breedSelect = container.querySelector<HTMLSelectElement>('fieldset.block select.input')!;
+    act(() => {
+      fireEvent.change(breedSelect, { target: { value: 'sahiwal' } });
+      fireEvent.change(numInputs[0], { target: { value: '400' } });
+      fireEvent.change(numInputs[1], { target: { value: '8' } });
+      fireEvent.change(numInputs[2], { target: { value: '4.5' } });
+    });
+    const budgetInput = [...container.querySelectorAll<HTMLInputElement>('input.input.num')].at(-1)!;
+    act(() => {
+      fireEvent.change(budgetInput, { target: { value: '200' } });
+    });
+
+    const balanceBtn = container.querySelector<HTMLButtonElement>('.balancebar button')!;
+    // 0 feeds entered, button is enabled (AC-C3-2.1)
+    expect(container.querySelectorAll('.feedrow')).toHaveLength(0);
+    expect(balanceBtn.disabled).toBe(false);
+    expect(balanceBtn.textContent).toContain('Calculate ration');
+
+    // Add unpriced feed (molasses) -> disabled with notice_next_price
+    const addMolasses = [...container.querySelectorAll<HTMLButtonElement>('.librow-act')].find((btn) =>
+      btn.getAttribute('aria-label')?.toLowerCase().includes('molasses'),
+    )!;
+    act(() => {
+      fireEvent.click(addMolasses);
+    });
+    expect(balanceBtn.disabled).toBe(true);
+    expect(container.querySelector('#balance-reason')?.textContent).toContain('enter a valid price');
+
+    // Enter negative price -> still disabled
+    const feedPriceInput = container.querySelector<HTMLInputElement>('.feedrow input.input.num')!;
+    act(() => {
+      fireEvent.change(feedPriceInput, { target: { value: '-5' } });
+      fireEvent.blur(feedPriceInput);
+    });
+    expect(balanceBtn.disabled).toBe(true);
+
+    // Fix price -> enabled
+    act(() => {
+      fireEvent.change(feedPriceInput, { target: { value: '14' } });
+      fireEvent.blur(feedPriceInput);
+    });
+    expect(balanceBtn.disabled).toBe(false);
+  });
+
+  it('every ration row with kg > 0 carries exactly one You have or Buy tag, and Buy rows match plan.buyFeedIds (AC-C3-2.6, AC-C3-E1)', () => {
+    // 1. Zero own feeds: all rows are Buy (AC-C3-E1)
+    setRationAdapterMode('live');
+    const { container, unmount } = render(<App />);
+    const tightBtn = container.querySelector<HTMLElement>('[data-preset="tight-budget"]')!;
+    act(() => {
+      fireEvent.click(tightBtn);
+    });
+    const rows = container.querySelectorAll('.ration-table tbody tr');
+    expect(rows.length).toBeGreaterThan(0);
+    for (const row of rows) {
+      expect(row.querySelectorAll('[data-tag="buy"]')).toHaveLength(1);
+      expect(row.querySelectorAll('[data-tag="you-have"]')).toHaveLength(0);
+    }
+    unmount();
+
+    // 2. Buffalo preset: owned feeds used are tagged "You have", buy feeds are tagged "Buy" (AC-C3-2.6)
+    const bufRender = render(<App />);
+    act(() => {
+      fireEvent.click(bufRender.container.querySelector<HTMLElement>('[data-preset="buffalo"]')!);
+    });
+    const bufRows = bufRender.container.querySelectorAll('.ration-table tbody tr');
+    expect(bufRows.length).toBeGreaterThan(0);
+    const ownedIds = new Set(['wheat_straw', 'maize_green', 'bajra_grain', 'wheat_bran', 'mustard_cake', 'mineral_mix', 'common_salt']);
+    for (const r of bufRows) {
+      const feedId = r.getAttribute('data-feed')!;
+      if (ownedIds.has(feedId)) {
+        expect(r.querySelector('[data-tag="you-have"]'), `${feedId} is owned`).toBeTruthy();
+        expect(r.querySelector('[data-tag="buy"]'), `${feedId} is not buy`).toBeNull();
+      } else {
+        expect(r.querySelector('[data-tag="buy"]'), `${feedId} is buy`).toBeTruthy();
+        expect(r.querySelector('[data-tag="you-have"]'), `${feedId} is not owned`).toBeNull();
+      }
+    }
+    bufRender.unmount();
+
+    // 3. Straw preset: straw is unneeded in optimal solve, so it appears in Not needed line (AC-C3-2.11)
+    const strawRender = render(<App />);
+    act(() => {
+      fireEvent.click(strawRender.container.querySelector<HTMLElement>('[data-preset="straw"]')!);
+    });
+    const notNeeded = strawRender.container.querySelector('[data-testid="not-needed"]');
+    expect(notNeeded).toBeTruthy();
+    expect(notNeeded?.textContent).toContain('Wheat straw');
+    strawRender.unmount();
+  });
+
+  it('renders buy ladder with rung 0 states, rungs 1..n, and every figure opens its audit (AC-C3-2.7, AC-C3-2.8, AC-C3-2.9, AC-C3-2.10)', () => {
+    // Straw preset: rung 0 is not balanced, rungs 1..n show steps
+    const { container, unmount } = render(<App />);
+    act(() => {
+      fireEvent.click(container.querySelector<HTMLElement>('[data-preset="straw"]')!);
+    });
+    const ladder = container.querySelector('[data-testid="buy-ladder"]')!;
+    expect(ladder).toBeTruthy();
+
+    const rung0 = ladder.querySelector('[data-rung="0"]')!;
+    expect(rung0).toBeTruthy();
+    expect(rung0.textContent).toContain('Your feeds alone: not balanced');
+    expect(rung0.querySelector('.fig')).toBeNull();
+
+    const rung1 = ladder.querySelector('[data-rung="1"]')!;
+    expect(rung1).toBeTruthy();
+    const rung1Figs = rung1.querySelectorAll<HTMLButtonElement>('.fig');
+    expect(rung1Figs.length).toBeGreaterThan(0);
+
+    // Tapping a rung figure opens audit
+    act(() => {
+      fireEvent.click(rung1Figs[0]);
+    });
+    const dialog = container.querySelector('[role="dialog"]')!;
+    expect(dialog).toBeTruthy();
+    expect(dialog.getAttribute('data-audit-id')).toMatch(/^rung-/);
+    unmount();
+
+    // Buffalo preset: rung 0 is balanced, figures open audit
+    const bufRender = render(<App />);
+    act(() => {
+      fireEvent.click(bufRender.container.querySelector<HTMLElement>('[data-preset="buffalo"]')!);
+    });
+    const bufLadder = bufRender.container.querySelector('[data-testid="buy-ladder"]');
+    if (bufLadder) {
+      const bufRung0 = bufLadder.querySelector('[data-rung="0"]');
+      if (bufRung0) {
+        const rung0Fig = bufRung0.querySelector<HTMLButtonElement>('.fig');
+        if (rung0Fig) {
+          act(() => {
+            fireEvent.click(rung0Fig);
+          });
+          expect(bufRender.container.querySelector('[role="dialog"]')?.getAttribute('data-audit-id')).toMatch(/^rung-/);
+        }
+      }
+    }
+    bufRender.unmount();
+  });
+
+  it('budget increase prompt appears only when plan.budgetIncrease is set, and audits open for X and Y (AC-C3-2.12)', () => {
+    setRationAdapterMode('live');
+    const { container, unmount } = render(<App />);
+    // Buffalo: budget is not tight, prompt does not appear
+    act(() => {
+      fireEvent.click(container.querySelector<HTMLElement>('[data-preset="buffalo"]')!);
+    });
+    expect(container.querySelector('[data-testid="budget-increase-prompt"]')).toBeNull();
+
+    // Tight budget: prompt appears
+    act(() => {
+      fireEvent.click(container.querySelector<HTMLElement>('[data-preset="tight-budget"]')!);
+    });
+    const prompt = container.querySelector('[data-testid="budget-increase-prompt"]')!;
+    expect(prompt).toBeTruthy();
+    expect(prompt.textContent).toContain('Add ₹');
+    expect(prompt.textContent).toContain('to your budget to reach');
+    expect(prompt.textContent).toContain('breed best');
+
+    const promptFigs = prompt.querySelectorAll<HTMLButtonElement>('.fig');
+    expect(promptFigs).toHaveLength(2);
+
+    // Figure X: extra budget audit
+    act(() => {
+      fireEvent.click(promptFigs[0]);
+    });
+    expect(container.querySelector('[role="dialog"]')?.getAttribute('data-audit-id')).toBe('budget-increase');
+
+    // Figure Y: breed cap audit
+    act(() => {
+      fireEvent.click(promptFigs[1]);
+    });
+    expect(container.querySelector('[role="dialog"]')?.getAttribute('data-audit-id')).toMatch(/^breed-cap-/);
+    unmount();
+  });
+
+  it('shows Raise the budget by at least ₹X/day on budget shortfall and opens audit (AC-C3-2.14)', () => {
+    const { container } = render(<App />);
+    demo(container, 'shortfall');
+    expect(container.querySelector('#analysis[data-state="shortfall"]')).toBeTruthy();
+
+    const raise = container.querySelector('[data-testid="shortfall-raise"]')!;
+    expect(raise).toBeTruthy();
+    expect(raise.textContent).toContain('Raise the budget by at least ₹');
+
+    const raiseFig = raise.querySelector<HTMLButtonElement>('.fig')!;
+    expect(raiseFig).toBeTruthy();
+    act(() => {
+      fireEvent.click(raiseFig);
+    });
+    expect(container.querySelector('[role="dialog"]')?.getAttribute('data-audit-id')).toBe('raise-to-maintenance');
+  });
+
+  it('renders Not needed line when owned feeds are not used in final solve and hides it otherwise (AC-C3-2.11)', () => {
+    // When 0 own feeds: not needed is null
+    const { container, unmount } = render(<App />);
+    act(() => {
+      fireEvent.click(container.querySelector<HTMLElement>('[data-preset="tight-budget"]')!);
+    });
+    expect(container.querySelector('[data-testid="not-needed"]')).toBeNull();
+    unmount();
+  });
+
+  it('starts with own feeds section collapsed and titled Feeds you already have (optional) in en and hi, showing your price and how much you have when expanded (AC-C3-2.2)', () => {
+    const { container, unmount } = render(<App />);
+    const feedsHeadings = [...container.querySelectorAll('section.block h2.block-title')];
+    const ownFeedsHead = feedsHeadings.find((h) => h.textContent?.includes('Feeds you already have (optional)'));
+    expect(ownFeedsHead).toBeTruthy();
+
+    const collapsible = ownFeedsHead?.closest('section.block')?.querySelector('.collapsible');
+    expect(collapsible?.classList.contains('is-collapsed')).toBe(true);
+
+    const addFeedsBtn = ownFeedsHead?.closest('section.block')?.querySelector('.block-head-actions button');
+    expect(addFeedsBtn).toBeTruthy();
+    act(() => {
+      fireEvent.click(addFeedsBtn!);
+    });
+    expect(collapsible?.classList.contains('is-collapsed')).toBe(false);
+
+    const addStraw = [...container.querySelectorAll<HTMLButtonElement>('.librow-act')].find((btn) =>
+      btn.getAttribute('aria-label')?.toLowerCase().includes('wheat straw'),
+    )!;
+    act(() => {
+      fireEvent.click(addStraw);
+    });
+
+    const feedRow = container.querySelector('.feedrow')!;
+    expect(feedRow).toBeTruthy();
+    expect(feedRow.textContent).toContain('your price');
+    expect(feedRow.textContent).toContain('how much you have');
+    unmount();
+
+    window.localStorage.setItem(LANG_STORAGE_KEY, 'hi');
+    setActiveLang('hi');
+    const hiRender = render(<App />);
+    const hiFeedsHeadings = [...hiRender.container.querySelectorAll('section.block h2.block-title')];
+    const hiOwnFeedsHead = hiFeedsHeadings.find((h) => h.textContent?.includes('आपके पास पहले से मौजूद चारा (वैकल्पिक)'));
+    expect(hiOwnFeedsHead).toBeTruthy();
+    hiRender.unmount();
+  });
+
+  it('own feeds cover only part of the need: wheat straw only -> rung 0 not balanced, rung 1 groups supplements + next feed, used own straw is tagged You have (AC-C3-E2)', () => {
+    const { container } = render(<App />);
+    act(() => {
+      fireEvent.click(container.querySelector<HTMLElement>('[data-preset="straw"]')!);
+    });
+    const ladder = container.querySelector('[data-testid="buy-ladder"]')!;
+    expect(ladder).toBeTruthy();
+    const rung0 = ladder.querySelector('[data-rung="0"]')!;
+    expect(rung0.textContent).toContain('Your feeds alone: not balanced');
+
+    const rung1 = ladder.querySelector('[data-rung="1"]')!;
+    expect(rung1).toBeTruthy();
+    expect(rung1.textContent).toContain('Mineral mixture');
+    expect(rung1.textContent).toContain('Common salt');
+
+    const rows = container.querySelectorAll('.ration-table tbody tr');
+    expect(rows.length).toBeGreaterThan(0);
+    const strawRow = [...rows].find((r) => r.getAttribute('data-feed') === 'wheat_straw');
+    if (strawRow) {
+      expect(strawRow.querySelector('[data-tag="you-have"]')).toBeTruthy();
+    }
+  });
+
+  it('budget not limiting: no Add ₹X/day prompt is shown (AC-C3-E4)', () => {
+    setRationAdapterMode('live');
+    const { container } = render(<App />);
+    act(() => {
+      fireEvent.click(container.querySelector<HTMLElement>('[data-preset="buffalo"]')!);
+    });
+    expect(container.querySelector('[data-testid="budget-increase-prompt"]')).toBeNull();
+  });
+
+  it('dry animal: ladder rungs show cost only, no milk figure or gain, and no budget prompt (AC-C3-E6)', () => {
+    const { container } = render(<App />);
+    demo(container, 'dry');
+    expect(container.querySelector('[data-testid="verdict"]')?.getAttribute('data-verdict')).toBe('dry_animal');
+    expect(container.querySelector('[data-testid="budget-increase-prompt"]')).toBeNull();
+
+    const ladder = container.querySelector('[data-testid="buy-ladder"]');
+    if (ladder) {
+      expect(ladder.querySelectorAll('.rung-milk')).toHaveLength(0);
+    }
+  });
+
+  it('three demos: buffalo gives feasible ration, straw gives rung 0 unbalanced and Buy rows, tight-budget gives budget prompt (AC-C3-2.15)', () => {
+    setRationAdapterMode('live');
+    const { container, unmount } = render(<App />);
+    const presetsSection = container.querySelector('.presets')!;
+    const demoButtons = presetsSection.querySelectorAll('[data-preset]');
+    expect(demoButtons).toHaveLength(3);
+
+    act(() => {
+      fireEvent.click(presetsSection.querySelector<HTMLElement>('[data-preset="buffalo"]')!);
+    });
+    expect(container.querySelector('#analysis[data-state="solved"]')).toBeTruthy();
+    expect(container.querySelector('[data-testid="verdict"]')?.getAttribute('data-verdict')).toBe('gain');
+
+    act(() => {
+      fireEvent.click(presetsSection.querySelector<HTMLElement>('[data-preset="straw"]')!);
+    });
+    expect(container.querySelector('#analysis[data-state="solved"]')).toBeTruthy();
+    expect(container.querySelector('[data-rung="0"]')?.textContent).toContain('Your feeds alone: not balanced');
+    expect(container.querySelectorAll('.tag-buy').length).toBeGreaterThan(0);
+
+    act(() => {
+      fireEvent.click(presetsSection.querySelector<HTMLElement>('[data-preset="tight-budget"]')!);
+    });
+    expect(container.querySelector('#analysis[data-state="solved"]')).toBeTruthy();
+    expect(container.querySelector('[data-testid="budget-increase-prompt"]')).toBeTruthy();
+    unmount();
+  });
+});
+

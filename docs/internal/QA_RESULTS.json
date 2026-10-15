@@ -150,7 +150,16 @@
     "exit_code": 0,
     "summary": "16 unit test files passed, 264 tests passed (including 19 tests in tests/unit/rationPlan.test.ts and 21 tests in tests/unit/adapter.test.ts)",
     "failure_output": ""
+  },
+  {
+    "task_id": "C3-M2-T3",
+    "attempt": 1,
+    "command": "cmd.exe /c \"npm run test:full && npm run build && npm run compile:data && npm run eval:dump && npm run eval:scipy\"",
+    "exit_code": 0,
+    "summary": "16 unit test files passed (275 tests, including 49 tests in tests/unit/resultUi.test.tsx and 21 tests in tests/unit/oneLanguage.test.tsx), 30 Playwright E2E tests passed (in tests/e2e/ration-journey.spec.ts and tests/e2e/language.spec.ts), production build succeeded (zero type errors, 16 Workbox precache entries), compile:data succeeded (31 feeds, 16 breeds, requirements), and eval:dump + eval:scipy passed across all 18 benchmark animals (100% constraint satisfaction, 23 SciPy agreement tests passed)",
+    "failure_output": ""
   }
 ]
+
 
 

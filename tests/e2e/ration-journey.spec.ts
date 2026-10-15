@@ -99,7 +99,7 @@ test.describe('SahiDana M1 offline vertical-slice journey', () => {
     await bodyWeightInput.fill('100');
     await bodyWeightInput.blur();
     await expect(page.locator('.errors[role="alert"]')).toContainText('150–800 kg');
-    await expect(page.getByRole('button', { name: 'Balance ration' })).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Calculate ration' })).toBeDisabled();
 
     await bodyWeightInput.fill('450');
     await page.getByLabel('Milk yield').fill('8');
@@ -119,16 +119,23 @@ test.describe('SahiDana M1 offline vertical-slice journey', () => {
     }
     await expect(page.locator('.feedrow')).toHaveCount(6);
 
-    // Toggle Show details on Feeds section to reveal and hide per-feed Max kg/day inputs (AC-6.3)
+    // Open feeds editor if collapsed
+    const editFeedsBtn = page
+      .locator('section.block')
+      .filter({ has: page.locator('.librow') })
+      .locator('.block-head-actions button')
+      .filter({ hasText: 'Edit' });
+    if (await editFeedsBtn.isVisible()) {
+      await editFeedsBtn.click();
+    }
+
+    // Toggle Show details on Feeds section to reveal per-feed inputs (AC-6.3)
     const feedsDetailsToggle = page.locator('.block-head-actions button[aria-pressed]');
     await expect(feedsDetailsToggle).toHaveAttribute('aria-pressed', 'false');
     await feedsDetailsToggle.click();
     await expect(feedsDetailsToggle).toHaveAttribute('aria-pressed', 'true');
     await expect(feedsDetailsToggle).toContainText('Hide details');
-    await expect(page.locator('.feedrow').first().getByLabel('Max kg/day')).toBeVisible();
-    await feedsDetailsToggle.click();
-    await expect(feedsDetailsToggle).toHaveAttribute('aria-pressed', 'false');
-    await expect(page.locator('.feedrow').first().getByLabel('Max kg/day')).toHaveCount(0);
+    await expect(page.locator('.feedrow').first().getByLabel('Today kg/day')).toBeVisible();
 
     const todayQuantities: [string, string][] = [
       ['Wheat straw', '4'],
@@ -160,8 +167,8 @@ test.describe('SahiDana M1 offline vertical-slice journey', () => {
     await expect(fillBtn).toBeDisabled();
     await expect(page.locator('.extractor-body .tag-offline')).toContainText('Needs internet');
 
-    // 7. Balance ration offline, verify Explain is disabled with "Needs internet", toggle Show details, inspect cited & solver audit drawers, and copy summary (AC-5.1, AC-6.1, AC-6.2, AC-6.3, AC-8.1, AC-E3.1)
-    const balanceBtn = page.getByRole('button', { name: 'Balance ration' });
+    // 7. Calculate ration offline, verify Explain is disabled with "Needs internet", toggle Show details, inspect cited & solver audit drawers, and copy summary (AC-5.1, AC-6.1, AC-6.2, AC-6.3, AC-8.1, AC-E3.1)
+    const balanceBtn = page.getByRole('button', { name: 'Calculate ration' });
     await expect(balanceBtn).toBeEnabled();
     await balanceBtn.click();
 
@@ -242,7 +249,7 @@ test.describe('SahiDana M1 offline vertical-slice journey', () => {
         await expect(page.locator('html')).toHaveAttribute('lang', 'hi');
       }
       const budgetName = lang === 'en' ? 'Daily budget' : 'रोज़ का बजट';
-      const balanceName = lang === 'en' ? 'Balance ration' : 'राशन संतुलित करें';
+      const balanceName = lang === 'en' ? 'Calculate ration' : 'राशन निकालें';
 
       const sections = [
         page.locator('.inputs .extractor'),
@@ -331,7 +338,7 @@ test.describe('SahiDana M1 offline vertical-slice journey', () => {
         expect(covered, 'pinned bar does not cover the examples').toBe(false);
       }
 
-      for (const key of ['buffalo', 'straw']) {
+      for (const key of ['buffalo', 'straw', 'tight-budget']) {
         const button = section.locator(`[data-preset="${key}"]`);
         await expect(button).toBeVisible();
         expect((await button.boundingBox())!.height, 'touch target >= 44 px').toBeGreaterThanOrEqual(44);
@@ -344,7 +351,7 @@ test.describe('SahiDana M1 offline vertical-slice journey', () => {
       if (lang === 'en') await expect(page.locator('.inputs').getByLabel('Body weight', { exact: true })).toHaveValue('450');
     });
 
-    test(`fills the form from "Straw only" and shows the infeasible state at ${label} in ${lang} (AC-C3-1.6)`, async ({
+    test(`fills the form from "Straw only" and shows the buy ladder at ${label} in ${lang} (AC-C3-2.7, AC-C3-2.8)`, async ({
       page,
     }) => {
       await page.setViewportSize(viewport);
@@ -355,12 +362,18 @@ test.describe('SahiDana M1 offline vertical-slice journey', () => {
       }
       const section = page.locator('.inputs .presets');
       await section.locator('[data-preset="straw"]').click();
-      await expect(page.locator('#analysis')).toHaveAttribute('data-state', 'infeasible');
-      await expect(page.locator('.feedrow')).toHaveCount(1);
+      await expect(page.locator('#analysis')).toHaveAttribute('data-state', 'solved');
+      const ladder = page.locator('[data-testid="buy-ladder"]');
+      await expect(ladder).toBeVisible();
+      const rung0 = ladder.locator('[data-rung="0"]');
+      await expect(rung0).toBeVisible();
       if (lang === 'en') {
-        await expect(page.locator('.feedrow').first()).toContainText('Wheat straw');
+        await expect(rung0).toContainText('Your feeds alone: not balanced');
         await expect(page.locator('.inputs').getByLabel('Body weight', { exact: true })).toHaveValue('400');
+      } else {
+        await expect(rung0).toContainText('सिर्फ़ आपके चारे: संतुलित नहीं');
       }
+      await expect(page.locator('.tag-buy').first()).toBeVisible();
     });
   }
 
@@ -428,6 +441,77 @@ test.describe('SahiDana M1 offline vertical-slice journey', () => {
     );
     expect(totalWoff2Bytes).toBeGreaterThan(0);
     expect(totalWoff2Bytes).toBeLessThanOrEqual(300 * 1024);
+  });
+
+  test('calculates ration with zero own feeds, showing all-buy ration and buy ladder (AC-C3-2.1, AC-C3-2.6)', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    // Enter animal profile
+    await page.getByRole('button', { name: 'Buffalo', exact: true }).click();
+    await page.getByLabel('Breed').selectOption('murrah');
+    await page.getByLabel('Body weight').fill('450');
+    await page.getByLabel('Milk yield').fill('8');
+    await page.getByLabel('Milk fat').fill('6.5');
+    await page.getByRole('textbox', { name: 'Daily budget' }).fill('250');
+
+    // Feeds is empty (0 feeds). Button should be enabled (AC-C3-2.1).
+    const calcBtn = page.getByRole('button', { name: 'Calculate ration' });
+    await expect(calcBtn).toBeEnabled();
+    await calcBtn.click();
+
+    await expect(page.locator('#analysis')).toHaveAttribute('data-state', 'solved');
+    // All rows must have Buy tags since farmer has 0 own feeds (AC-C3-2.6)
+    const buyTags = page.locator('.tag-buy');
+    await expect(buyTags.first()).toBeVisible();
+    const youHaveTags = page.locator('.tag-you-have');
+    await expect(youHaveTags).toHaveCount(0);
+    // Buy ladder is present
+    await expect(page.locator('[data-testid="buy-ladder"]')).toBeVisible();
+  });
+
+  test('shows budget increase prompt and audits on tight-budget preset (AC-C3-2.12)', async ({ page }) => {
+    await page.goto('/');
+    const section = page.locator('.inputs .presets');
+    await section.locator('[data-preset="tight-budget"]').click();
+    await expect(page.locator('#analysis')).toHaveAttribute('data-state', 'solved');
+
+    const prompt = page.locator('[data-testid="budget-increase-prompt"]');
+    await expect(prompt).toBeVisible();
+    await expect(prompt).toContainText('Add ₹');
+    await expect(prompt).toContainText('to your budget to reach');
+
+    // Click extra budget figure to open audit drawer
+    const figs = prompt.locator('.fig');
+    await figs.first().click();
+    const drawer = page.locator('[role="dialog"].sheet');
+    await expect(drawer).toBeVisible();
+    await expect(drawer).toHaveAttribute('data-audit-id', 'budget-increase');
+    await expect(drawer).toContainText('Required budget increase');
+    await drawer.getByRole('button', { name: 'Close' }).click();
+    await expect(drawer).toBeHidden();
+  });
+
+  test('shows raise-by line and audit drawer on budget below maintenance (AC-C3-E7)', async ({ page }) => {
+    await page.goto('/');
+    await page.locator('[data-preset="buffalo"]').click();
+    const budgetInput = page.getByRole('textbox', { name: 'Daily budget' });
+    await budgetInput.fill('30');
+    await page.getByRole('button', { name: 'Calculate ration' }).click();
+
+    await expect(page.locator('#analysis')).toHaveAttribute('data-state', 'shortfall');
+    const raiseAlert = page.locator('[data-testid="shortfall-raise"]');
+    await expect(raiseAlert).toBeVisible();
+    await expect(raiseAlert).toContainText('Raise the budget by at least ₹');
+
+    // Click figure to open audit drawer
+    await raiseAlert.locator('.fig').click();
+    const drawer = page.locator('[role="dialog"].sheet');
+    await expect(drawer).toBeVisible();
+    await expect(drawer).toHaveAttribute('data-audit-id', 'raise-to-maintenance');
+    await expect(drawer).toContainText('Maintenance cost − daily budget');
+    await drawer.getByRole('button', { name: 'Close' }).click();
+    await expect(drawer).toBeHidden();
   });
 });
 
@@ -506,7 +590,7 @@ test.describe('SahiDana M2 online AI extraction & verified explanation journey',
     await expect(page.getByRole('textbox', { name: 'Milk fat' })).toHaveValue('6.5');
     await expect(page.getByRole('textbox', { name: 'Daily budget' })).toHaveValue('250');
 
-    const balanceBtn = page.getByRole('button', { name: 'Balance ration' });
+    const balanceBtn = page.getByRole('button', { name: 'Calculate ration' });
     await expect(balanceBtn).toBeDisabled();
     await expect(page.locator('#balance-reason')).toContainText('confirm the prefilled values');
 

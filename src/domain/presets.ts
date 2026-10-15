@@ -136,6 +136,12 @@ export const PRESET_STRAW: Preset = {
   feeds: [feed('wheat_straw', '6', '')],
 };
 
+/** Tight budget: budget of ₹150 with Murrah buffalo triggers the budget increase prompt (AC-C3-2.12, AC-C3-2.15). */
+export const PRESET_TIGHT_BUDGET: Preset = {
+  animal: animal('buffalo', 'murrah', '450', '8.8', '6.5', '150'),
+  feeds: [],
+};
+
 /** Non-descript cow: the benchmark is the DAHD national average and the breed fat is "not cited". Berseem is out of season in October. */
 const PRESET_NONDESCRIPT: Preset = {
   animal: animal('cow', 'nondescript_cow', '350', '2', '4'),

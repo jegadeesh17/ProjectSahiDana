@@ -9,10 +9,11 @@ interface FigProps {
   /** Inline figures inside a sentence keep line height; table figures get a 44px target. */
   inline?: boolean;
   className?: string;
+  'data-lang-exempt'?: string;
 }
 
 /** A tappable figure: opens the fine-print sheet with its source or solver constraint. */
-export function Fig({ audit, children, inline = false, className }: FigProps) {
+export function Fig({ audit, children, inline = false, className, 'data-lang-exempt': langExempt }: FigProps) {
   const { open } = useAudit();
   if (!audit) return <span className={`num ${className ?? ''}`}>{children}</span>;
   return (
@@ -22,6 +23,7 @@ export function Fig({ audit, children, inline = false, className }: FigProps) {
       onClick={() => open(audit)}
       aria-haspopup="dialog"
       aria-label={`${audit.formattedValue}: ${biText(audit.label)}`}
+      data-lang-exempt={langExempt}
     >
       {children}
     </button>

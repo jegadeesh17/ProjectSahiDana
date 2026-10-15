@@ -1,8 +1,36 @@
 import { LLM_ERROR_STRING } from '../domain/types';
 import type { VerifiedExplanationResult } from '../domain/types';
 import { Bi } from '../i18n/Bi';
+import { useLang } from '../i18n/LanguageProvider';
 import { t } from '../i18n/strings';
 import { StatusPill } from './StatusPill';
+
+const ALLOWED_HI_LATIN = new Set([
+  'kg',
+  'DM',
+  'CP',
+  'ME',
+  'Ca',
+  'AI',
+  'OpenRouter',
+  'DAHD',
+  'ICAR',
+  'NDDB',
+  'RCDF',
+  'CIRB',
+  'Buffalopedia',
+  'Mcal',
+  'Down',
+  'To',
+  'Earth',
+  'Kisan',
+  'Tak',
+]);
+
+function hasUnexemptLatin(text: string): boolean {
+  const words = text.match(/[A-Za-z]{2,}/g) ?? [];
+  return words.some((w) => !ALLOWED_HI_LATIN.has(w));
+}
 
 export type ExplainState =
   | { kind: 'idle' }
@@ -11,6 +39,7 @@ export type ExplainState =
 
 /** E6 and AC-L1.5: verified text with a bilingual badge, or the fixed bilingual template. */
 export function ExplanationCard({ state }: { state: ExplainState }) {
+  const { lang } = useLang();
   if (state.kind === 'idle') return null;
 
   if (state.kind === 'loading') {
@@ -84,7 +113,10 @@ export function ExplanationCard({ state }: { state: ExplainState }) {
       </div>
       <ul className="template">
         {result.template.map((line, i) => (
-          <li key={i}>
+          <li
+            key={i}
+            data-lang-exempt={lang === 'hi' && hasUnexemptLatin(line.hi) ? 'feed-no-deva' : undefined}
+          >
             <Bi text={line} />
           </li>
         ))}

@@ -2155,7 +2155,9 @@ select.input {
 .verdict .fig-inline,
 .cost-notes .fig-inline,
 .budget-today .fig-inline,
-.supports-context .fig-inline {
+.supports-context .fig-inline,
+.budget-prompt-text .fig-inline,
+.shortfall-raise .fig-inline {
   display: inline;
   min-height: 0;
   margin-block: 0;
@@ -2168,6 +2170,136 @@ select.input {
   display: flex;
   flex-direction: column;
   gap: var(--s-1);
+}
+
+/* ---------- farmer-first ration tags, buy ladder & prompts ------------------------------- */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-strong);
+  line-height: 1;
+  padding: 2px var(--s-2);
+  border-radius: var(--r-pill);
+}
+.tag-you-have {
+  background: var(--c-sunken);
+  color: var(--c-text-2);
+  border: 1px solid var(--c-line-strong);
+}
+.tag-buy {
+  background: var(--c-accent-tint);
+  color: var(--c-accent-ink);
+}
+
+.not-needed {
+  margin-top: var(--s-3);
+  padding-top: var(--s-2);
+  border-top: 1px solid var(--c-line);
+  font-size: var(--fs-xs);
+  color: var(--c-text-2);
+  line-height: 1.4;
+}
+.not-needed-label {
+  font-weight: var(--fw-strong);
+  color: var(--c-text);
+}
+
+.buy-ladder {
+  margin: var(--s-4) var(--s-3) 0;
+  padding: var(--s-4);
+  border-radius: var(--r-inner);
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+}
+.ladder-title {
+  font-size: var(--fs-base);
+  font-weight: var(--fw-strong);
+  color: var(--c-text);
+  margin-bottom: var(--s-3);
+}
+.ladder-list {
+  display: flex;
+  flex-direction: column;
+}
+.ladder-rung {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  padding: var(--s-2) 0;
+  border-bottom: 1px solid var(--c-line);
+}
+.ladder-rung:last-child {
+  border-bottom: 0;
+}
+.rung-info {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  flex: 1;
+  min-width: 140px;
+}
+.rung-title {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-strong);
+  color: var(--c-text);
+}
+.rung-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--s-2);
+  border-radius: var(--r-pill);
+  background: var(--c-sunken);
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-strong);
+}
+.rung-feeds {
+  font-size: var(--fs-sm);
+  color: var(--c-text);
+}
+.rung-figures {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  font-size: var(--fs-sm);
+}
+.rung-milk {
+  color: var(--c-text-2);
+}
+.rung-cost {
+  font-weight: var(--fw-strong);
+  color: var(--c-text);
+}
+.ladder-note {
+  margin: var(--s-2) 0;
+  font-size: var(--fs-xs);
+  color: var(--c-text-2);
+  font-style: italic;
+}
+
+.budget-increase-prompt {
+  margin: var(--s-3) var(--s-3) 0;
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-inner);
+  background: var(--c-accent-tint);
+  border: 1px solid var(--c-accent-tint-2);
+}
+.budget-prompt-text {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-strong);
+  color: var(--c-accent-ink);
+  line-height: 1.4;
+}
+
+.shortfall-raise {
+  margin: var(--s-2) 0;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-strong);
+  color: var(--c-warn-ink);
 }
 
 /* ---------- utilities that must win over the component rules above ------------------------ */

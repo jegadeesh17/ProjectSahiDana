@@ -354,7 +354,7 @@
             "tests/e2e/language.spec.ts"
           ],
           "acceptance_criteria": "SPEC AC-C3-2.1, AC-C3-2.2, AC-C3-2.6, AC-C3-2.7, AC-C3-2.8, AC-C3-2.9, AC-C3-2.10, AC-C3-2.11, AC-C3-2.12, AC-C3-2.14, AC-C3-2.15, AC-C3-E1, AC-C3-E2, AC-C3-E3, AC-C3-E4, AC-C3-E6, AC-C3-E7, AC-C3-E8, AC-C3-E9; regression AC-C3-R2, AC-C3-R3, AC-C3-R4, AC-C3-R5, AC-C3-R6, AC-C3-R7: tests/unit/resultUi.test.tsx asserts the button is enabled with no feeds and disabled with an invalid own-feed row (notice_next_price shown), every ration row has exactly one 'You have'/'Buy' tag, the ladder renders rung 0 states and rungs 1..n with figures equal to the plan's solver outputs, every new figure opens its audit, the budget prompt appears only when plan.budgetIncrease is set, and the raise-by line appears for budget_below_maintenance; tests/unit/oneLanguage.test.tsx checks all new strings in both languages with no leakage; tests/e2e/ration-journey.spec.ts covers calculate with no feeds, own straw (rung 0 'not balanced', 'Buy' rows), the Tight budget demo prompt, the raise-by alert and offline. Verify: npm test exits 0 (milestone end: npm run test:full, npm run build, npm run compile:data, npm run eval:dump && npm run eval:scipy all exit 0).",
-          "status": "pending"
+          "status": "completed"
         }
       ]
     }

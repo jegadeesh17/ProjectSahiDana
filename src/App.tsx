@@ -15,8 +15,9 @@ import { PrototypeStatesPanel } from './components/PrototypeStatesPanel';
 import { RationResultsPanel } from './components/RationResultsPanel';
 import { StatusPill } from './components/StatusPill';
 import { Button } from './components/ui/button';
-import { DEMO_CASES, PRESET_BUFFALO, PRESET_STRAW } from './domain/presets';
+import { DEMO_CASES, PRESET_BUFFALO, PRESET_STRAW, PRESET_TIGHT_BUDGET } from './domain/presets';
 import type { DemoKey, Preset } from './domain/presets';
+import type { RationPlan } from './domain/rationPlan';
 import { buildSummary } from './domain/summary';
 import type {
   AnimalProfile,
@@ -47,6 +48,7 @@ interface SolveResult {
   profile: Profile;
   requirement: RequirementResult;
   outcome: RationSolveOutcome;
+  plan: RationPlan | null;
 }
 
 function useOnline(): boolean {
@@ -90,7 +92,7 @@ function Workspace() {
   const [prefill, setPrefill] = useState<PrefillState | null>(null);
   const [text, setText] = useState('');
   const [animalOpen, setAnimalOpen] = useState(true);
-  const [feedsOpen, setFeedsOpen] = useState(true);
+  const [feedsOpen, setFeedsOpen] = useState(false);
   const [extractorOpen, setExtractorOpen] = useState(false);
   const [protoOpen, setProtoOpen] = useState(false);
   const [connection, setConnection] = useState<ConnectionMode>('auto');
@@ -154,13 +156,11 @@ function Workspace() {
         : validation.errors.breed && !validation.errors.weight && !validation.errors.milk && !validation.errors.fat && !validation.errors.species
           ? 'notice_next_breed'
           : 'notice_next_fix'
-      : feeds.length === 0
-        ? 'notice_next_feeds'
-        : !feedsValid
-          ? 'notice_next_price'
-          : !validation.profile
-            ? 'notice_next_budget'
-            : 'notice_next_balance';
+      : !feedsValid
+        ? 'notice_next_price'
+        : !validation.profile
+          ? 'notice_next_budget'
+          : 'notice_next_balance';
   const canBalance = nextStep === 'notice_next_balance';
 
   /** Any edit makes the printed analysis stale, so it is cleared rather than left looking valid. */
@@ -174,15 +174,16 @@ function Workspace() {
     (animalDraft: AnimalDraft, feedDrafts: FeedDraft[], confirmed: boolean) => {
       const checked = validateAnimal(animalDraft, todayCostInr(feedDrafts));
       const { inputs: selected, allValid } = toInputs(feedDrafts);
-      if (!checked.profile || !allValid || selected.length === 0) return;
+      if (!checked.profile || !allValid) return;
       const profile: AnimalProfile = { ...checked.profile, isConfirmed: confirmed };
-      const outcome = rationService.solveRation(profile, selected);
+      const plan = rationService.planRation(profile, selected);
+      const outcome = plan.final;
       // The requirement the result is checked against: at the supported milk, or at 0 L when there is no ration (E2, E7.1).
       const forMilk = outcome.status === 'optimal' ? outcome.supportedMilkLPerDay : 0;
       const requirement = rationService.computeRequirements({ ...profile, milkYieldLitersPerDay: forMilk });
       explainAbort.current?.abort();
       setExplain({ kind: 'idle' });
-      setResult({ profile: checked.profile, requirement, outcome });
+      setResult({ profile: checked.profile, requirement, outcome, plan });
       setAnimalOpen(false);
       setFeedsOpen(false);
     },
@@ -212,7 +213,23 @@ function Workspace() {
 
   const onDemo = (key: DemoKey) => {
     const found = DEMO_CASES.find((c) => c.key === key);
-    if (found) applyPreset(found.preset);
+    if (!found) return;
+    scrollToResult.current = true;
+    setPrefill(null);
+    setAnimal(found.preset.animal);
+    setFeeds(found.preset.feeds);
+    const checked = validateAnimal(found.preset.animal, todayCostInr(found.preset.feeds));
+    const { inputs: selected } = toInputs(found.preset.feeds);
+    if (!checked.profile) return;
+    const profile: AnimalProfile = { ...checked.profile, isConfirmed: true };
+    const outcome = rationService.solveRation(profile, selected);
+    const forMilk = outcome.status === 'optimal' ? outcome.supportedMilkLPerDay : 0;
+    const requirement = rationService.computeRequirements({ ...profile, milkYieldLitersPerDay: forMilk });
+    explainAbort.current?.abort();
+    setExplain({ kind: 'idle' });
+    setResult({ profile: checked.profile, requirement, outcome, plan: null });
+    setAnimalOpen(false);
+    setFeedsOpen(false);
   };
 
   const editAnimal = (next: AnimalDraft) => {
@@ -357,7 +374,7 @@ function Workspace() {
     setPrefill(null);
     setText('');
     setAnimalOpen(true);
-    setFeedsOpen(true);
+    setFeedsOpen(false);
     setExtractorOpen(false);
     setConnection('auto');
     setLlm('ok');
@@ -365,7 +382,7 @@ function Workspace() {
     setToast(null);
   };
 
-  const feedsCollapsed = !feedsOpen && feeds.length > 0 && !prefill;
+  const feedsCollapsed = !feedsOpen && !prefill;
   const animalCollapsed = !animalOpen && animalOnly !== null && !prefill;
 
   return (
@@ -500,7 +517,15 @@ function Workspace() {
                   <Bi id="action_demo_straw" />
                 </span>
                 <span className="preset-note">
-                  <Bi id="note_demo_infeasible" />
+                  <Bi id="note_demo_needs_buy" />
+                </span>
+              </Button>
+              <Button variant="preset" onClick={() => applyPreset(PRESET_TIGHT_BUDGET)} data-preset="tight-budget">
+                <span className="preset-name">
+                  <Bi id="action_demo_tight_budget" />
+                </span>
+                <span className="preset-note">
+                  <Bi id="note_demo_tight_budget" />
                 </span>
               </Button>
             </div>
@@ -512,6 +537,7 @@ function Workspace() {
           profile={result?.profile ?? animalOnly}
           requirement={result?.requirement ?? liveRequirement}
           outcome={result?.outcome ?? null}
+          plan={result?.plan ?? null}
           library={library}
           breeds={breeds}
           online={online}

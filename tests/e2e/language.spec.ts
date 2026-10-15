@@ -245,20 +245,30 @@ test.describe('One language at a time across every screen state and modal (AC-L1
     await switchLang(page, 'en');
     await page.locator('.extractor button.disclosure').click(); // close extractor
 
-    // 5. Infeasible state (wheat straw only)
+    // 5. Straw preset with buy ladder and tags
     await page.locator('[data-preset="straw"]').click();
-    await expect(page.locator('#analysis[data-state="infeasible"]')).toBeVisible();
-    await assertLanguageIsolation(page, 'en', '5-infeasible');
+    await expect(page.locator('#analysis[data-state="solved"]')).toBeVisible();
+    await expect(page.locator('[data-testid="buy-ladder"]')).toBeVisible();
+    await assertLanguageIsolation(page, 'en', '5-straw-ladder');
     await switchLang(page, 'hi');
-    await assertLanguageIsolation(page, 'hi', '5-infeasible');
+    await assertLanguageIsolation(page, 'hi', '5-straw-ladder');
+    await switchLang(page, 'en');
+
+    // 5b. Tight budget preset with budget increase prompt
+    await page.locator('[data-preset="tight-budget"]').click();
+    await expect(page.locator('[data-testid="budget-increase-prompt"]')).toBeVisible();
+    await assertLanguageIsolation(page, 'en', '5b-tight-budget');
+    await switchLang(page, 'hi');
+    await assertLanguageIsolation(page, 'hi', '5b-tight-budget');
     await switchLang(page, 'en');
 
     // 6. Budget below maintenance state (daily budget = ₹30)
     await page.locator('[data-preset="buffalo"]').click();
     const budgetInput = page.getByRole('textbox', { name: 'Daily budget' });
     await budgetInput.fill('30');
-    await page.getByRole('button', { name: 'Balance ration' }).click();
+    await page.getByRole('button', { name: 'Calculate ration' }).click();
     await expect(page.locator('#analysis[data-state="shortfall"]')).toBeVisible();
+    await expect(page.locator('[data-testid="shortfall-raise"]')).toBeVisible();
     await assertLanguageIsolation(page, 'en', '6-budget-below-maintenance');
     await switchLang(page, 'hi');
     await assertLanguageIsolation(page, 'hi', '6-budget-below-maintenance');
