@@ -2351,3 +2351,568 @@ select.input {
     scroll-behavior: auto;
   }
 }
+
+/* =====================================================================================================
+   Change 4 clickable prototype (?c4): the 3-screen herd flow. New classes only, existing tokens only.
+   ===================================================================================================== */
+.c4-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--s-4) var(--s-4) 0;
+}
+.c4-head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-2);
+}
+.c4-title {
+  font-size: var(--fs-2xl);
+  font-weight: var(--fw-strong);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+.c4-title:lang(hi) {
+  line-height: 1.3;
+  letter-spacing: 0;
+}
+.c4-title:focus-visible {
+  outline-offset: 4px;
+}
+.c4-proto-pill {
+  align-self: flex-start;
+}
+
+/* step indicator: 1 - 2 - 3, state shown by shape and weight, not colour alone */
+.c4-steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.c4-step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-1);
+  text-align: center;
+}
+.c4-step + .c4-step::before {
+  content: '';
+  position: absolute;
+  top: 15px;
+  left: calc(-50% + 20px);
+  right: calc(50% + 20px);
+  height: 2px;
+  background: var(--c-line-strong);
+}
+.c4-step[data-state='done'] + .c4-step::before,
+.c4-step[data-state='current']::before {
+  background: var(--c-accent);
+}
+.c4-step-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-pill);
+  border: 2px solid var(--c-line-strong);
+  background: var(--c-surface);
+  color: var(--c-text-2);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-strong);
+  font-variant-numeric: tabular-nums;
+}
+.c4-step[data-state='done'] .c4-step-dot {
+  background: var(--c-accent);
+  border-color: var(--c-accent);
+  color: var(--c-surface);
+}
+.c4-step[data-state='current'] .c4-step-dot {
+  border-color: var(--c-accent);
+  background: var(--c-accent-tint);
+  color: var(--c-accent-ink);
+}
+.c4-step-name {
+  font-size: var(--fs-xs);
+  line-height: 1.3;
+  color: var(--c-text-2);
+}
+.c4-step[data-state='current'] .c4-step-name {
+  color: var(--c-text);
+  font-weight: var(--fw-strong);
+}
+
+/* the sticky bottom bar: Back (secondary) and the one primary action */
+.c4-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  margin: 0 calc(var(--s-4) * -1);
+  padding: var(--s-3) var(--s-4) calc(var(--s-3) + env(safe-area-inset-bottom));
+  background: var(--c-surface);
+  border-radius: var(--r-card) var(--r-card) 0 0;
+  box-shadow: var(--shadow-bar);
+}
+.c4-bar-reason {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--fs-sm);
+  line-height: 1.35;
+  color: var(--c-text-2);
+  text-align: center;
+}
+.c4-bar-row {
+  display: flex;
+  gap: var(--s-2);
+}
+.c4-bar-back {
+  flex: none;
+  min-height: 56px;
+}
+.c4-bar-primary {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+}
+@media (min-width: 720px) {
+  .c4-page {
+    padding: var(--s-6) var(--s-4) 0;
+    gap: var(--s-6);
+  }
+  .c4-bar {
+    bottom: var(--s-4);
+    margin: 0;
+    border-radius: var(--r-card);
+  }
+}
+.c4-page > :last-child {
+  margin-bottom: var(--s-6);
+}
+.c4-page > .c4-bar:last-child {
+  margin-bottom: 0;
+}
+
+/* screen 1: animal list, add card, herd budget, examples */
+.c4-block-title {
+  float: none;
+  width: auto;
+}
+.c4-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.c4-list-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2) var(--s-3);
+  padding: var(--s-3) 0;
+  border-top: 1px solid var(--c-line);
+}
+.c4-list-row:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.c4-list-row[data-editing='true'] .c4-list-name {
+  color: var(--c-accent-ink);
+}
+.c4-list-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.c4-list-name {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-strong);
+  line-height: 1.3;
+}
+.c4-list-meta {
+  font-size: var(--fs-sm);
+  color: var(--c-text-2);
+  line-height: 1.3;
+}
+.c4-list-actions {
+  display: flex;
+  gap: var(--s-1);
+}
+.c4-limit {
+  padding: var(--s-3) var(--s-4);
+  background: var(--c-warn-tint);
+  color: var(--c-warn-ink);
+  border-radius: var(--r-inner);
+  font-size: var(--fs-sm);
+}
+.c4-card-form {
+  scroll-margin-top: var(--s-4);
+}
+.c4-species {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s-2);
+}
+.c4-species-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  min-height: 64px;
+  padding: var(--s-2) var(--s-4);
+  background: var(--c-surface);
+  color: var(--c-text);
+  border: 1px solid var(--c-control);
+  border-radius: var(--r-inner);
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-strong);
+}
+.c4-species-btn:hover:not(:disabled) {
+  background: var(--c-sunken);
+}
+.c4-species-btn[aria-pressed='true'] {
+  background: var(--c-accent-tint);
+  color: var(--c-accent-ink);
+  border: 2px solid var(--c-accent);
+}
+.c4-species-btn:disabled {
+  color: var(--c-text-2);
+  cursor: not-allowed;
+}
+.c4-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s-3);
+  align-items: start;
+}
+.c4-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+.c4-card-add {
+  flex: 1;
+  min-width: 160px;
+}
+.c4-card-reason {
+  flex-basis: 100%;
+}
+.c4-budget {
+  gap: var(--s-2);
+}
+.c4-budget-q {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-strong);
+  line-height: 1.3;
+  color: var(--c-text);
+}
+.c4-examples {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+.c4-examples-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--s-2);
+}
+@media (min-width: 720px) {
+  .c4-examples-list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* screen 2: feed you already have */
+.c4-skip-note {
+  padding: var(--s-3) var(--s-4);
+  background: var(--c-accent-tint);
+  color: var(--c-accent-ink);
+  border-radius: var(--r-inner);
+  font-size: var(--fs-sm);
+  line-height: 1.4;
+}
+.c4-home-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.c4-home-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--c-line);
+}
+.c4-home-row:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+.c4-home-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+.c4-home-name {
+  flex: 1;
+  min-width: 0;
+  font-weight: var(--fw-strong);
+}
+.c4-groups {
+  max-height: min(60vh, 440px);
+  overflow-y: auto;
+  border-radius: var(--r-inner);
+  background: var(--c-sunken);
+}
+.c4-picklist {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.c4-pick {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: 52px;
+  padding: var(--s-2) var(--s-4);
+  background: transparent;
+  color: var(--c-text);
+  border: 0;
+  border-top: 1px solid var(--c-line);
+  text-align: left;
+}
+.c4-pick:hover:not(:disabled) {
+  background: var(--c-accent-tint);
+}
+.c4-pick:disabled {
+  color: var(--c-text-2);
+  cursor: default;
+}
+.c4-pick-name {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-base);
+  line-height: 1.3;
+}
+.c4-pick-local {
+  font-size: var(--fs-xs);
+  color: var(--c-text-2);
+}
+.c4-pick-state {
+  flex: none;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-strong);
+  color: var(--c-accent-ink);
+}
+.c4-pick-state[data-added='true'] {
+  color: var(--c-text-2);
+}
+
+/* screen 3: your plan. "What to buy" and "Not needed today" share .c4-card so their padding matches. */
+.c4-notice {
+  padding: var(--s-3) var(--s-4);
+  background: var(--c-warn-tint);
+  color: var(--c-warn-ink);
+  border-radius: var(--r-inner);
+  font-size: var(--fs-sm);
+  line-height: 1.4;
+}
+.c4-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  min-width: 0;
+  padding: var(--pad);
+  background: var(--c-surface);
+  border-radius: var(--r-card);
+  box-shadow: var(--shadow-card);
+}
+.c4-section-title {
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-strong);
+  line-height: 1.2;
+  letter-spacing: -0.005em;
+}
+.c4-section-title-plain {
+  padding: 0 var(--s-1);
+}
+.c4-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--c-line);
+}
+.c4-group-first {
+  padding-top: 0;
+  border-top: 0;
+}
+.c4-group-title {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-strong);
+  color: var(--c-accent-ink);
+}
+.c4-shop-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.c4-shop-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    'name kg cost'
+    'gain gain gain';
+  align-items: center;
+  column-gap: var(--s-2);
+  padding: var(--s-1) 0;
+  border-top: 1px solid var(--c-line);
+}
+.c4-shop-row:first-child {
+  border-top: 0;
+}
+.c4-shop-name {
+  grid-area: name;
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-width: 0;
+  line-height: 1.3;
+}
+.c4-shop-fig {
+  font-size: var(--fs-base);
+}
+.c4-shop-gain {
+  grid-area: gain;
+  margin-top: calc(var(--s-1) * -1);
+  padding-bottom: var(--s-1);
+  font-size: var(--fs-sm);
+  color: var(--c-text-2);
+}
+.c4-shop-total {
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--c-line-strong);
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-strong);
+  line-height: 1.4;
+}
+.c4-none {
+  color: var(--c-text-2);
+}
+
+.c4-cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+.c4-acard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: var(--pad);
+  background: var(--c-surface);
+  border-radius: var(--r-card);
+  box-shadow: var(--shadow-card);
+}
+.c4-acard-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+.c4-acard-name {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-strong);
+  line-height: 1.25;
+}
+.c4-acard-breed {
+  font-size: var(--fs-sm);
+  color: var(--c-text-2);
+}
+.c4-lines {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.c4-line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  column-gap: var(--s-2);
+  border-top: 1px solid var(--c-line);
+}
+.c4-line:first-child {
+  border-top: 0;
+}
+.c4-line-name {
+  min-width: 0;
+  line-height: 1.3;
+}
+.c4-line-fig {
+  font-size: var(--fs-base);
+}
+.c4-line .tag {
+  min-width: 64px;
+  justify-content: center;
+}
+.c4-enough {
+  padding-top: var(--s-2);
+  border-top: 1px solid var(--c-line-strong);
+  font-weight: var(--fw-strong);
+  line-height: 1.4;
+}
+.c4-details-toggle {
+  margin: 0;
+  width: 100%;
+  justify-content: flex-start;
+  background: var(--c-sunken);
+}
+.c4-detail-list {
+  margin: 0;
+}
+.c4-acard [data-details='true'] {
+  padding-top: var(--s-3);
+}
+.c4-acard .nutrient {
+  padding-inline: 0;
+}
+
+.c4-not-needed-names {
+  line-height: 1.4;
+}
+.c4-prompt-card {
+  background: var(--c-accent-tint);
+  box-shadow: none;
+}
+.c4-prompt-text {
+  font-size: var(--fs-lg);
+  line-height: 1.4;
+  color: var(--c-accent-ink);
+  font-weight: var(--fw-strong);
+}

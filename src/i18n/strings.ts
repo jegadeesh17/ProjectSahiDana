@@ -6,6 +6,132 @@ import { getActiveLang } from './lang';
 
 export type BiText = { readonly hi: string; readonly en: string };
 
+// ---- Change 4: the 3-screen herd flow (prototype). Kept in its own object, with its own ids, because the Change 3 test
+// "never calls the farmer's cow or buffalo an animal" scans `strings` and SPEC C4.4 now approves the word ("Your animals").
+// Every Hindi line here is a proposal, pending native review (OQ-C4-1); HINDI_REVIEW_C4 lists them.
+export const stringsC4 = {
+  // ---- navigation ---------------------------------------------------------------------------
+  c4_screen_animals: { hi: 'आपकी गाय-भैंस', en: 'Your animals' },
+  c4_screen_feeds: { hi: 'आपके पास पहले से मौजूद चारा', en: 'Feed you already have' },
+  c4_screen_result: { hi: 'आपकी योजना', en: 'Your plan' },
+  c4_step_animals_short: { hi: 'गाय-भैंस', en: 'Animals' },
+  c4_step_feeds_short: { hi: 'घर का चारा', en: 'Home feed' },
+  c4_step_result_short: { hi: 'योजना', en: 'Plan' },
+  c4_steps_label: { hi: 'प्रगति', en: 'Progress' },
+  c4_step_count: { hi: '3 में से {n}', en: '{n} of 3' },
+  c4_action_back: { hi: 'पीछे', en: 'Back' },
+  c4_action_next: { hi: 'आगे', en: 'Next' },
+  c4_calculating: { hi: 'हिसाब लगाया जा रहा है…', en: 'Calculating…' },
+  c4_notice_nearest: {
+    hi: 'आपका झुंड किसी उदाहरण जैसा नहीं है, इसलिए सबसे नज़दीकी उदाहरण की योजना दिखाई गई है।',
+    en: 'Your herd is not one of the examples, so this is the nearest example’s plan.',
+  },
+  label_cow_n: { hi: 'गाय {n}', en: 'Cow {n}' },
+  label_buffalo_n: { hi: 'भैंस {n}', en: 'Buffalo {n}' },
+
+  // ---- screen 1: your animals ---------------------------------------------------------------
+  c4_card_add_title: { hi: 'गाय या भैंस जोड़ें', en: 'Add a cow or buffalo' },
+  c4_card_edit_title: { hi: '{animal} बदलें', en: 'Change {animal}' },
+  c4_breed_desi: { hi: 'देशी / पता नहीं', en: 'Desi / don’t know' },
+  c4_label_milk: { hi: 'आज का दूध', en: 'Milk today' },
+  c4_hint_typical: { hi: 'इस नस्ल के लिए आम — पता हो तो बदलें', en: 'typical for this breed — change if you know' },
+  c4_hint_midpoint: { hi: 'प्रकाशित सीमा से निकाला गया', en: 'calculated from cited range' },
+  c4_hint_your_value: { hi: 'आपका मान', en: 'your value' },
+  c4_hint_no_value: { hi: 'इस नस्ल का प्रकाशित मान नहीं है — ख़ुद लिखें', en: 'no cited value for this breed — enter it yourself' },
+  c4_action_add_animal: { hi: 'जोड़ें', en: 'Add' },
+  c4_action_save: { hi: 'सहेजें', en: 'Save' },
+  c4_action_cancel: { hi: 'रद्द करें', en: 'Cancel' },
+  c4_action_remove: { hi: 'हटाएँ', en: 'Remove' },
+  c4_aria_edit: { hi: '{animal} बदलें', en: 'Edit {animal}' },
+  c4_aria_remove: { hi: '{animal} हटाएँ', en: 'Remove {animal}' },
+  c4_list_heading: { hi: 'अब तक जोड़ी गई', en: 'Added so far' },
+  c4_max_animals: { hi: 'ज़्यादा से ज़्यादा 10 गाय-भैंस जोड़ सकते हैं', en: 'You can add up to 10 animals' },
+  c4_card_reason: { hi: 'जोड़ने के लिए: {reason}', en: 'To add: {reason}' },
+  c4_budget_label: {
+    hi: 'सभी गाय-भैंस के चारे पर रोज़ कितना ख़र्च कर सकते हैं?',
+    en: 'How much can you spend on feed each day, for all animals?',
+  },
+  c4_budget_hint: {
+    hi: 'सिर्फ़ चारा ख़रीदने का ख़र्च। घर का चारा मुफ़्त गिना जाता है।',
+    en: 'Only what you will spend buying feed. Feed you already have costs nothing.',
+  },
+  c4_gate_add_animal: { hi: 'कम से कम एक गाय या भैंस जोड़ें', en: 'Add at least one animal' },
+  c4_gate_budget: { hi: 'रोज़ का ख़र्च लिखें', en: 'Enter how much you can spend each day' },
+  c4_examples_hint: {
+    hi: 'हर उदाहरण गाय-भैंस, ख़र्च और घर का चारा भर देता है।',
+    en: 'Each example fills in the animals, the budget and the feed at home.',
+  },
+  c4_example_cow_buffalo: { hi: 'गाय + भैंस', en: 'Cow + Buffalo' },
+
+  // ---- screen 2: feed you already have ------------------------------------------------------
+  c4_feeds_skip: { hi: 'घर पर कुछ नहीं है तो छोड़ दें।', en: 'Skip if you have nothing at home.' },
+  c4_feeds_at_home: { hi: 'घर पर', en: 'At home' },
+  c4_feeds_empty: {
+    hi: 'अभी कोई चारा नहीं जुड़ा। नीचे किसी चारे को दबाकर जोड़ें।',
+    en: 'No feed added yet. Tap a feed below to add it.',
+  },
+  c4_feeds_add_heading: { hi: 'चारा जोड़ें', en: 'Add a feed' },
+  c4_kg_label: { hi: 'रोज़ कितने kg दे सकते हैं (सभी गाय-भैंस)', en: 'kg per day you can give (all animals)' },
+  c4_error_kg_positive: { hi: 'रोज़ के kg लिखें, 0 से ज़्यादा', en: 'Enter kg per day, more than 0' },
+  c4_gate_kg: { hi: 'हर चारे के रोज़ के kg लिखें या उसे हटाएँ', en: 'Enter kg per day for every feed, or remove it' },
+
+  // ---- screen 3: your plan ------------------------------------------------------------------
+  c4_shop_title: { hi: 'क्या ख़रीदें', en: 'What to buy' },
+  c4_shop_first: { hi: 'पहले यह ख़रीदें', en: 'Buy first' },
+  c4_shop_later: { hi: 'फिर, हो सके तो', en: 'Then, if you can' },
+  c4_shop_gain: { hi: '→ लगभग +{l} L दूध', en: '→ about +{l} L milk' },
+  c4_shop_same: { hi: '→ उतना ही दूध', en: '→ same milk' },
+  c4_shop_total: { hi: 'आपके {b} रोज़ में से {a}', en: '{a} of your {b} a day' },
+  c4_shop_none: { hi: 'आज कुछ ख़रीदना नहीं', en: 'Nothing to buy today' },
+  c4_cards_title: { hi: 'हर गाय-भैंस को क्या दें', en: 'What to give each animal' },
+  c4_tag_home: { hi: 'घर का', en: 'From home' },
+  c4_card_enough: { hi: 'लगभग {l} L दूध के लिए काफ़ी', en: 'Enough for about {l} L milk' },
+  c4_card_dry: { hi: 'सूखी गाय/भैंस का गुज़ारा', en: 'keeps her healthy (dry)' },
+  c4_details: { hi: 'विवरण (पैरावेट के लिए)', en: 'Details (for paravet)' },
+  c4_not_needed_title: { hi: 'आज ज़रूरत नहीं', en: 'Not needed today' },
+  c4_not_needed_hint: { hi: 'इन्हें किसी और दिन के लिए रखें।', en: 'Keep these for another day.' },
+  c4_prompt_add: { hi: '{y} L तक पहुँचने के लिए रोज़ {x} और जोड़ें', en: 'Add {x}/day to reach {y} L' },
+  c4_prompt_short: { hi: 'रोज़ कम से कम {x} और ख़र्च करें', en: 'Spend at least {x} more a day' },
+  c4_infeasible: {
+    hi: 'ये चारे सब गाय-भैंस को साथ में स्वस्थ नहीं रख सकते',
+    en: 'These feeds cannot keep all animals healthy together',
+  },
+  c4_summary_title: { hi: 'आपकी योजना', en: 'Your plan' },
+
+  // ---- Details (for paravet): technical words are allowed here --------------------------------
+  c4_det_share: { hi: 'दूध लक्ष्य का हिस्सा', en: 'Share of milk target' },
+  c4_det_target: { hi: 'दूध लक्ष्य (नस्ल की सीमा)', en: 'Milk target (breed cap)' },
+  c4_det_limit: { hi: 'किसकी वजह से सीमा', en: 'What limits it' },
+  c4_det_limit_budget: { hi: 'बजट', en: 'Budget' },
+  c4_det_limit_target: { hi: 'दूध लक्ष्य पूरा हुआ', en: 'Milk target reached' },
+  c4_det_roughage: { hi: 'रेशेदार चारे का हिस्सा (शुष्क पदार्थ में)', en: 'Roughage share of dry matter' },
+
+  // ---- audit drawer (prototype fixtures and cited prefill) -------------------------------------
+  c4_audit_role: { hi: 'प्रोटोटाइप का नमूना मान (असली झुंड सॉल्वर नहीं)', en: 'Prototype fixture (not the real herd solver)' },
+  c4_audit_constraint: { hi: 'क्लिक-प्रोटोटाइप के लिए नमूना आँकड़ा', en: 'Stand-in figure for the clickable prototype' },
+  c4_audit_label_shop_kg: { hi: '{feed}: रोज़ ख़रीदें, सभी गाय-भैंस', en: '{feed}: to buy per day, all animals' },
+  c4_audit_label_shop_cost: { hi: '{feed}: रोज़ की लागत', en: '{feed}: cost per day' },
+  c4_audit_label_card_kg: { hi: '{animal}: {feed} रोज़', en: '{animal}: {feed} per day' },
+  c4_audit_label_card_milk: { hi: '{animal}: योजना से मिलने वाला दूध', en: '{animal}: milk the plan supports' },
+  c4_audit_label_gain: { hi: '{feed} से अतिरिक्त दूध', en: 'Extra milk from {feed}' },
+  c4_audit_label_total: { hi: 'चारे पर रोज़ का ख़र्च', en: 'Spend on feed per day' },
+  c4_audit_label_prompt_x: { hi: 'दूध लक्ष्य तक पहुँचने का रोज़ का अतिरिक्त ख़र्च', en: 'Extra spend per day to reach the milk target' },
+  c4_audit_label_prompt_y: { hi: 'सभी गाय-भैंस का दूध लक्ष्य', en: 'Milk target for all animals' },
+  c4_audit_label_generic: { hi: '{what}: प्रोटोटाइप का नमूना मान', en: '{what}: prototype fixture' },
+  c4_audit_row_source: { hi: 'यह मात्रा कहाँ से', en: 'Where this amount comes from' },
+  c4_audit_row_animal: { hi: 'गाय-भैंस', en: 'Animal' },
+  c4_audit_label_prefill_weight: { hi: '{breed}: आम शरीर का वज़न', en: '{breed}: typical body weight' },
+  c4_audit_label_prefill_fat: { hi: '{breed}: दूध में आम फैट', en: '{breed}: typical milk fat' },
+  c4_audit_note_prefill_weight: {
+    hi: 'नस्ल की तालिका से मादा का आम वज़न',
+    en: 'typical female body weight from the breed table',
+  },
+  c4_audit_row_low: { hi: 'सीमा का निचला सिरा', en: 'Low end of the range' },
+  c4_audit_row_high: { hi: 'सीमा का ऊपरी सिरा', en: 'High end of the range' },
+} as const satisfies Record<string, BiText>;
+
+export type StringIdC4 = keyof typeof stringsC4;
+
 export const strings = {
   // ---- connectivity, prototype strip ----------------------------------------------------------
   brand_tagline: { hi: 'सही दाना, हर नंबर का हिसाब।', en: 'Sahi dana, har number ka hisaab.' },
@@ -721,6 +847,13 @@ export const strings = {
 } as const satisfies Record<string, BiText>;
 
 export type StringId = keyof typeof strings;
+/** Any string id: Change 3 (`strings`) or Change 4 (`stringsC4`). */
+export type AnyStringId = StringId | StringIdC4;
+
+/** The { hi, en } pair for an id from either set. */
+export function entryOf(id: AnyStringId): BiText {
+  return id in stringsC4 ? stringsC4[id as StringIdC4] : strings[id as StringId];
+}
 export type BiParams = Record<string, number | string | BiText>;
 
 /** Hindi strings stay unverified until native-speaker review is recorded (ADR-0005). */
@@ -729,6 +862,14 @@ export const HINDI_REVIEW = {
   reviewedBy: null,
   reviewedOn: null,
 } as const;
+
+/** The Change 4 Hindi strings, all proposals pending native-speaker review (SPEC OQ-C4-1). */
+export const HINDI_REVIEW_C4: { status: 'unverified'; reviewedBy: null; reviewedOn: null; pendingIds: StringIdC4[] } = {
+  status: 'unverified',
+  reviewedBy: null,
+  reviewedOn: null,
+  pendingIds: Object.keys(stringsC4) as StringIdC4[],
+};
 
 function formatParam(value: number | string): string {
   return typeof value === 'number' ? formatNumber(value, naturalDecimals(value)) : value;
@@ -745,13 +886,13 @@ function interpolate(template: string, params: BiParams | undefined, half: 'hi' 
 }
 
 /** Both halves of a string with its {placeholders} filled. */
-export function t(id: StringId, params?: BiParams): BiText {
-  const entry: BiText = strings[id];
+export function t(id: AnyStringId, params?: BiParams): BiText {
+  const entry: BiText = entryOf(id);
   return { hi: interpolate(entry.hi, params, 'hi'), en: interpolate(entry.en, params, 'en') };
 }
 
 /** Plain text in the selected language, for aria-label, title, <option>, toast and the copied summary. */
-export function bi(id: StringId, params?: BiParams): string {
+export function bi(id: AnyStringId, params?: BiParams): string {
   return t(id, params)[getActiveLang()];
 }
 

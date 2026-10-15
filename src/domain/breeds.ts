@@ -79,3 +79,27 @@ export function capFromCitedFigures(breed: BreedStandard): CapDivision {
   const yieldKg = breed.lactationYieldKg ?? 0;
   return { basis: 'breed_average_calc', yieldKg, lengthDays: days, value: yieldKg / days };
 }
+
+// ---- Change 4: prefill of weight and fat from the cited breed row (SPEC C4.1 "Prefill") ----------------------
+export interface BreedPrefill {
+  /** breed.femaleBodyWeightKg (cited by bodyWeightCitation); null means the field stays blank and required. */
+  weightKg: number | null;
+  /** The single cited value, or the midpoint of a cited range; null when the table has no fat value. */
+  fatPct: number | null;
+  /** true: the fat is calculated from a cited range, so the card says "calculated from cited range". */
+  fatIsMidpoint: boolean;
+}
+
+const round3 = (x: number) => Math.round(x * 1000) / 1000;
+
+/** What a breed pick fills into an untouched weight and fat field. Nothing is substituted when the table is blank. */
+export function breedPrefill(breed: BreedStandard): BreedPrefill {
+  const low = breed.fatPctLow ?? null;
+  const high = breed.fatPctHigh ?? null;
+  const fatIsMidpoint = low !== null && high !== null;
+  return {
+    weightKg: breed.femaleBodyWeightKg ?? null,
+    fatPct: low === null ? null : high === null ? low : round3((low + high) / 2),
+    fatIsMidpoint,
+  };
+}

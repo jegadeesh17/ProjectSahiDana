@@ -71,3 +71,13 @@ export function parseDecimal(text: string): number {
   if (cleaned === '' || !/^\d*\.?\d*$/.test(cleaned) || cleaned === '.') return Number.NaN;
   return Number(cleaned);
 }
+
+/** Whole rupees for the farmer view: 1,235 becomes "₹1,235". The caller rounds (see src/domain/format.ts). */
+export function formatInrWhole(value: number): string {
+  return `₹${formatNumber(value, 0)}`;
+}
+
+/** An amount in its display unit: "5.0 kg" or "50 g" (see displayAmount in src/domain/format.ts). */
+export function formatAmount(a: { value: number; unit: 'kg' | 'g'; decimals: 0 | 1 }): string {
+  return `${formatNumber(a.value, a.decimals)}${NBSP}${a.unit}`;
+}
