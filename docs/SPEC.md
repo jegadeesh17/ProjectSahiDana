@@ -612,3 +612,419 @@ Quoted strings are the English-mode text unless stated; the Hindi text comes fro
   - *Resolution:* cannot happen. From rung 1 on, prefixes are nested and each step adds only a feed the solver may leave at 0 kg/day, so every rung is balanced and milk never goes down; tests assert both. The fixed-minimum supplements (`mineral_mix`, `common_salt`) are always in rung 1, because adding one later would add a fixed cost and could lower milk. Rung 0 is outside this chain and may show slightly more milk than rung 1; the UI labels it.
 - **OQ-C3-9. Hindi strings for new labels not given in the plan ("You have", "Buy", "Feeds to buy, cheapest first", "Not needed", the prompt and raise-by lines, "Tight budget"):**
   - *Assumption:* the frontend task writes them in the strings file; they stay unverified until a native-speaker review, as in OQ8.
+
+---
+
+## Change 4: Herd and 3-step flow
+
+This section specifies Change 4 (started 2026-10-15, branch `feat/herd-flow`, base commit `2134ab6`) from [PROJECT_MENTAL_MODEL.md](PROJECT_MENTAL_MODEL.md) "Change 4" and [BRAINSTORM.md §12](internal/BRAINSTORM.md). It specifies only what is new or different. Sections 1–5 and Change 3 still hold unless C4.4 lists a criterion as superseded.
+
+### C4.1 Summary
+
+- **Change:** SahiDana becomes a 3-screen app for the whole herd, built for farmers and paravets rather than analysts.
+  - Screen 1 "Your animals" (`#/animals`): add each cow or buffalo and set one daily budget for buying feed.
+  - Screen 2 "Feed you already have" (`#/feeds`, optional): the feed already at home, in kg per day for all animals, with no price.
+  - Screen 3 "Your plan" (`#/result`): the best plan within the budget. It shows one shopping list, "What to buy" (in buying order, with the milk each later feed adds), what to give each animal, what is not needed today, and budget prompts.
+  - Nutrient detail sits in a collapsed "Details (for paravet)" inside each animal card. Every number stays one tap from its audit.
+- **Change type:** Feature. **Posture:** Prototype; the solver and the number-honesty checks keep thorough tests, including a herd SciPy cross-check.
+- **Persona:** the farmer and the paravet reading the same phone screen (a basic Android phone, see [PRODUCT.md](../PRODUCT.md)). The main view uses plain words with no technical terms.
+- **Milestones:**
+  - **C4-M1** (target 2026-10-16 23:00 IST): screens 1–3 for one animal, breed prefill, home feed at ₹0, the plain result, display units, and the "Not needed" padding fix.
+  - **C4-M2** (target 2026-10-17 23:00 IST): several animals, herd budget sharing, the herd shopping list in buying order with per-animal cards, and herd demos. If C4-M2 is not accepted by then, the C4-M1 build is submitted.
+- **Constraint restated:** every displayed number comes from the solver, a cited source row, or the user's input, and is tappable to its audit. The single-animal solver (`solveRation`) is unchanged.
+
+**Shared definitions for Change 4** (in addition to section 3 and C3.1):
+
+- **Herd (`H`)**: the animals `a_1 … a_n` in the screen-1 list. `1 ≤ n ≤ 10` from C4-M2 on, and `n = 1` in C4-M1. Each animal has a species, a breed, a body weight `W_i`, today's milk `T_i` and a fat %.
+- **Animal label**: each animal gets a label made of its species word and a number counted per species: "Cow 1", "Cow 2", "Buffalo 1" (Hindi "गाय 1", "गाय 2", "भैंस 1"). The number is the highest number used so far for that species in this session plus 1. Labels are not renumbered when an animal is removed (OQ-C4-3).
+- **Prefill**: a body-weight or fat field that the user has not typed in shows a value from the selected breed's row in `data/breeds.csv`:
+  - **Weight** comes from `female_body_weight_kg`, cited by `body_weight_citation`.
+  - **Fat** comes from `fat_pct_low` when `fat_pct_high` is blank (the single cited value). When both are present it is `(fat_pct_low + fat_pct_high) / 2`, labelled "calculated from cited range". It is cited by the `fat_source_*` columns.
+  - When the column is blank (for example, weight for Kankrej, HF crossbred, Jersey crossbred, Surti, Mehsana and both non-descript rows; fat for Kankrej, both crossbreds and both non-descript rows), the field stays blank and is required.
+  - Once the user types in a field, that field holds "your value" and a later breed change does not overwrite it. A breed change re-prefills only fields the user has not typed in.
+- **Milk target (`g_i`)**: `effCap_i = max(cap_i, T_i)` when `T_i > 0`, with `cap_i` per section 3. It is `0` for a dry animal (`T_i = 0`).
+- **Home feeds (`Hm`)**: the screen-2 rows. Each row is a library feed `f` with `q_f`, the herd total in kg/day as fed, where `q_f > 0`. A feed appears at most once. Home feeds may be in or out of season and may have no cited price.
+- **Buy set (`C`)**: every library feed whose `availableMonths` includes the device's current month `m` and that has a cited default price, at that price, with no per-feed cap. This is the C3 candidate rule with no own feeds.
+- **Herd budget (`Bd`)**: the screen-1 amount in ₹/day, spent only on buying feed for the whole herd. It must be `> 0`.
+- **Joint herd LP**: one linear program over the herd.
+  - For each animal `i` and feed `f`, there is a home amount `h_{i,f} ≥ 0` (for `f ∈ Hm`) and a buy amount `b_{i,f} ≥ 0` (for `f ∈ C`). A feed in both `Hm` and `C` has both variables.
+  - Each animal has the existing per-animal constraints: requirements at its milk level `y_i`, its dry-matter intake ceiling from `W_i`, the roughage minimum `r`, and the supplement fixed minimums ([ADR-0012](DECISIONS.md#adr-0012-cheapest-first-upgrade-ladder-from-nested-prefix-solves)).
+  - Home stock is shared: `Σ_i h_{i,f} ≤ q_f`.
+  - Home feed costs ₹0. The purchase cost is `P = Σ_i Σ_f price_f × b_{i,f}`.
+  - No minimum use of any home feed is imposed.
+- **Herd maintenance cost (`M_H`)**: the minimum `P` with every `y_i = 0` and no budget row. It is null when that LP is infeasible.
+- **Fair share (`t*`)**: Stage 1 maximizes `t ∈ [0, 1]` subject to `y_i = t × g_i` for every animal and `P ≤ Bd`. When every animal is dry, Stage 1 is skipped and `t* = 0`.
+- **Per-animal milk**: `Y_i = t* × g_i` (unrounded) and `S_i = ⌊Y_i × 10⌋ / 10`.
+- **Herd plan (`F`)**: Stage 2 minimizes `P` subject to `y_i = S_i` for every animal and `P ≤ Bd`. The split of a shared home feed between animals is the solver's.
+  - **Home-use tie-break (`F` only):** among plans whose purchase cost equals the minimum `P` within `1e-6` (relative), `F` is one with the least total home use `Σ_i Σ_f h_{i,f}` (kg/day as fed). In plain words: feed exactly what is needed from home and keep the rest for tomorrow. The tie-break does not apply to the ladder prefixes.
+  - `F` is the best plan within the budget, and it is the only plan whose amounts appear on the main view: the shopping list, the total line, the animal cards, "Not needed today" and the copied summary.
+- **Herd buy list (`Bu_H`)**: the feeds `f ∈ C` with `Σ_i b_{i,f} > 1e-6` in `F`. Supplements come first, cheapest herd ₹/day first, then the rest by herd ₹/day ascending, with ties broken by feed id. This is the C3 buy-list order applied to herd totals.
+- **Prefix `k`**: the joint herd LP (Stage 1 and Stage 2) with the buy set restricted to `Bu_H[1..k]`, the same home feeds, herd and budget.
+- **Buy-first prefix (`P1`)**: when `Bu_H` is non-empty, `P1` is the prefix `k1` = the smallest `k ≥ s` (`k ≥ 1` when `s = 0`) whose solve is optimal, where `s` is the number of supplements on `Bu_H`. This is the C3 rung-1 rule. `P1` decides only which feeds are in the "Buy first" group; its amounts are not shown on the main view.
+- **Later steps**: the prefixes `k1 + 1 … |Bu_H|`, one step per added feed `Bu_H[k]`. The last step is `F`. Steps decide the buying order and the milk gain only; their amounts are not shown on the main view.
+  - **Step gain** is `ΔL_k = Σ_i S_i(k) − Σ_i S_i(k − 1)`, which is `≥ 0` because prefixes are nested.
+- **Shopping list ("What to buy")**: the feeds of `Bu_H` in `Bu_H` order. Each line shows that feed's herd kg/day and ₹/day from `F`.
+  - Group 1, headed "Buy first", holds `Bu_H[1..k1]`.
+  - Then, under "Then, if you can", there is one line per later step `k`, for the feed `Bu_H[k]`, ending with its step gain `ΔL_k`.
+- **Herd cost at target (`costAtCap_H`)**: the minimum `P` with every `y_i = g_i` and no budget row. It is null when that LP is infeasible or every animal is dry.
+- **Herd budget-prompt rule:** "Add ₹`X`/day to reach `Y` L" is shown only when all of these hold:
+  - `F` is optimal;
+  - the budget is tight in Stage 1;
+  - `t* < 1 − 1e-6`;
+  - `costAtCap_H` is not null.
+
+  Then `X = ⌈costAtCap_H − Bd⌉` and `Y = Σ_i ⌊g_i × 10⌋ / 10`.
+- **Below-maintenance rule:** when `M_H` is not null and `Bd < M_H − 1e-6`, the plan is replaced by "Spend at least ₹`X` more a day", with `X = ⌈M_H − Bd⌉`.
+- **Display units (main view):**
+  - Rupees are rounded to the nearest whole rupee, except the `X` in the two budget prompts, which is rounded up.
+  - kg are shown to 1 decimal place (half up).
+  - `mineral_mix` and `common_salt` are shown in grams (`g`), as kg × 1000 rounded to the nearest whole gram.
+  - Milk is shown as `S_i` (rounded down to `0.1` L), and herd milk gains are rounded down to `0.1` L.
+  - A line is shown when its exact amount is `> 1e-6` kg.
+  - The audit drawer shows the exact solver value.
+- **Main view**: screen 3 outside the collapsed "Details (for paravet)" panels and outside the audit drawer.
+
+### C4.2 User Journeys
+
+#### Journey C4-A: One animal, three screens (C4-M1, replaces the single-page flow of Journeys C3-A and C3-B)
+
+1. The user opens the app at `#/animals`, titled "Your animals" (Hindi "आपकी गाय-भैंस", pending native review). The add-animal card is open.
+2. The user taps **Cow** or **Buffalo** and picks a breed from that species' list, which includes "Desi / don't know" (Hindi "देशी / पता नहीं", pending native review).
+3. Body weight and fat fill in from the cited breed row, each with the hint "typical for this breed — change if you know" (Hindi "इस नस्ल के लिए आम — पता हो तो बदलें", pending native review). For a breed with a fat range, the fat hint adds "calculated from cited range". The user can tap either value to see its citation, or type over it.
+4. The user types today's milk in L/day and taps **Add**. The animal appears in the list as "Cow 1" (or "Buffalo 1") with **Edit** and **Remove**.
+5. The user types the answer to "How much can you spend on feed each day, for all animals?" in ₹/day. **Next** becomes enabled. Before that, it was disabled with a line saying why.
+6. On `#/feeds`, "Feed you already have", the user reads "Skip if you have nothing at home.". They search by English or local name, tap a feed to add a row, and type "kg per day you can give (all animals)". They can also tap **Calculate ration** with no rows.
+7. On `#/result`, "Your plan", the user sees, top to bottom:
+   - "What to buy", one shopping list for the best plan within the budget. It shows the "Buy first" group, then lines under "Then, if you can", each ending "→ about +`L` L milk". Every line shows its kg/day and ₹/day, and the list ends with "₹`A` of your ₹`Bd` a day";
+   - "What to give each animal", with one card per animal from the same plan, each line tagged "From home" or "Buy", ending "enough for about `S` L milk";
+   - "Not needed today";
+   - any budget prompt.
+8. The user taps any number to open its audit, and taps "Details (for paravet)" in a card to see nutrients, the breed benchmark and the verdict.
+9. The phone's Back button returns to `#/feeds`, then to `#/animals`, with every input kept.
+
+#### Journey C4-B: Herd (C4-M2, extends Journey C4-A)
+
+1. On screen 1 the user adds up to 10 animals, for example "Cow 1", "Cow 2" and "Buffalo 1". Adding an 11th is refused with a message.
+2. The user sets one herd budget, adds home feeds as herd totals, and taps **Calculate ration**.
+3. Every animal is kept healthy first. The rest of the budget is shared so every milking animal reaches the same share of its milk target, and a dry animal gets a maintenance ration.
+4. "What to buy" shows herd totals in buying order. Each animal's share of the plan is on its own card.
+5. The user taps **Remove** on "Cow 2" on screen 3. The app returns to screen 1 with the remaining animals, the budget and the home feeds kept, and the plan must be calculated again.
+
+### C4.3 Acceptance Criteria
+
+Quoted strings are the English-mode text. The Hindi text is given where it is proposed, and new Hindi strings stay "pending native review" (OQ-C4-1). AC-L1.2 applies to every new string.
+
+#### C4-M1: Three screens for one animal
+
+- **AC-C4-1.1 (Three screens on hash routes) [C4-M1]:**
+  - **Given** the app opens with no hash, `#/`, or an unknown hash,
+  - **When** it renders,
+  - **Then** it shows screen 1 at `#/animals`, titled "Your animals"; screen 2 is at `#/feeds` ("Feed you already have", Hindi "आपके पास पहले से मौजूद चारा") and screen 3 is at `#/result` ("Your plan", Hindi "आपकी योजना"); opening `#/feeds` or `#/result` with no valid animal and budget redirects to `#/animals`; and opening `#/result` with no current plan redirects to `#/feeds`.
+- **AC-C4-1.2 (Add-animal card) [C4-M1]:**
+  - **Given** screen 1 with the add-animal card open,
+  - **When** the user taps **Cow** or **Buffalo**,
+  - **Then** the breed list shows exactly that species' breeds from `data/breeds.csv`, with the non-descript row shown as "Desi / don't know" (Hindi "देशी / पता नहीं"); the card has a today's-milk field in L/day and an **Add** button; and **Add** adds the animal only when species, breed, weight, milk and fat (fat optional when milk is `0`, per OQ1) pass AC-E1.1, showing AC-E1.1's inline errors otherwise.
+- **AC-C4-1.3 (Weight prefill) [C4-M1]:**
+  - **Given** the user has not typed a body weight,
+  - **When** they pick a breed whose `female_body_weight_kg` is filled (for example Rathi, `295`),
+  - **Then** the weight field shows that value with the hint "typical for this breed — change if you know", and tapping the value opens the audit drawer with `body_weight_citation` and the line "typical female body weight from the breed table".
+- **AC-C4-1.4 (Fat prefill: single value or midpoint) [C4-M1]:**
+  - **Given** the user has not typed a fat %,
+  - **When** they pick a breed with only `fat_pct_low` (for example Sahiwal, `4.93`) and then a breed with both bounds (for example Rathi, `3.7`–`4`),
+  - **Then** the fat field shows `4.93` with the prefill hint; after the second pick it shows `3.85` with the hint and the label "calculated from cited range"; and the audit for `3.85` shows the low value, the high value, the formula `(low + high) / 2` and the `fat_source_*` citation.
+- **AC-C4-1.5 (Typed values win) [C4-M1]:**
+  - **Given** a prefilled weight and fat,
+  - **When** the user types a weight, then picks another breed,
+  - **Then** the typed weight is kept and labelled "your value" (no prefill hint), the fat re-prefills from the new breed, and the solver uses the values shown.
+- **AC-C4-1.6 (Animal list entry) [C4-M1]:**
+  - **Given** a valid add-animal card,
+  - **When** the user taps **Add**,
+  - **Then** the list shows the animal as "Cow 1" or "Buffalo 1" (Hindi "गाय 1" or "भैंस 1") with its breed and today's milk, and with **Edit** and **Remove**; **Edit** reopens the card with that animal's values and saving keeps the label; **Remove** removes it; and in C4-M1 the add card is hidden while one animal is listed.
+- **AC-C4-1.7 (Herd budget field) [C4-M1]:**
+  - **Given** screen 1,
+  - **When** it renders,
+  - **Then** a single budget field labelled "How much can you spend on feed each day, for all animals?" (Hindi "सभी गाय-भैंस के चारे पर रोज़ कितना ख़र्च कर सकते हैं?") takes ₹/day, and a value that is not a number greater than `0` shows "Budget must be a positive number in ₹/day".
+- **AC-C4-1.8 (Next gating says why) [C4-M1]:**
+  - **Given** screen 1,
+  - **When** the list has no animal, or the budget is blank or not greater than `0`,
+  - **Then** **Next** is disabled and a line names each missing item: "Add at least one animal" (Hindi "कम से कम एक गाय या भैंस जोड़ें") and/or "Enter how much you can spend each day" (Hindi "रोज़ का ख़र्च लिखें"); with at least 1 listed animal and a valid budget, **Next** is enabled and goes to `#/feeds`.
+- **AC-C4-1.9 (Home feed screen) [C4-M1]:**
+  - **Given** screen 2,
+  - **When** the user searches by an English, transliterated or Devanagari name (AC-3.1) and taps a result,
+  - **Then** the text "Skip if you have nothing at home." (Hindi "घर पर कुछ नहीं है तो छोड़ दें।") is shown; a row is added with the feed name, a field "kg per day you can give (all animals)" (Hindi "रोज़ कितने kg दे सकते हैं (सभी गाय-भैंस)") and **Remove**; tapping a feed already listed adds no second row; and no row shows a price field, a season mark or a month selector.
+- **AC-C4-1.10 (Calculate gating on screen 2) [C4-M1]:**
+  - **Given** screen 2,
+  - **When** there are no rows, or every row has a kg/day greater than `0`,
+  - **Then** **Calculate ration** (Hindi "राशन निकालें") is enabled, and tapping it solves and goes to `#/result`; **Back** goes to `#/animals`. (For invalid rows see AC-C4-E4.)
+- **AC-C4-1.11 (Home feed is free, capped and optional) [C4-M1]:**
+  - **Given** a home feed `f` with `q_f` kg/day,
+  - **When** the plan is calculated,
+  - **Then** the solver costs `f`'s home amount at ₹0; the herd total of `f` from home is `≤ q_f + 1e-6`; when `f ∈ C`, the plan may also buy `f` at its cited price as a separate line, tagged "Buy"; when `f ∉ C` (out of season or no cited price), `f` is never bought; and the plan's purchase cost is never higher than the same inputs with that home row removed.
+- **AC-C4-1.11a (Home feed used only as needed) [C4-M1]:**
+  - **Given** one animal, home wheat straw at `20` kg/day, and a budget that already balances the ration,
+  - **When** the plan is computed,
+  - **Then** the straw used in `F` is no more than the least amount of straw any minimum-purchase plan needs (within `1e-6`), as checked by a SciPy HiGHS case that minimizes home use with the purchase cost fixed at its minimum; and the animal card's "From home" straw line equals that amount (before display rounding).
+- **AC-C4-1.12 (Single animal equals the Change 3 solver) [C4-M1]:**
+  - **Given** a one-animal herd with no home feeds,
+  - **When** the plan is calculated,
+  - **Then** `F`'s ration, `S_1`, `Y*`, cost and binding constraint equal `solveRation` run on `C` with the same animal and budget, within `1e-6` (relative); the "Buy first" group equals the feeds of C3 rung 1; the order of the "Then, if you can" lines equals the feeds added by C3 rungs 2 to last; and each line's `ΔL_k` equals the difference between consecutive C3 rung milk figures for the same inputs.
+- **AC-C4-1.13 ("What to buy" shopping list) [C4-M1]:**
+  - **Given** a feasible plan with `Bu_H` non-empty,
+  - **When** screen 3 renders,
+  - **Then** the first section is "What to buy" (Hindi "क्या ख़रीदें", pending native review); it lists every feed of `Bu_H` exactly once, in `Bu_H` order, each with its herd kg/day (or g) and ₹/day from `F`; the first group is headed "Buy first" (Hindi "पहले यह ख़रीदें") and holds `Bu_H[1..k1]`; the section ends with the line "₹`A` of your ₹`Bd` a day" (Hindi "आपके ₹`Bd` रोज़ में से ₹`A`"), where `A` is `F`'s purchase cost (whole rupees); and no text on screen 3 says "more money" (Hindi "ज़्यादा पैसे").
+- **AC-C4-1.14 ("Then, if you can" lines) [C4-M1]:**
+  - **Given** a feasible plan with at least one later step,
+  - **When** the shopping list renders,
+  - **Then** after the "Buy first" group comes the heading "Then, if you can" (Hindi "फिर, हो सके तो", pending native review) and one line per later step `k`, in step order, reading "`<feed>` `<kg>` (₹`<cost>`) → about +`<L>` L milk" (Hindi "`<feed>` `<kg>` (₹`<cost>`) → लगभग +`<L>` L दूध"), where kg and ₹ come from `F` and `L = ΔL_k` rounded down to `0.1`; `L` is tappable and its audit shows "Solver output", the feeds in prefixes `k − 1` and `k`, and `Σ_i S_i` for each; when `ΔL_k` rounds to `0.0` the line ends "→ same milk" (Hindi "→ उतना ही दूध", pending native review); for a dry-only herd the line has no milk part; and the heading is absent when there is no later step.
+- **AC-C4-1.14a (Nothing to buy) [C4-M1]:**
+  - **Given** a feasible plan with `Bu_H` empty,
+  - **When** screen 3 renders,
+  - **Then** "What to buy" shows "Nothing to buy today" (Hindi "आज कुछ ख़रीदना नहीं", pending native review), with no "Buy first" group, no "Then, if you can" lines and no total line.
+- **AC-C4-1.15 (Animal card) [C4-M1]:**
+  - **Given** a feasible plan,
+  - **When** "What to give each animal" (Hindi "हर गाय-भैंस को क्या दें") renders,
+  - **Then** each animal has one card, for example "Cow 1: Bhusa 5.0 kg · Wheat bran 1.5 kg · Mineral mix 50 g · Salt 30 g — enough for about 7.0 L milk", from `F`; each line carries exactly one tag, "From home" (Hindi "घर का") for `h_{i,f}` or "Buy" (Hindi "ख़रीदें") for `b_{i,f}`, so a feed both used from home and bought shows two lines; the milk is `S_i(F)`; and a dry animal's card ends "keeps her healthy (dry)" (Hindi "सूखी गाय/भैंस का गुज़ारा", pending native review) instead of a milk figure.
+- **AC-C4-1.16 ("Details (for paravet)") [C4-M1]:**
+  - **Given** an animal card,
+  - **When** it first renders, and then the user taps "Details (for paravet)" (Hindi "विवरण (पैरावेट के लिए)"),
+  - **Then** the details are collapsed at first; once expanded they show the nutrient coverage bars (`DM`, `CP`, `ME`, `Ca`, `P`, supplied against required at `S_i`), the intake ceiling, the roughage share against `r`, the breed benchmark per AC-2.4 and AC-2.5, the milk target `g_i` with `t*`, the per-animal verdict (AC-5.6, AC-5.13, the AC-5.7 wording without `Z`, the AC-5.11 first sentence without `B`), the fat line (AC-5.9, AC-5.10), the caveat line and the binding constraint (AC-5.5, or AC-C4-2.10 for a herd); and a second tap collapses them.
+- **AC-C4-1.17 ("Not needed today" and its padding) [C4-M1]:**
+  - **Given** a feasible plan,
+  - **When** some home feeds have a herd total of `≤ 1e-6` kg/day in `F`,
+  - **Then** a section "Not needed today" (Hindi "आज ज़रूरत नहीं") names exactly those feeds; it is absent when there are none; and at 375 px wide its content has the same left and right padding as the "What to buy" section (computed style equal, text not touching the card edge).
+- **AC-C4-1.18 (Budget prompts) [C4-M1]:**
+  - **Given** a plan,
+  - **When** the herd budget-prompt rule holds, or the below-maintenance rule holds,
+  - **Then** in the first case screen 3 adds "Add ₹`X`/day to reach `Y` L" (Hindi "`Y` L तक पहुँचने के लिए रोज़ ₹`X` और जोड़ें"), with `X` tappable to an audit showing `costAtCap_H`, `Bd`, the subtraction and the rounding up, and `Y` tappable to the milk-target audit; in the second case screen 3 shows only "Spend at least ₹`X` more a day" (Hindi "रोज़ कम से कम ₹`X` और ख़र्च करें"), with `X` tappable to `M_H`, `Bd` and the subtraction, and no "What to buy", cards or "Not needed today"; and neither prompt is shown when its rule does not hold (AC-C3-E4 and AC-C3-E5 read for the herd).
+- **AC-C4-1.19 (Display units) [C4-M1]:**
+  - **Given** a plan,
+  - **When** the main view is inspected,
+  - **Then** every ₹ amount is a whole number; every kg amount has exactly 1 decimal place; `mineral_mix` and `common_salt` lines are in whole `g` and never in kg; milk figures have exactly 1 decimal place; and the audit drawer for each such number shows the exact unrounded solver value.
+- **AC-C4-1.20 (Every number tappable) [C4-M1]:**
+  - **Given** screens 1–3,
+  - **When** the user taps any number (a prefilled weight or fat, a kg, g, ₹ or L figure, a total, a milk gain, a prompt figure),
+  - **Then** the audit drawer opens with its citation (AC-6.1) or "Solver output" with the stage and LP term (AC-6.2); for a milk gain the audit follows AC-C4-1.14; and a typed input opens "Your input".
+- **AC-C4-1.21 (Plain words on the main view) [C4-M1]:**
+  - **Given** screen 3 in English mode, in any plan state,
+  - **When** the main-view text is inspected,
+  - **Then** it contains none of `DM`, `ME`, `CP`, "rung", "binding", "supported milk" or "Stage" (whole words, case-insensitive); in Hindi mode it contains no "चरण" step label; and these terms may appear only inside "Details (for paravet)" and the audit drawer.
+- **AC-C4-1.22 (Navigation keeps inputs) [C4-M1]:**
+  - **Given** inputs on screens 1 and 2 and a plan on screen 3,
+  - **When** the user taps **Back** or **Edit**, or presses the phone's Back button,
+  - **Then** the hash moves `#/result` → `#/feeds` → `#/animals` and every animal, the budget and every home-feed row are kept; when the user returns to screen 3 after changing any input, the old plan is not shown until **Calculate ration** is tapped again; and with no input changed, the forward button reshows the same plan.
+- **AC-C4-1.23 (Describe-your-animal shortcut) [C4-M1]:**
+  - **Given** screen 1 with the device online,
+  - **When** the user expands the collapsed "Describe your animal" helper (privacy notice per AC-2.2) and taps **Fill from description**,
+  - **Then** the extraction fills the add-animal card (species, breed if on the list, weight, milk, fat) in the unconfirmed prefilled state of AC-2.3; any stated budget fills the herd budget; matched feeds are added as screen-2 rows with a blank kg/day; and AC-E5.1 holds.
+- **AC-C4-1.24 (Copy summary and Explain) [C4-M1]:**
+  - **Given** a feasible plan,
+  - **When** the user taps **Copy summary**, or **Explain** (shown only when the herd has exactly 1 animal),
+  - **Then** the copied plain text, in the active language, is built from `F` and contains "What to buy" with its "Buy first" group, its "Then, if you can" lines with their milk gains, and the total line, then each animal card line, "Not needed today", any budget prompt, the budget and source attribution, using the main-view units; and Explain follows AC-7.1, AC-E4.2 and AC-E6.1 for the one animal.
+- **AC-C4-1.25 (Single-animal examples) [C4-M1]:**
+  - **Given** the "Try an example" (Hindi "उदाहरण आज़माएँ") section on screen 1 in the C4-M1 build,
+  - **When** the user taps each example and goes through to screen 3,
+  - **Then** there are three one-animal examples, each filling screens 1 and 2: a lactating buffalo with a feasible plan; a cow with home feed wheat straw only, labelled "Needs feeds to buy" (Hindi "चारा ख़रीदना ज़रूरी"), whose "What to buy" list has at least one line; and a "Tight budget" example showing "Add ₹`X`/day to reach `Y` L". Outcomes are asserted by tests against real solver output.
+
+#### C4-M2: Herd
+
+- **AC-C4-2.1 (Up to 10 animals, labelled per species) [C4-M2]:**
+  - **Given** screen 1,
+  - **When** the user adds a cow, a cow, then a buffalo,
+  - **Then** they are listed as "Cow 1", "Cow 2", "Buffalo 1" (Hindi "गाय 1", "गाय 2", "भैंस 1"); the add card stays available below the list while fewer than 10 animals are listed; after "Cow 1" is removed, the next cow added is "Cow 3"; and the labels on screen 3 match screen 1.
+- **AC-C4-2.2 (Remove from the plan returns to screen 1) [C4-M2]:**
+  - **Given** a plan for 2 or more animals on screen 3,
+  - **When** the user taps **Remove** on an animal card,
+  - **Then** that animal is removed, the app goes to `#/animals`, the other animals, the budget and the home feeds are kept, and no plan is shown until **Calculate ration** is tapped again.
+- **AC-C4-2.3 (Every animal kept healthy first) [C4-M2]:**
+  - **Given** a herd with `Bd ≥ M_H` and `M_H` not null,
+  - **When** the plan is calculated,
+  - **Then** every animal's ration in `F` and in every prefix solve from `P1` on meets its requirements at `y_i = S_i ≥ 0`, its intake ceiling and the roughage minimum (within `1e-6`), so no animal is below maintenance; and the plan's purchase cost is `≤ Bd + 1e-6`.
+- **AC-C4-2.4 (Same share of the milk target) [C4-M2]:**
+  - **Given** a herd with at least two milking animals and a feasible plan,
+  - **When** Stage 1 runs,
+  - **Then** `Y_i / g_i = t*` within `1e-6` for every milking animal; `0 ≤ t* ≤ 1`; each dry animal has `y_i = 0`; no other split of the budget gives every milking animal a share greater than `t*` (checked against the SciPy cross-check, AC-C4-2.9); and Details shows `t*` as "share of milk target" with its solver audit.
+- **AC-C4-2.5 (Cheapest purchase at that share, stock shared) [C4-M2]:**
+  - **Given** a feasible herd plan,
+  - **When** Stage 2 runs,
+  - **Then** `F`'s purchase cost is the minimum `P` with every `y_i = S_i` (agreeing with SciPy within tolerance), and among such plans `F`'s total home use `Σ_i Σ_f h_{i,f}` is minimal (agreeing with SciPy within tolerance); for every home feed `f`, `Σ_i h_{i,f} ≤ q_f + 1e-6`; and for every bought feed, the "Buy" card lines summed over animals equal its herd total in "What to buy" within `1e-6` before display rounding.
+- **AC-C4-2.6 (Herd shopping list in buying order) [C4-M2]:**
+  - **Given** a herd plan with `Bu_H` non-empty,
+  - **When** "What to buy" renders,
+  - **Then** AC-C4-1.13 and AC-C4-1.14 hold with herd totals from `F`; each prefix from `P1` to the last is a real joint herd solve; every feed of `Bu_H` appears exactly once in the list; supplements on `Bu_H` are in the "Buy first" group; `Σ_i S_i` never decreases from `P1` through each later step, so every `ΔL_k ≥ 0`; the last step equals `F` within `1e-6` (relative); and no per-step per-animal split is shown (each animal's share is its card, AC-C4-2.7).
+- **AC-C4-2.7 (Herd cards, dry animal included) [C4-M2]:**
+  - **Given** a herd with a dry animal and milking animals,
+  - **When** the plan renders,
+  - **Then** there is one card per animal in screen-1 list order, each from `F`; the dry animal's card shows a maintenance ration with no milk figure (AC-C4-1.15); and the milking animals' cards show `S_i(F)`.
+- **AC-C4-2.8 (Herd budget prompts) [C4-M2]:**
+  - **Given** a herd,
+  - **When** the herd budget-prompt rule or the below-maintenance rule holds,
+  - **Then** AC-C4-1.18 holds with herd totals: `Y` is the sum over milking animals of `⌊g_i × 10⌋ / 10`, and `X` uses `costAtCap_H` or `M_H` of the whole herd; no per-animal budget is shown.
+- **AC-C4-2.9 (Herd SciPy agreement) [C4-M2]:**
+  - **Given** herd benchmark cases added to `eval/` (at least: 2 animals of different species; a herd with a dry animal; a herd with shared home stock that binds; a herd below maintenance),
+  - **When** `npm run eval:dump && npm run eval:scipy` runs,
+  - **Then** `t*`, `F`'s purchase cost, `M_H` and `costAtCap_H` equal the SciPy HiGHS results within the suite's tolerance, infeasible or null together, at 100% agreement.
+- **AC-C4-2.10 (Herd limit named in Details) [C4-M2]:**
+  - **Given** a herd plan,
+  - **When** the user opens Details or taps `t*`,
+  - **Then** the audit names what limits `t*`: "budget"; "milk target" when `t* = 1`; or a named animal's limit ("`<label>`: intake limit", "roughage", a nutrient), or "home stock: `<feed>`"; and for each test case in which exactly one of these is tight, that one is named.
+- **AC-C4-2.11 (Herd examples) [C4-M2]:**
+  - **Given** "Try an example" in the C4-M2 build,
+  - **When** the user taps each example and goes through to screen 3,
+  - **Then** there are exactly three herd examples: "Cow + Buffalo" with a feasible plan for both; "Straw only" with home wheat straw and a "What to buy" list of at least one line; and "Tight budget" showing "Add ₹`X`/day to reach `Y` L". Outcomes are asserted against real solver output.
+- **AC-C4-2.12 (Copy and Explain for a herd) [C4-M2]:**
+  - **Given** a plan for 2 or more animals,
+  - **When** screen 3 renders,
+  - **Then** **Copy summary** copies the herd plan per AC-C4-1.24 with every animal card, and **Explain** is not shown (no whole-herd explanation).
+
+#### Edge cases
+
+- **AC-C4-E1 (No animals) [C4-M1]:**
+  - **Given** screen 1 with an empty list (including after **Remove** of the last animal),
+  - **When** it renders,
+  - **Then** **Next** is disabled with "Add at least one animal", and `#/feeds` and `#/result` redirect to `#/animals`.
+- **AC-C4-E2 (Budget blank or 0) [C4-M1]:**
+  - **Given** at least one animal,
+  - **When** the budget is blank, `0`, negative or non-numeric,
+  - **Then** **Next** is disabled with "Enter how much you can spend each day", and a typed invalid value also shows "Budget must be a positive number in ₹/day".
+- **AC-C4-E3 (Budget below herd maintenance) [C4-M1; herd C4-M2]:**
+  - **Given** `M_H` not null and `Bd < M_H − 1e-6`,
+  - **When** the user taps **Calculate ration**,
+  - **Then** screen 3 shows only "Spend at least ₹`X` more a day" with `X = ⌈M_H − Bd⌉`, with no ration, no animal card and no partial plan; and AC-E7.1's feed suggestion is not shown (OQ-C3-7).
+- **AC-C4-E4 (Home-feed row with blank or invalid kg) [C4-M1]:**
+  - **Given** screen 2 with a row whose kg/day is blank, `0`, negative or non-numeric,
+  - **When** it renders,
+  - **Then** the row shows an inline error, **Calculate ration** is disabled, and the line "Enter kg per day for every feed, or remove it" (Hindi "हर चारे के रोज़ के kg लिखें या उसे हटाएँ", pending native review) is shown until the row is fixed or removed.
+- **AC-C4-E5 (11th animal) [C4-M2]:**
+  - **Given** 10 animals in the list,
+  - **When** the user tries to add another,
+  - **Then** the list stays at 10 and the message "You can add up to 10 animals" (Hindi "ज़्यादा से ज़्यादा 10 गाय-भैंस जोड़ सकते हैं", pending native review) is shown.
+- **AC-C4-E6 (Breed with no cited weight or fat) [C4-M1]:**
+  - **Given** a breed whose `female_body_weight_kg` or fat columns are blank (for example "Desi / don't know", Kankrej, HF crossbred),
+  - **When** it is picked,
+  - **Then** each such field is blank with no hint and no number substituted, and **Add** stays disabled with AC-E1.1's range message until the user types a valid value (fat is optional when milk is `0`).
+- **AC-C4-E7 (Language switch on each screen) [C4-M1]:**
+  - **Given** inputs on screen 1, rows on screen 2, or a plan on screen 3,
+  - **When** the user switches the language on that screen,
+  - **Then** the hash and screen stay the same, every input is kept, the plan is not recalculated and its numbers are identical, the animal labels switch ("Cow 1" ↔ "गाय 1"), and AC-L1.2 and AC-L1.3 hold.
+- **AC-C4-E8 (Online-only helper while offline) [C4-M1]:**
+  - **Given** the device is offline,
+  - **When** the user uses screens 1–3, the examples and the audits,
+  - **Then** all work with no network request; **Fill from description** and **Explain** are disabled with "Needs internet" (AC-E3.1).
+- **AC-C4-E9 (One animal cannot be fed healthily at any cost) [C4-M1; per-animal naming C4-M2]:**
+  - **Given** `M_H` is null,
+  - **When** the user taps **Calculate ration**,
+  - **Then** no plan is shown (no partial plan); the alert names each animal that fails alone at `0` L with all of `C` and the full home stock, as "`<label>`: `<limit>` limits it", with the limiting nutrient(s) or "roughage" per AC-E2.1 and AC-E2.2 and an **Edit** for that animal; feed suggestions follow AC-C3-E7; and when every animal passes alone, the alert says "These feeds cannot keep all animals healthy together" (pending native review).
+
+#### Language
+
+- **AC-C4-L1 (One language per screen for the new UI) [C4-M1]:**
+  - **Given** Hindi mode,
+  - **When** any C4 element is rendered (screen titles, add card, prefill hints, labels, list, budget question, Next/Back/Calculate, gating lines, screen 2 rows, every screen 3 section including "What to buy" and "Then, if you can", tags, Details, prompts, examples, messages),
+  - **Then** AC-L1.2 and AC-L1.3 hold; the unit `g` joins the exempt units; every new string has an English and a Hindi entry in the strings file; and Hindi text does not use "पशु" for the farmer's cows and buffaloes.
+
+### C4.4 Superseded
+
+These criteria no longer apply from the milestone shown. The criterion that replaces each one is in brackets.
+
+- **From C4-M1:**
+  - **Own-feed price and its default:** AC-3.2 (home rows have no price; buy lines use the cited price) [AC-C4-1.9, AC-C4-1.11]; AC-3.6 for home rows (price provenance stays in the audit of "Buy" lines, AC-6.1); AC-C3-2.2; AC-C3-2.4; AC-C3-E3 [AC-C4-E4].
+  - **Season marks and month selector on the picker:** AC-3.4, AC-3.5 [AC-C4-1.9]. The device month still decides `C`.
+  - **"Today kg" and today's cost:** AC-4.1, AC-4.2, AC-4.3 [AC-C4-1.7, AC-C4-E2]; AC-C3-R5.
+  - **Savings vs today and the reference cost:** AC-5.2 [AC-C4-1.13 total line]; the "same milk for ₹`Z` less" part of AC-5.7; the `B` sentence of AC-5.11; AC-C3-R2 as worded [AC-C4-1.16].
+  - **Single-page layout:** AC-C3-1.1, AC-C3-1.2, AC-C3-1.3, AC-C3-1.5, AC-C3-1.6 [AC-C4-1.1–1.6, AC-C4-1.25]; the AC-5.3 headline wording [AC-C4-1.15; `S ≤ effCap` still holds per animal]; AC-6.3 Show details and per-feed max caps [AC-C4-1.16]; AC-C3-2.1 [AC-C4-1.8, AC-C4-1.10].
+  - **The English rule against the word "animal":** AC-C3-1.4 English part ("Your animals" is approved); the Hindi part continues in AC-C4-L1.
+  - **Own-feed candidate set and tags:** AC-C3-2.3, AC-C3-2.5 [shared definitions, AC-C4-1.11, AC-C4-1.12]; AC-C3-2.6 "You have" [AC-C4-1.15 "From home"]; AC-C3-2.11 [AC-C4-1.17]; AC-C3-R4 [AC-C4-1.23].
+  - **Rung labels on the main view:** AC-C3-2.7, AC-C3-2.8, AC-C3-2.9, AC-C3-2.10, AC-C3-E1, AC-C3-E2 (rung 0 is gone; the ladder now sets only the buying order and the milk gains in "What to buy") [AC-C4-1.13, AC-C4-1.14, AC-C4-1.14a, AC-C4-1.20, AC-C4-2.6].
+  - **Budget messages:** AC-C3-2.12 [AC-C4-1.18]; AC-E7.1 and AC-C3-2.14 [AC-C4-E3].
+  - **Other:** AC-8.1 [AC-C4-1.24]; AC-C3-2.15 [AC-C4-1.25, then AC-C4-2.11]; AC-C3-E8 [AC-C4-E8]; AC-C3-E9 [AC-C4-L1].
+  - **Historical:** AC-C3-1.7 (C3-M1 only).
+
+### C4.5 Regression Criteria
+
+These existing criteria must keep passing. "Per animal" means the criterion holds for each animal in the herd plan.
+
+- **AC-C4-R1 (Solver and SciPy agreement):**
+  - **Given** the 18 benchmark animals and every existing SciPy case,
+  - **When** `npm run eval:dump && npm run eval:scipy` runs on each C4 build,
+  - **Then** 100% still agree; `solveRation`, Stage 2′ and `costAtCap` (AC-C3-2.13) outputs are unchanged; and AC-5.1, AC-5.4, AC-5.5, AC-C3-R1 hold for a one-animal herd with no home feeds.
+- **AC-C4-R2 (Per-animal nutrition rules):**
+  - **Given** a plan,
+  - **When** each animal's ration is inspected,
+  - **Then** AC-2.1 (ranges and requirements), AC-5.12 (roughage), AC-5.13 (dry animal at maintenance), AC-5.6, AC-5.9, AC-5.10, AC-2.4 and AC-2.5 (shown in Details) hold per animal; and `S_i ≤ Y_i ≤ g_i + 1e-6`.
+- **AC-C4-R3 (Infeasibility diagnosis):**
+  - **Given** inputs that cannot be balanced at `0` L,
+  - **When** the plan is calculated,
+  - **Then** AC-E2.1, AC-E2.2 and AC-C3-E7 hold per animal (AC-C4-E9), and AC-C3-E4 and AC-C3-E5 hold for the herd prompt.
+- **AC-C4-R4 (Validation):**
+  - **Given** invalid weight, milk, fat or breed on the add card,
+  - **When** it renders,
+  - **Then** AC-E1.1's messages appear and **Add** is disabled (AC-C3-R3).
+- **AC-C4-R5 (Audit drawer):**
+  - **Given** any screen,
+  - **When** a number is tapped,
+  - **Then** AC-6.1 and AC-6.2 hold: the drawer opens with the citation or "Solver output", closes by its close control, the Escape key or the phone's Back button without changing the screen, and works offline.
+- **AC-C4-R6 (Offline core):**
+  - **Given** the app was loaded once or installed,
+  - **When** it opens offline,
+  - **Then** AC-1.1 and AC-E3.1 hold for all 3 screens.
+- **AC-C4-R7 (LLM safety):**
+  - **Given** the device is online,
+  - **When** the helper or Explain is used,
+  - **Then** AC-2.2, AC-2.3 (filling the add card), AC-E4.1, AC-E4.2, AC-E5.1, AC-E6.1, AC-7.1, AC-L1.5 and AC-L1.6 hold; AC-C3-R6 holds with Explain limited per AC-C4-1.24.
+- **AC-C4-R8 (Feed search):**
+  - **Given** screen 2,
+  - **When** the user searches,
+  - **Then** AC-3.1, AC-3.3 (grouping when no search text) and AC-L1.4 hold.
+- **AC-C4-R9 (One language per screen, ADR-0009):**
+  - **Given** every C4 state (screen 1 empty, prefilled, listed, 10-animal message, gating; screen 2 empty, rows, invalid row; screen 3 plan, "Nothing to buy today", Details open, both prompts, infeasible, offline, audit drawer, copy confirmation),
+  - **When** it renders in each language,
+  - **Then** AC-L1.1 (default English, remembered, switch without losing inputs), AC-L1.2, AC-L1.7 and AC-C4-L1 hold.
+- **AC-C4-R10 (Latin digits):**
+  - **Given** any number on any screen, the audit, or the copied summary,
+  - **When** it is inspected in either language,
+  - **Then** AC-L1.3 holds: Latin digits only, units `kg`, `g`, `L`, `₹`.
+- **AC-C4-R11 (Touch targets):**
+  - **Given** any screen at 375 px wide,
+  - **When** every interactive control (species buttons, Add, Edit, Remove, Next, Back, Calculate, feed results, Details toggles, tappable numbers, example buttons, language toggle) is measured,
+  - **Then** each has a hit area of at least 44 × 44 CSS px.
+- **AC-C4-R12 (Suites stay green):**
+  - **Given** the C4-M1 and C4-M2 builds,
+  - **When** `npm run test:full`, `npx playwright test`, `npm run build` and `npm run compile:data` run,
+  - **Then** all exit 0, and expected values changed by this change are updated only from real solver output.
+
+### C4.6 Non-Goals
+
+- No market value of home stock (home feed is always ₹0).
+- No total-kg stock over several days (home feed is kg per day only).
+- No savings against today's ration.
+- No per-animal budgets.
+- No whole-herd explanation from the LLM.
+- No saving the herd across reloads: a reload starts at `#/animals` with an empty list. Only the language choice is stored.
+- No change to the single-animal solver formulation, the requirement tables, feed or breed citations, or prices.
+- No forced minimum use of home feed.
+
+### C4.7 Open Questions
+
+- **OQ-C4-1. Hindi for new strings:**
+  - *Assumption:* the Hindi given in C4.3 is proposed and pending native review; the frontend task enters it in the strings file and marks it unverified, as in OQ8.
+- **OQ-C4-2. Which plan the animal cards show:**
+  - *Resolved (orchestrator, 2026-10-15, per the user's rule "practical, for farmers, not analysts"):* the cards and the list show `F`, and the steps give the buying order and the milk gain. The main view shows only `F` (cards, "What to buy", total line, "Not needed today", copy summary). The former "Buy first" and "If you have more money" sections are merged into one list, "What to buy", with a "Buy first" group and "Then, if you can" lines. The per-step per-animal split is dropped. See AC-C4-1.13, AC-C4-1.14, AC-C4-1.14a and AC-C4-2.6.
+- **OQ-C4-3. Label numbering after a removal:**
+  - *Assumption:* labels are stable and never renumbered (removing "Cow 1" leaves "Cow 2"), so a label on screen 3 always means the same animal as on screen 1.
+- **OQ-C4-4. "Desi / don't know" label source:**
+  - *Question:* `data/breeds.csv` names the row "Non-descript" / "Desi / Non-descript" / "देशी (नस्ल तय नहीं)", while AC-L1.7 requires breed names from the data file.
+  - *Assumption:* the data task adds or updates the display name for both non-descript rows to "Desi / don't know" / "देशी / पता नहीं" in `data/breeds.csv`. No figure or citation changes.
+- **OQ-C4-5. Partly filled add card when tapping Next:**
+  - *Assumption:* only listed animals count. An unsaved card does not block **Next**, and its values are kept if the user comes back.
+- **OQ-C4-6. A step whose milk gain rounds to 0.0 L:**
+  - *Assumption (adopted by the orchestrator, see AC-C4-1.14):* the line reads "→ same milk" (Hindi "→ उतना ही दूध", pending native review) instead of "+0.0 L".
+- **OQ-C4-7. Budget when home feed alone is enough:**
+  - *Assumption:* the budget must still be greater than `0` (approved rule). If `M_H = 0` and the plan buys nothing, "What to buy" shows "Nothing to buy today".
+- **OQ-C4-8. Breed benchmark on the add card:**
+  - *Assumption:* the add card does not show the benchmark (it uses technical labels). It appears in "Details (for paravet)" and in the breed's audit.
+- **OQ-C4-9. Examples in C4-M1:**
+  - *Assumption:* C4-M1 ships three one-animal examples (AC-C4-1.25), and C4-M2 replaces them with the three herd examples (AC-C4-2.11).
+- **OQ-C4-10. Explain in C4-M2:**
+  - *Assumption:* Explain is shown only for a one-animal herd. A per-animal Explain for herds is not added.
+- **OQ-C4-11. Supplement minimums per animal:**
+  - *Assumption:* the ADR-0012 fixed minimums for `mineral_mix` and `common_salt` apply per animal, as in the single-animal solver, so a herd of `n` buys `n` times the minimum.

@@ -1212,3 +1212,742 @@ Plain-English list for Change 3. Each item is costly to change after C3-M2 becau
 4. **The shape of `RationPlan`.** The app, the ladder card, the prompt, the table tags and their tests all read it. Adding a field is cheap; renaming or removing one is not.
 5. **The solver itself stays unchanged.** This keeps the 100% agreement with SciPy. Any later wish to force own feeds, add per-feed limits or rank feeds inside the solver reopens that agreement and the frozen formulation.
 6. **Calculating without picking feeds.** The button rules, the hints, the demos and the end-to-end tests all assume feeds are optional. Going back to "feeds first" would undo most of C3-M2.
+
+## Change 4: Herd and 3-step flow (2026-10-15)
+
+Status: DRAFT
+
+This section is a **superseding addition** to the frozen architecture and to the Change 3 section above, for Change 4 ([SPEC.md](SPEC.md) "Change 4: Herd and 3-step flow", [ADR-0019](DECISIONS.md#adr-0019-home-feed-at-0-capped-by-the-herds-daily-amount-with-a-separate-buy-option) and [ADR-0020](DECISIONS.md#adr-0020-joint-herd-lp-with-a-fair-share-of-each-milk-target)). Earlier sections are not edited. Where this section differs from them, it applies from the milestone marked. Change type: Feature. Posture: Prototype. Branch `feat/herd-flow` from `2134ab6`. No new runtime or dev dependency, no new tool, account or environment variable.
+
+### C4 overview
+
+- **C4-M1 (one animal, three screens).** Hash routes `#/animals`, `#/feeds`, `#/result`; the add-animal card with breed prefill of weight and fat; one herd budget; home feeds at ₹0 with no price field; the plain result ("What to buy", the animal card, "Not needed today", prompts) with farmer display units; "Details (for paravet)" per card.
+- **C4-M2 (herd).** Up to 10 animals with per-species labels, the herd budget shared by the fair-share rule, herd totals in "What to buy", one card per animal, herd examples, the herd limit named in Details, and the herd SciPy cross-check.
+- **Solver.** A new joint herd LP (`src/domain/herdSolver.ts`) is composed from per-animal constraint blocks identical to the rows `solveRation` builds. When home feeds exist, the best plan gets a Stage 3 tie-break that uses the least home feed at the cheapest purchase. `solveRation` is not changed; `src/domain/solver.ts` only gains `export` keywords on existing private helpers.
+- **M1 choice: `solveHerd` with one animal, not `planRation` with a ₹0 home split.** Reasons:
+  1. `planRation` cannot express ADR-0019. `solveRation` names each LP variable by `feedId`, so a feed cannot be both "from home at ₹0, capped" and "bought at the cited price" in one solve. Expressing it would mean changing `solveRation`, which is forbidden.
+  2. The screen 3 components consume one shape, `HerdPlan`, from M1 on. C4-M2 then changes only the screen 1 limits, the examples and the tests, not the solver path or the result UI.
+  3. AC-C4-1.12 gives a strong M1 check: a one-animal herd with no home feeds must equal `solveRation` and the C3 ladder on all 18 benchmark animals, which are already SciPy-verified.
+
+### C4 components
+
+New and changed parts only (additions to the [Components](#components) diagram):
+
+```mermaid
+flowchart TD
+    Hash["src/lib/hashRoute.ts: useHashStep (pushState + popstate)"]
+    App["App.tsx: step, animals[], addDraft, editingKey, herdBudget, homeFeeds[], plan"]
+    S1["AnimalsScreen.tsx: FreeTextExtractor, AnimalList, AnimalProfileForm (card), BudgetField, Next, examples"]
+    S2["HomeFeedsScreen.tsx: FeedSelector (home rows), Back, Calculate ration"]
+    S3["HerdPlan.tsx (HerdPlanView): ShoppingList, AnimalPlanCard[], Not needed, prompts, Copy / Explain"]
+    Card["AnimalPlanCard.tsx: From home / Buy lines + RationDetails (paravet)"]
+    Svc["rationService.planHerd (src/services/rationService.ts)"]
+    Plan["planHerd (src/domain/herdPlan.ts, pure): buy set C, F, buy order, steps, prompts"]
+    HSolve["solveHerd / solveHerdStep (src/domain/herdSolver.ts): joint LP"]
+    Solver["solver.ts (unchanged bodies): runLp, solveFixedMilk, diagnoseAtMilk, detectTightConstraintsAtYStar, buildFeedLinesAndTotals"]
+    Fmt["src/domain/format.ts: display rounding (whole ₹, kg 1 dp, g for supplements)"]
+    Aud["src/domain/auditHerd.ts: share t*, ΔL, shopping totals, prompts, prefill"]
+
+    Hash --> App
+    App --> S1
+    App --> S2
+    App --> S3
+    S3 --> Card
+    App -->|"Calculate ration"| Svc
+    Svc --> Plan
+    Plan -->|"F and every prefix"| HSolve
+    HSolve --> Solver
+    S3 --> Fmt
+    Card --> Fmt
+    S3 --> Aud
+    Card --> Aud
+    S1 --> Aud
+```
+
+### C4 module map
+
+**New files** (each one is new because no existing file has that responsibility, or adding it would mix the frozen single-animal path with the herd path):
+
+| File | Milestone | Responsibility and why it is a new file |
+|---|---|---|
+| `src/domain/herdSolver.ts` | M1 | The joint herd LP: model builders (per-animal blocks plus shared rows), `solveHerd` (full solve for `F`), `solveHerdStep` (cheap solve for a prefix), per-animal slicing into `RationSolution`, herd limit detection, `verifyHerdSolution`. Kept out of `solver.ts` so that file's function bodies stay byte-for-byte unchanged. |
+| `src/domain/herdPlan.ts` | M1 | Pure plan rules on top of the LP, like `rationPlan.ts` is for C3: buy set `C` (via `buildCandidates([], library, month)`), `Bu_H` order, `P1`, later steps and `ΔL_k`, "Not needed today", both budget prompts, infeasibility naming with buyable suggestions, `nextAnimalLabel`. |
+| `src/domain/format.ts` | M1 | Pure display-rounding rules (numbers in, numbers out). Strings are still built only by `src/i18n/format.ts`, so the "only `src/i18n/format.ts` uses `Intl.NumberFormat`" scan still holds. |
+| `src/domain/auditHerd.ts` | M1 | `AuditMeta` builders for the new numbers (see [C4 audit metadata](#c4-audit-metadata)). Kept apart from `auditMilk.ts`, which already holds the C3 builders. |
+| `src/lib/hashRoute.ts` | M1 | `parseHash`, `hashFor` and the `useHashStep` hook. About 40 lines, no router dependency. |
+| `src/components/AnimalsScreen.tsx` | M1 | Screen 1 layout: title, "Describe your animal" helper, list, add card, budget, gating line, **Next**, "Try an example". |
+| `src/components/AnimalList.tsx` | M1 | Listed animals (label, breed, today's milk, **Edit**, **Remove**), the add card's **Add**/**Save**, and the 10-animal message. |
+| `src/components/HomeFeedsScreen.tsx` | M1 | Screen 2 layout: "Skip if you have nothing at home.", the home-feed picker, the invalid-row line, **Back**, **Calculate ration**. |
+| `src/components/HerdPlan.tsx` (exports `HerdPlanView`) | M1 | Screen 3 container: "What to buy", "What to give each animal", "Not needed today", both prompts, the infeasible alert, **Copy summary**, **Explain** (one animal only). |
+| `src/components/ShoppingList.tsx` | M1 | "What to buy": "Buy first" group, "Then, if you can" lines with `ΔL_k`, the total line, "Nothing to buy today". |
+| `src/components/AnimalPlanCard.tsx` | M1 | One card per animal: lines tagged "From home"/"Buy" (two lines when one feed is both), milk `S_i` or "keeps her healthy (dry)", **Remove** (M2), and "Details (for paravet)". |
+| `src/components/RationDetails.tsx` | M1 | The `Details` function **moved** unchanged out of `RationResultsPanel.tsx` so each card reuses it. It gains rows for `g_i`, `t*` and the herd limit. |
+| `tests/unit/herdSolver.test.ts` | M1, extended M2 | One-animal equivalence with `solveRation` and the C3 ladder; home-feed rules; herd invariants (M2). |
+| `tests/unit/herdPlan.test.ts` | M1, extended M2 | Buy order, `P1`, steps, `ΔL_k ≥ 0`, last step equals `F`, not needed, prompts, shortfall, infeasible naming. |
+| `tests/unit/domainFormat.test.ts` | M1 | Rounding boundaries for every helper in `src/domain/format.ts`. |
+| `tests/unit/breedPrefill.test.ts` | M1 | Prefill values, blanks, typed values win, prefill audits. |
+| `tests/unit/hashRoute.test.ts` | M1 | Parsing, redirects and Back behaviour in jsdom. |
+| `tests/unit/herdUi.test.tsx` | M1, extended M2 | Screens 1–3 in jsdom: gating lines, card, list, rows, sections, units, plain words, tags, audits. |
+| `tests/e2e/herd-flow.spec.ts` | M1, extended M2 | Journeys C4-A and C4-B in Chromium: phone Back, audit drawer Back, offline, examples, 375 px padding, 44 px targets. |
+| `tests/unit/herdPerf.slow.test.ts` | M2 | 10 animals with the full in-season library: `planHerd` time budget (see [C4 risks](#c4-risks)). |
+| `eval/test_herd_animals.json` | M2 | Herd benchmark cases for the SciPy cross-check (format below). |
+| `eval/cross_check_herd.py` | M2 | Rebuilds the joint LP with `scipy.optimize.linprog` (HiGHS), reusing the helpers in `cross_check_solver.py`. A separate file because `cross_check_solver.py` must keep producing identical single-animal output. |
+| `eval/test_scipy_herd_agreement.py` | M2 | pytest: browser and SciPy agree on `t*`, `P(F)`, `M_H`, `costAtCap_H`, infeasible or null together, at 100%. |
+
+**Changed files:**
+
+| File | Milestone | Change |
+|---|---|---|
+| `src/domain/solver.ts` | M1 | `export` added to `runLp`, `buildFeedLinesAndTotals`, `solveFixedMilk`, `diagnoseAtMilk`, `detectTightConstraintsAtYStar`, `relTol`, `TOL` and the `ActiveFeed` / `FixedMilkSolveResult` types, each marked `/** @internal for herdSolver.ts */`. No body changes. |
+| `src/domain/types.ts` | M1 | Herd types (below); `RationFeedLine` gains optional `source?: 'home' \| 'buy'`, set only by the herd solver, so `solveRation` output and the eval dump are unchanged. |
+| `src/domain/validation.ts` | M1 | `AnimalCardDraft`, `EMPTY_CARD`, `validateAnimalCard` (wraps `validateAnimal` with a dummy budget, as `App.tsx` already does for `animalOnly`), `HomeFeedDraft`, `validateHomeFeed`. `validateBudget` is reused for the herd budget. |
+| `src/domain/breeds.ts` | M1 | `breedPrefill(breed)` (below). |
+| `src/domain/presets.ts` | M1, M2 | Three one-animal examples (M1, AC-C4-1.25), replaced by three herd examples (M2, AC-C4-2.11). |
+| `src/domain/summary.ts` | M1 | `buildHerdSummary(plan, lang)` for **Copy summary**. `buildSummary` stays for the adapter tests. |
+| `src/services/rationService.ts` | M1 | `planHerd(animals, homeFeeds, budget)` added to `RationService`. `planRation` stays, because tests use it as the C3 oracle. |
+| `src/App.tsx` | M1 | `Workspace` becomes the 3-screen state machine (see [C4 app state](#c4-app-state-and-screens)). |
+| `src/components/AnimalProfileForm.tsx` | M1 | Becomes the add/edit card body: species buttons, breed list ("Desi / don't know"), prefilled weight and fat with hint and tappable figure, today's milk. The `BreedBenchmark` moves to Details (OQ-C4-8). |
+| `src/components/FeedSelector.tsx` | M1 | Becomes the home-feed picker. Search and vertical grouping are kept. Price, cap, today-kg fields, season marks, the month selector and "Show details" are removed. A row is the feed name, "kg per day you can give (all animals)" and **Remove**. |
+| `src/components/BudgetField.tsx` | M1 | Plain herd budget field with the AC-C4-1.7 label. The "use today's cost" default is removed (AC-4.x superseded). |
+| `src/components/AuditDrawer.tsx` | M1 | Opening pushes a history entry with the same hash; `popstate` while open closes the drawer and keeps the screen (AC-C4-R5); closing by control or Escape calls `history.back()` to drop that entry. |
+| `src/components/FreeTextExtractor.tsx` | M1 | Unchanged UI; it is rendered inside the add card on screen 1. `App.tsx` routes its result (below). |
+| `src/i18n/strings.ts` | M1, M2 | Every new string id with `en` and `hi`; new Hindi listed in `HINDI_REVIEW` (OQ-C4-1). |
+| `src/i18n/format.ts` | M1 | `formatAmount(a: DisplayAmount)` and `formatInrWhole(v)`, built on the existing `Intl.NumberFormat('en-IN', latn)` helpers. |
+| `src/index.css` | M1 | Screen layouts and one shared section padding class used by "What to buy" and "Not needed today" (the AC-C4-1.17 padding fix). |
+| `data/breeds.csv`, `src/data/breeds.v1.json` | M1 | Display names of both non-descript rows become "Desi / don't know" / "देशी / पता नहीं" (OQ-C4-4). No figure or citation changes; recompiled with `npm run compile:data`. |
+| `scripts/dump_solver_results.ts` | M2 | Herd branch (below). The single-animal loop and `eval/out/browser_results.json` are untouched. |
+| `package.json` | M2 | `eval:scipy` becomes `python -m pytest -q eval/test_scipy_agreement.py eval/test_scipy_herd_agreement.py`. No other script changes. |
+| `tests/unit/oneLanguage.test.tsx`, `tests/unit/i18n.test.ts`, `tests/e2e/language.spec.ts`, `tests/e2e/ration-journey.spec.ts` | M1 | Rewritten for the C4 states and flow. Expected values come from real solver output only. |
+
+**Unchanged:** `src/services/liveAdapter.ts`, `src/services/mockAdapter.ts`, `api/llm.ts`, `src/domain/verifier.ts`, `src/domain/rationPlan.ts`, `eval/cross_check_solver.py`, `eval/test_scipy_agreement.py`, `eval/test_animals.json`. `RationResultsPanel.tsx`, `BuyLadder.tsx`, `BudgetIncreasePrompt.tsx` and `MonthSelector.tsx` are no longer rendered after C4-M1. They stay in the tree with their tests until the user approves deleting them (deleting files needs the user's yes).
+
+### C4 data models
+
+**Shared types** (`src/domain/types.ts`):
+
+```ts
+/** "Cow 2" is { species: 'cow', n: 2 }; rendered with <Bi id="label_cow_n" params={{ n }} /> so it switches language (AC-C4-E7). */
+export interface AnimalLabel { species: Species; n: number }
+
+/** Where a weight or fat value came from: typed by the user (or the description helper), the breed row, the midpoint of a cited range, or the dry-animal species default (OQ1, never shown). */
+export type InputSource = 'typed' | 'breed' | 'breed_midpoint' | 'species_default_dry';
+
+export type HerdAnimalProfile = Omit<AnimalProfile, 'budgetInrPerDay' | 'isConfirmed'>;
+
+export interface HerdAnimal {
+  /** 'a1', 'a2', ... unique in the session, never reused, never contains '__'. Used as the LP variable prefix. */
+  key: string;
+  /** Stable; never renumbered after a removal (OQ-C4-3). */
+  label: AnimalLabel;
+  profile: HerdAnimalProfile;
+  weightSource: 'typed' | 'breed';
+  fatSource: InputSource;
+  /** false while the values come from the description helper and the user has not tapped Add/Save (AC-2.3). */
+  isConfirmed: boolean;
+}
+
+/** One screen-2 row: q_f, the herd total in kg/day as fed. kgPerDay > 0. At most one row per feedId. */
+export interface HomeFeed { feedId: string; kgPerDay: number }
+
+export interface RationFeedLine {
+  // ...existing fields unchanged...
+  /** Set only by the herd solver: 'home' for h_{i,f} (priceInrPerKg 0, costInr 0), 'buy' for b_{i,f}. */
+  source?: 'home' | 'buy';
+}
+```
+
+**Per-animal solution: reuses `RationSolution`** (`src/domain/herdSolver.ts`). Each animal's part of a herd solve is a normal `RationSolution`, so `auditFeedKg`, `auditFeedCost`, `auditSupportedMilk`, `NutrientCoverageBars`, `RationDetails`, `selectVerdict`, `verdictText` and the verifier work per animal unchanged.
+
+```ts
+export interface HerdAnimalSolution {
+  key: string;
+  /** g_i = effCap_i = max(cap_i, T_i) when T_i > 0; 0 for a dry animal. */
+  milkTargetLPerDay: number;
+  /** Y_i = t* × g_i, unrounded. */
+  milkExactLPerDay: number;
+  /** S_i = floor(10 × Y_i + 1e-7) / 10 (roundSupportedMilkDown). */
+  milkLPerDay: number;
+  /** Field mapping:
+   *  supportedMilkLPerDay = S_i; supportedMilkExactLPerDay = Y_i; effectiveCapLPerDay and milkCapLPerDay as solveRation sets them;
+   *  feeds = this animal's lines from F, home and buy lines separate (source set);
+   *  totalCostInr = this animal's purchase cost (home lines cost 0); budgetInrPerDay = Bd;
+   *  referenceCostInrPerDay = Bd; underBudgetInr = max(0, Bd − P(F));
+   *  maintenanceCostInrPerDay, costAtTodayMilkInrPerDay, costAtCapInrPerDay = this animal ALONE
+   *    (all of C plus the full home stock, no budget), so the verdict and Details read as in solveRation;
+   *  tightConstraints / bindingConstraint / feedLimitIds = per-animal detection (see LP formulation);
+   *  currentCostInr, savingsInr, savingsPct = null; sourceKey = 'SOLVER-HERD-LP-V1'. */
+  solution: RationSolution;
+  /** computeRequirements at S_i, for Details and Explain. */
+  requirementAtS: RequirementResult;
+}
+
+export type HerdLimit =
+  | { kind: 'budget' }
+  | { kind: 'milk_target' }                                           // t* = 1
+  | { kind: 'home_stock'; feedId: string }
+  | { kind: 'animal'; key: string; constraint: 'intake' | 'roughage' | 'CP' | 'ME' | 'Ca' | 'P' };
+
+export interface HerdSolution {
+  status: 'optimal';
+  /** t* in [0, 1]; 0 when every animal is dry or Stage 1 is infeasible. */
+  shareT: number;
+  stage1Feasible: boolean;
+  /** Herd purchase at Stage 2 at Y is >= Bd − relTol(Bd) (the "budget is tight in Stage 1" test). */
+  budgetTight: boolean;
+  /** Every tight herd limit, in the order budget, milk_target, home_stock (row order), then animals in list order with intake, roughage, CP, ME, Ca, P. limits[0] is named first (AC-C4-2.10). */
+  limits: HerdLimit[];
+  maintenanceCostInrPerDay: number;          // M_H
+  costAtTargetInrPerDay: number | null;      // costAtCap_H
+  purchaseCostInrPerDay: number;             // P(F)
+  budgetInrPerDay: number;                   // Bd
+  animals: HerdAnimalSolution[];             // screen-1 order
+  /** Herd totals of bought feeds with Σ_i b_{i,f} > 1e-6, in buy-set order (not yet Bu_H order). */
+  buyTotals: ShoppingLine[];
+  homeUse: { feedId: string; usedKgPerDay: number; stockKgPerDay: number; tight: boolean }[];
+  /** Which fallback produced Stage 2 at S: 'direct', 'retry_minus_0_1' or 'maintenance'. Tests assert 'direct'. */
+  stage2Path: 'direct' | 'retry_minus_0_1' | 'maintenance';
+  /** Stage 3 (minimum total home kg at Stage 2's purchase) produced F: true; fell back to Stage 2 (float noise): false; no home rows: null. Tests assert true when home rows exist. */
+  stage3Applied: boolean | null;
+  /** Stage 2 optimum P*, kept for the Stage 3 audit; P(F) ≤ P* + relTol(P*). */
+  stage2PurchaseInrPerDay: number;
+  solvedOn: string;
+  sourceKey: 'SOLVER-HERD-LP-V1';
+}
+
+export interface HerdShortfall { status: 'below_maintenance'; maintenanceCostInrPerDay: number; budgetInrPerDay: number }
+export interface HerdInfeasible {
+  status: 'infeasible';
+  /** Animals that fail alone at 0 L with all of C and the full home stock, in list order (AC-C4-E9). */
+  animals: { key: string; limitingNutrients: LimitingNutrient[]; dmConflict: boolean; suggestedFeeds: FeedSuggestion[] }[];
+  /** true when every animal passes alone ("These feeds cannot keep all animals healthy together"). */
+  jointConflict: boolean;
+}
+export type HerdSolveOutcome = HerdSolution | HerdShortfall | HerdInfeasible;
+
+/** The cheap prefix solve: M_H(k), Stage 1, Stage 2 at S only. */
+export type HerdStepOutcome =
+  | { status: 'optimal'; shareT: number; milkLPerDay: Record<string, number>; totalMilkL: number; purchaseCostInrPerDay: number }
+  | { status: 'not_optimal' };
+```
+
+**Plan types** (`src/domain/herdPlan.ts`):
+
+```ts
+export interface ShoppingLine {
+  feedId: string;
+  kgPerDay: number;                 // Σ_i b_{i,f} in F, exact
+  costInrPerDay: number;            // price × kgPerDay, exact
+  priceInrPerKg: number;            // cited default price
+  perAnimalKg: { key: string; kg: number }[];   // for the audit; sums to kgPerDay within 1e-6 (AC-C4-2.5)
+}
+
+export interface HerdStep {
+  k: number;                        // prefix length in Bu_H
+  prefixFeedIds: string[];          // Bu_H[1..k]
+  addedFeedIds: string[];           // Bu_H[1..k1] for P1, else [Bu_H[k]]
+  shareT: number;                   // t*(k)
+  totalMilkL: number;               // Σ_i S_i(k)
+  purchaseCostInrPerDay: number;    // P at Stage 2 of prefix k (audit only, never on the main view)
+}
+
+export interface ShoppingList {
+  buyFirst: ShoppingLine[];         // Bu_H[1..k1], amounts from F
+  later: {
+    line: ShoppingLine;             // Bu_H[k], amounts from F
+    deltaMilkExactL: number;        // ΔL_k = Σ S_i(k) − Σ S_i(k − 1)
+    deltaMilkL: number;             // floor(10 × ΔL_k + 1e-7) / 10; 0 → "same milk"
+    step: HerdStep;
+    previous: HerdStep;
+  }[];
+  totalInr: number;                 // A = P(F), exact
+  firstStep: HerdStep | null;       // P1; null when Bu_H is empty
+}
+
+export interface HerdBudgetPrompt {
+  extraInrPerDay: number;           // X = roundUpInrWhole(costAtCap_H − Bd)
+  targetMilkL: number;              // Y = Σ_i floor(10 × g_i) / 10 over milking animals
+  perAnimalTargetL: { key: string; targetL: number }[];
+  costAtTargetInrPerDay: number;    // costAtCap_H
+  budgetInrPerDay: number;
+}
+
+export interface HerdShortfallPrompt {
+  extraInrPerDay: number;           // X = roundUpInrWhole(M_H − Bd)
+  maintenanceCostInrPerDay: number; // M_H
+  budgetInrPerDay: number;
+}
+
+interface HerdPlanBase {
+  animals: HerdAnimal[];
+  homeFeeds: HomeFeed[];
+  budgetInrPerDay: number;
+  buySet: SelectedFeedInput[];      // C, exactly as passed to solveHerd
+  month: number;                    // device month (ADR-0016)
+}
+
+export type HerdPlan =
+  | (HerdPlanBase & {
+      status: 'optimal';
+      best: HerdSolution;                     // F
+      perAnimal: HerdAnimalSolution[];        // = best.animals
+      buyOrder: string[];                     // Bu_H
+      shopping: ShoppingList;
+      notNeeded: string[];                    // home feedIds with Σ_i h_{i,f} ≤ 1e-6 in F, in row order
+      budgetPrompt: HerdBudgetPrompt | null;
+      shortfall: null;
+      infeasible: null;
+      /** The real solve of the last prefix equals F (Σ S_i and P within 1e-6 relative). Tests assert true. */
+      lastStepMatchesBest: boolean;
+    })
+  | (HerdPlanBase & { status: 'below_maintenance'; best: null; perAnimal: []; buyOrder: []; shopping: null; notNeeded: []; budgetPrompt: null; shortfall: HerdShortfallPrompt; infeasible: null })
+  | (HerdPlanBase & { status: 'infeasible'; best: null; perAnimal: []; buyOrder: []; shopping: null; notNeeded: []; budgetPrompt: null; shortfall: null; infeasible: HerdInfeasible });
+```
+
+**Input drafts** (`src/domain/validation.ts`):
+
+```ts
+export interface AnimalCardDraft {
+  species: '' | Species;
+  breedId: string;
+  weight: string;
+  milk: string;
+  fat: string;
+  /** true once the user (or the description helper) has put a value in the field; a breed change then no longer overwrites it (AC-C4-1.5). */
+  weightTyped: boolean;
+  fatTyped: boolean;
+}
+export interface HomeFeedDraft { feedId: string; kg: string }
+export function validateAnimalCard(d: AnimalCardDraft): { errors: AnimalErrors; profile: HerdAnimalProfile | null };
+export function validateHomeFeed(d: HomeFeedDraft): { error?: FieldError; input: HomeFeed | null };  // kg must be a number > 0
+```
+
+**Breed prefill** (`src/domain/breeds.ts`):
+
+```ts
+export interface BreedPrefill {
+  weightKg: number | null;          // breed.femaleBodyWeightKg (cited by bodyWeightCitation); null → field blank and required
+  fatPct: number | null;            // fatPctHigh === null ? fatPctLow : round3((fatPctLow + fatPctHigh) / 2); null when fatPctLow is null
+  fatIsMidpoint: boolean;           // true → label "calculated from cited range"
+}
+export function breedPrefill(breed: BreedStandard): BreedPrefill;
+```
+
+`round3(x) = Math.round(x × 1000) / 1000` only removes float noise (inputs have at most 2 decimals, so the midpoint has at most 3). Rathi gives 295 kg and `3.85`; Sahiwal gives fat `4.93`. When the user picks a breed, each field whose `*Typed` flag is false gets the prefill as text, or `''` when null. Typing sets the flag.
+
+**Display rounding** (`src/domain/format.ts`, pure):
+
+```ts
+export const GRAM_FEED_IDS: readonly string[] = ['mineral_mix', 'common_salt'];
+export const SHOW_AMOUNT_MIN_KG = 1e-6;                        // a line is shown when exact kg > this
+export function isShownAmount(kg: number): boolean;            // kg > SHOW_AMOUNT_MIN_KG
+export function roundInrWhole(v: number): number;              // Math.round(v); −0 → 0
+export function roundUpInrWhole(v: number): number;            // max(0, Math.ceil(v − 1e-7)); only for prompt X values
+export function roundKg1(kg: number): number;                  // Math.round(kg × 10 + 1e-9) / 10 (half up)
+export function toGrams(kg: number): number;                   // Math.round(kg × 1000)
+export function floorMilk1(l: number): number;                 // = roundSupportedMilkDown (floor(10 l + 1e-7) / 10)
+export interface DisplayAmount { value: number; unit: 'kg' | 'g'; decimals: 0 | 1 }
+export function displayAmount(feedId: string, kg: number): DisplayAmount;  // g (0 dp) for GRAM_FEED_IDS, else kg (1 dp)
+```
+
+`src/i18n/format.ts` gains `formatAmount(a)` (for example `5.0 kg`, `50 g`) and `formatInrWhole(v)` (`formatInr(roundInrWhole(v), 0)`). Each tappable figure on the main view passes the **exact** value to its audit; only the label text is rounded.
+
+### C4 LP formulation
+
+Notation follows [LP formulation](#5-lp-formulation-two-stage), with an animal index `i ∈ H` (screen-1 order, key `a<i>`), the buy set `C`, the home feeds `Hm` with stock `q_f`, and the herd budget `Bd`. Per animal, `m_n,i`, `ℓ_n,i`, `k0_i`, `kY_i` come from `buildRequirementModel(animal_i)`; `r` is the cited roughage share; `c = calciumMax.maxGramsPerKgDm`; `p_f` is the cited price; `a_n,f`, `d_f` and `ρ_f` (`(1 − r) d_f` for roughage, `−r d_f` otherwise) are per kg as fed.
+
+**Variables** (all `≥ 0`; `javascript-lp-solver` default):
+
+| Variable | LP name | Meaning |
+|---|---|---|
+| `b_i,f`, `f ∈ C` | `a<i>__<feedId>` | kg/day of `f` bought for animal `i` |
+| `h_i,f`, `f ∈ Hm` | `a<i>__home__<feedId>` | kg/day of `f` from home for animal `i` |
+| `y_i` | `a<i>__Y` | animal `i`'s milk level (Stage 1 only) |
+| `t` | `t` | the fair share (Stage 1 only) |
+
+Write `x_i,f = b_i,f + h_i,f` (a term is absent when its variable does not exist).
+
+**Per-animal block** (row names prefixed `a<i>__`; the same rows `solveRation` uses, in the same insertion order):
+
+| Row | Stage 1 (`y_i` is a variable) | Fixed milk at `y_i = ŷ_i` (maintenance, Stage 2, cost at target) |
+|---|---|---|
+| `CP`, `ME`, `P` | `Σ_f a_n,f x_i,f − ℓ_n,i y_i ≥ m_n,i` | `Σ_f a_n,f x_i,f ≥ m_n,i + ℓ_n,i ŷ_i` |
+| `Ca` | `Σ_f a_Ca,f x_i,f − ℓ_Ca,i y_i ≥ m_Ca,i` | `req_Ca(ŷ_i) ≤ Σ_f a_Ca,f x_i,f ≤ max(ratio × req_Ca(ŷ_i), c × DMmax_i(ŷ_i))` |
+| `Ca_max` | `Σ_f a_Ca,f x_i,f − c kY_i y_i ≤ c k0_i` | (folded into `Ca` above) |
+| `DM` | `Σ_f d_f x_i,f − kY_i y_i ≤ k0_i` | `Σ_f d_f x_i,f ≤ k0_i + kY_i ŷ_i` |
+| `roughage` | `Σ_f ρ_f x_i,f ≥ 0` | same |
+| `min_mineral_mix`, `min_common_salt` | `x_i,f ≥ min_f` (lactating value when `T_i > 0`, else dry) | `x_i,f ≥ min_f` (lactating value when `ŷ_i > 0`, else dry) |
+| `milkCap` | `y_i ≤ g_i` | n/a |
+| `share` (milking animals only) | `y_i − g_i t ≥ 0` | n/a |
+
+A supplement row exists for animal `i` when the feed is in `C ∪ Hm`. As in `solveRation`, a buy input with a non-null `maxKgAsFedPerDay` adds `cap_<feedId>` per animal and lowers that animal's supplement minimum to `min(min_f, cap)`. `planHerd` never sets a cap; the tests and eval use it to replay benchmark inputs. A home-only supplement (not in `C`) uses `min(min_f, q_f)`, mirroring the cap rule. Input filtering is the same as `solveRation` lines 816–822 (unknown feed, negative price or non-positive cap is dropped).
+
+**Shared rows** (no prefix):
+- `budget`: `Σ_i Σ_f∈C p_f b_i,f ≤ Bd` (absent in the no-budget runs);
+- `stock__<feedId>`: `Σ_i h_i,f ≤ q_f` for each `f ∈ Hm`;
+- `share_max`: `t ≤ 1` (Stage 1 only).
+
+Objective of every fixed-milk run: minimise `P = Σ_i Σ_f∈C p_f b_i,f` (home costs ₹0, ADR-0019). The one exception is Stage 3 (step 6), which minimises total home kg at that purchase. Insertion order: animal blocks in list order, then `budget`, then supplement and cap rows as variables are added, then stock rows. For one animal with no home feeds this reproduces `solveFixedMilk`'s order, which is what makes equal rations likely when the LP has alternative optima (AC-C4-1.12 is tested, not assumed).
+
+**Runs in `solveHerd`, in order:**
+
+1. **Herd maintenance `M_H`:** fixed milk at `ŷ_i = 0` for all, no budget row. If infeasible → `HerdInfeasible`. Each animal is checked **alone** with `solveFixedMilk(merged_i, req_i, 0, null)`, where `merged_i` has one `ActiveFeed` per feed: feeds in `C` at the cited price with no cap; home-only feeds at ₹0 capped at `q_f`. This is exactly "all of C and the full home stock", and it gives `M_i`. Each failing animal gets `diagnoseAtMilk(merged_i, req_i, 0, library)`. `planHerd` then keeps only buyable suggestions (in season and priced, the C3 `isBuyable` rule). `jointConflict = (no animal fails alone)`.
+2. **Below maintenance:** `Bd < M_H − 1e-6` → `HerdShortfall` (no fix-feed search, OQ-C3-7).
+3. **Every animal dry:** Stage 1 is skipped, `t* = 0`, and **`F` is the `M_H` solution** (no budget row), exactly like `solveRation`'s dry branch.
+4. **Stage 1:** maximise `t`. If it is infeasible, `t* = 0` and `stage1Feasible = false`. This mirrors `solveRation`, where Stage 1 uses the lactating supplement minimums and can be infeasible for a budget between `M_H` and that cost. Otherwise `t* = min(1, max(0, t))`. Then `Y_i = min(g_i, t* × g_i)`, and `0` for a dry animal. Only `t*` is read from Stage 1; the solver's own `y_i` values are discarded, because the `≥` rows allow `y_i > t* g_i`.
+5. **Stage 2 at `Y`** (detection only): fixed milk at `ŷ_i = Y_i` with the budget. The fallback chain mirrors `solveRation`: with budget → without budget → the Stage 1 values. Then `budgetTight = P ≥ Bd − relTol(Bd)`. When `Hm` is non-empty, **Stage 3 at `Y`** (the tie-break in step 6) follows, and the limit checks in step 9 read its solution. Otherwise free home feed piled up to the intake ceiling or onto the stock row would be reported as a false "intake" or "home stock" limit.
+6. **Stage 2 at `S`** (the displayed plan `F`): `S_i = roundSupportedMilkDown(Y_i)`. If every `|S_i − Y_i| ≤ 1e-6` and the Stage 2 at `Y` cost is `≤ Bd + relTol(Bd)`, reuse that solution. Otherwise solve fixed milk at `ŷ_i = S_i` with the budget. If that is infeasible, retry once with every `S_i ≥ 0.1` lowered by `0.1` (`stage2Path = 'retry_minus_0_1'`), then fall back to the `M_H` solution with all `S_i = 0` (`'maintenance'`). The same chain as `solveRation` steps 5–6. Why it can fail at all for `n > 1`: with shared stock, lowering one animal's milk can shrink its intake ceiling and force a different split of home feed. Tests assert `'direct'` on every case.
+   - **Stage 3, the home-feed tie-break (for `F` only; orchestrator decision 2026-10-15, [ADR-0020](DECISIONS.md#adr-0020-joint-herd-lp-with-a-fair-share-of-each-milk-target) decision 5).**
+     - **Why.** Home feed costs ₹0, so Stage 2 leaves the amount taken from home undetermined. Extra home straw that still fits the intake and roughage rows costs nothing, so a card could show an arbitrary "Bhusa 9 kg", and SciPy agreement on ration lines would be fragile.
+     - **What it solves.** Same rows as the Stage 2 solve that produced `F` (same `ŷ_i = S_i`, `budget` and `stock__` rows), plus a row `purchase: P ≤ P* + relTol(P*)`, where `P*` is that Stage 2 optimum. The objective is to minimise total home kg, `Σ_i Σ_f∈Hm h_i,f`.
+     - **In plain words:** feed exactly what is needed from home and keep the rest of the stock for tomorrow.
+     - **Result.** Stage 3's solution replaces Stage 2's as `F`, and `P(F)` is recomputed from its lines (at most `P* + relTol(P*)`, and still `≤ Bd + relTol(Bd)`). When `S = Y` was reused above, the Stage 3 at `Y` solution is reused too.
+     - **If Stage 3 reports infeasible.** That can only come from float noise, because the Stage 2 solution satisfies every Stage 3 row. `F` then keeps the Stage 2 solution and `stage3Applied = false`; tests assert `true`.
+     - **Skipped when there are no home feeds** (`stage3Applied = null`): there is nothing to minimise. **So the one-animal equivalence with `solveRation` (AC-C4-1.12, AC-C4-R1) is unaffected when no home feed is entered:** `F` is exactly the Stage 2 solution.
+     - **The ladder prefixes (`solveHerdStep`) never run Stage 3.** They report only `Σ S_i` and `P`, and Stage 3 changes neither.
+7. **Cost at target `costAtCap_H`:** fixed milk at `ŷ_i = g_i`, no budget. `null` when infeasible or every animal is dry.
+8. **Per-animal figures** for `RationSolution`, each on that animal alone with `merged_i`, the same calls `solveRation` makes: `costAtTodayMilk_i = solveFixedMilk(merged_i, req_i, T_i, null)` (with `diagnoseAtMilk` at `T_i` when it is null and `Y_i < T_i − 1e-6`), `costAtCap_i = solveFixedMilk(merged_i, req_i, g_i, null)`, then `selectVerdict` with `referenceCost = Bd` and `buildFatComparison`. Lines come from slicing `F`: `buildFeedLinesAndTotals` on the animal's buy inputs and on its home inputs (price 0), then merged; each line gets its `source`.
+9. **Limits** (AC-C4-2.10), evaluated on the Stage 2 at `Y` solution (after Stage 3 at `Y` when `Hm` is non-empty):
+   - `budget` when `budgetTight`;
+   - `milk_target` when `t* ≥ 1 − 1e-6`;
+   - `home_stock` for each `f` with `Σ_i h_i,f ≥ q_f − relTol(q_f)`;
+   - per animal, `detectTightConstraintsAtYStar(mergedForDetection_i, req_i, Y_i, g_i, residualBudget_i, slice_i)`, where `residualBudget_i = Bd − Σ_j≠i P_j` and `slice_i` is the animal's `FixedMilkSolveResult` from that solve. Its `budget` and `breed_cap` entries are dropped from the herd list (the herd-level checks above own them); its other entries become `{ kind: 'animal', key, constraint }`.
+   - The full per-animal list is stored as that animal's `tightConstraints`. For `n = 1` with no home feeds, `merged = inputs` and `residualBudget = Bd`, so `bindingConstraint` is computed by the very same call as in `solveRation`.
+   - For a dry animal, `bindingConstraint = 'breed_cap'` and `tightConstraints = []`, as in `solveRation`.
+10. **Numerical guard:** `verifyHerdSolution` recomputes, from `F`'s lines in double precision:
+    - every animal's rows at `S_i` (nutrients, Ca band, intake, roughage, supplements);
+    - every stock row (`≤ q_f + relTol`);
+    - `P ≤ Bd + relTol(Bd)`.
+
+    A violation throws `SolverError`, and nothing is shown (as in [Numerical guard](#5-lp-formulation-two-stage)).
+
+**`solveHerdStep`** (one prefix `k`, buy set `Bu_H[1..k]`, same home feeds, herd and budget): runs 1 (`M_H(k)` only, no alone checks), 2, 3, 4 and 6 (Stage 2 at `S` only, never Stage 3). It returns `'not_optimal'` when `M_H(k)` is infeasible or `Bd < M_H(k) − 1e-6`. That is the herd equivalent of `solveRation` returning a status other than `'optimal'`, so for one animal it matches the C3 ladder's step test.
+
+**`planHerd(animals, homeFeeds, Bd, library, breeds, month)`, in order:**
+1. `C = buildCandidates([], library, month)` (ADR-0010's library rule with no own feeds).
+2. `best = solveHerd(...)`. If the outcome is not `'optimal'`, return the shortfall plan (`X = roundUpInrWhole(M_H − Bd)`) or the infeasible plan.
+3. `Bu_H`: feeds of `best.buyTotals`, sorted with `MANDATORY_SUPPLEMENT_IDS` members first, then herd ₹/day ascending (difference `> 1e-9`), then `feedId` by code unit. This is the C3 comparator applied to herd totals.
+4. If `Bu_H` is empty: `shopping = { buyFirst: [], later: [], totalInr: P(F), firstStep: null }` ("Nothing to buy today").
+5. Steps: let `s` be the number of supplements on `Bu_H`. For `k = max(1, s) … |Bu_H|`, run `solveHerdStep` with `Bu_H[1..k]`. `P1` is the first `'optimal'` step. Each later `k` becomes one line for `Bu_H[k]` with `ΔL_k = ΣS(k) − ΣS(k − 1)`. Every prefix is a real joint solve; the last one is checked against `F` (`lastStepMatchesBest`). A step after `P1` that is not `'optimal'` cannot happen (nested prefixes, [ADR-0012](DECISIONS.md#adr-0012-cheapest-first-upgrade-ladder-from-nested-prefix-solves)); if it does, `planHerd` throws `SolverError`, so a test fails loudly instead of the app showing a gap.
+6. Shopping-line amounts and the total are always `F`'s; step amounts are never shown.
+7. `notNeeded`: home rows (in row order) with `Σ_i h_i,f ≤ 1e-6` in `F`.
+8. `budgetPrompt` only when `F` is optimal, `budgetTight`, `t* < 1 − 1e-6` and `costAtCap_H !== null`. Then `X = roundUpInrWhole(costAtCap_H − Bd)` and `Y = Σ_i floorMilk1(g_i)` over milking animals.
+
+**Tolerances (all existing values):**
+- `javascript-lp-solver` precision `1e-9`;
+- feasibility and tightness `relTol(v) = 1e-6 × max(1, |v|)`;
+- `S_i` rounding `+1e-7`;
+- below maintenance `1e-6`;
+- `t*` at target `1 − 1e-6`;
+- shown line or bought feed `> 1e-6` kg;
+- `ΔL` floor `+1e-7`;
+- whole-rupee round-up `−1e-7`;
+- Stage 3 purchase slack `relTol(P*)`;
+- the per-animal Ca ceiling constants (`calciumMax.value`, `maxGramsPerKgDm`) are the ones `solveRation` reads.
+
+**Size.** With `n` animals, `|C|` buy feeds and `|Hm|` home rows, Stage 1 has `n(|C| + |Hm| + 1) + 1` variables and about `10n + |Hm| + 2` rows. For 10 animals, 25 buy feeds and 3 home rows: about 291 variables and 105 rows.
+
+### C4 audit metadata
+
+New builders in `src/domain/auditHerd.ts`. All return the existing `AuditMeta` shape, so `Fig` and `AuditDrawer` are unchanged. Exact values go in `numericValue` and `breakdown`; `formattedValue` is the rounded label.
+
+| Figure | Builder | `originType` | Content |
+|---|---|---|---|
+| Share `t*` (Details, M2 limit) | `auditShare(best, animals)` | `solver_output` | Role "Stage 1 (herd): largest equal share of every milk target"; active constraint = names of `best.limits` ("budget", "milk target", "`<label>`: intake limit", "home stock: `<feed>`"); breakdown `t* = 0.8123; Cow 1: 0.8123 × 8.36 = 6.79 L; ...`. |
+| `S_i` on a card | `auditHerdMilk(animalSolution, shareT)` | `solver_output` | `Y_i = t* × g_i`, `S_i = floor(10 Y_i)/10`; links to the `g_i` audit. |
+| `g_i` (Details) | existing `auditBreedCap(breed, T_i)` | `cited_source` | Unchanged effective-cap audit. |
+| `ΔL_k` ("→ about +`L` L") | `auditStepGain(later, byId, labels)` | `solver_output` | Role "Buying order step `k`"; extra rows: feeds in prefix `k − 1`, feeds in prefix `k`, `Σ S_i(k − 1)`, `Σ S_i(k)` with the per-animal terms; breakdown `ΔL = 12.3 − 11.8 = 0.5 L (rounded down)` (AC-C4-1.14). |
+| Shopping-line kg or g | `auditShoppingKg(line, byId, labels)` | `solver_output` | Role "Stage 2 at S (herd)"; breakdown `Cow 1 2.134 kg + Buffalo 1 1.500 kg = 3.634 kg`; for grams also `× 1000 = 3634 g`. |
+| Shopping-line ₹ | `auditShoppingCost(line, feed)` | `solver_output` | `kg × ₹/kg = ₹`, exact; extra row with the cited price, its source, date and reliability (the fields `auditFeedPrice` shows). |
+| Total `A` | `auditShoppingTotal(shopping)` | `solver_output` | Sum of every line, exact; note "home feed costs ₹0". |
+| `Bd` in the total line | existing `auditUserInput` | `user_input` | "Your input". |
+| Card lines | existing `auditFeedKg` / `auditFeedCost` on the animal's `RationSolution` | `solver_output` | Plus an extra row "From home" or "Buy". |
+| Prompt `X` (add) | `auditHerdBudgetIncrease(prompt)` | `solver_output` | `costAtCap_H − Bd = exact → X (rounded up to whole ₹)`. |
+| Prompt `Y` | `auditHerdTarget(prompt, animals)` | `cited_source` | `Σ floor(10 g_i)/10` with each term, each term linking to its `g_i` audit. |
+| Prompt `X` (spend at least) | `auditHerdShortfall(shortfall)` | `solver_output` | `M_H − Bd = exact → X (rounded up)`. |
+| `M_H`, `costAtCap_H` (Details) | `auditHerdMaintenance`, `auditHerdCostAtTarget` | `solver_output` | Role "Herd maintenance (0 L, no budget)" / "Herd cost at every milk target (no budget)". |
+| Home stock `q_f` | existing `auditUserInput` | `user_input` | "Your input". |
+| Prefilled weight | `auditPrefillWeight(breed)` | `cited_source` | `bodyWeightCitation`; note "typical female body weight from the breed table" (AC-C4-1.3). |
+| Prefilled fat, single value | `auditPrefillFat(breed)` | `cited_source` | `fatCitation` (the `fat_source_*` columns). |
+| Prefilled fat, midpoint | `auditPrefillFat(breed)` | `cited_source` | Extra rows: low, high; `formula: (low + high) / 2 = (3.7 + 4) / 2 = 3.85`; note "calculated from cited range"; `fatCitation` (AC-C4-1.4). |
+| Typed weight or fat | existing `auditUserInput` | `user_input` | "Your input" (AC-C4-1.20). |
+
+New string ids cover each label, role and note. `audit_role_*` text may use "Stage" and technical names because the drawer is outside the main view (AC-C4-1.21).
+
+### C4 app state and screens
+
+**State in `Workspace` (`src/App.tsx`).** Everything is in memory; a reload starts empty at `#/animals` (C4.6). Only `sahidana.lang` is stored.
+
+```ts
+type Step = 'animals' | 'feeds' | 'result';
+const [step, go] = useHashStep();                                   // go(step, { replace?: boolean })
+const [animals, setAnimals] = useState<HerdAnimal[]>([]);
+const [labelCounters, setLabelCounters] = useState<Record<Species, number>>({ cow: 0, buffalo: 0 });
+const [nextKey, setNextKey] = useState(1);                          // 'a' + nextKey
+const [addDraft, setAddDraft] = useState<AnimalCardDraft>(EMPTY_CARD);
+const [editingKey, setEditingKey] = useState<string | null>(null);  // null = the card adds a new animal
+const [herdBudget, setHerdBudget] = useState('');                   // text; validateBudget
+const [homeFeeds, setHomeFeeds] = useState<HomeFeedDraft[]>([]);
+const [plan, setPlan] = useState<HerdPlan | null>(null);
+// kept from C3: library, breeds, explain, prefill (PrefillState), text, extractorOpen, connection, llm, explainMode, toast
+```
+
+**Rules:**
+- **Labels.** `nextAnimalLabel(counters, species)` returns `{ species, n: counters[species] + 1 }`, and the counter is stored. A removed animal's number is never reused (AC-C4-2.1, OQ-C4-3).
+- **Editing.** **Edit** sets `editingKey` and loads the card from the animal (the `*Typed` flags come from `weightSource`/`fatSource`). **Save** replaces the profile and keeps `key` and `label`. Species is fixed while editing (to change species, remove the animal and add a new one), so a label never names the wrong species.
+- **Card limits.** In C4-M1 the add card is hidden while one animal is listed (AC-C4-1.6). In C4-M2 it stays while fewer than 10 are listed; adding an 11th shows "You can add up to 10 animals" (AC-C4-E5). Both are controlled by one constant, `MAX_ANIMALS` (1 in M1, 10 in M2).
+- **Stale plans.** Every edit to `animals`, `herdBudget` or `homeFeeds` calls `clearPlan()` (sets `plan` to `null` and aborts Explain), the existing `clearResult` pattern. With nothing changed, `plan` survives Back and Forward (AC-C4-1.22).
+- **Calculate ration.** `planHerd` runs synchronously in a `setTimeout(0)` after a "Calculating…" state has painted. The result is stored in `plan`, then `go('result')`.
+
+**Hash navigation (`src/lib/hashRoute.ts`).**
+- `go(step)` calls `history.pushState(null, '', '#/' + step)` and sets state; `go(step, { replace: true })` uses `replaceState`.
+- A `popstate` listener reads `location.hash` (the phone's Back and Forward). `parseHash` maps `''`, `#/` and unknown hashes to `null`, and the hook replaces them with `#/animals`.
+- **Guards** (a `useEffect` on `step`, `animals`, `herdBudget`, `plan`):
+  - `#/feeds` or `#/result` without at least one animal and a valid budget → `go('animals', { replace: true })`;
+  - `#/result` with `plan === null` → `go('feeds', { replace: true })` (AC-C4-1.1, AC-C4-E1).
+- The **Back** controls call `history.back()` when the current entry was pushed by the app (tracked in a ref); otherwise they call `go(previous, { replace: true })`. On-screen and phone Back therefore behave the same.
+- **Remove** on a screen 3 card (M2) removes the animal, clears the plan and calls `go('animals')` (AC-C4-2.2).
+- The language toggle does not touch the hash or any state (AC-C4-E7).
+- The audit drawer's history entry is described under `AuditDrawer.tsx` above.
+
+**Screens:**
+- **`AnimalsScreen`** (`#/animals`):
+  - the collapsed "Describe your animal" helper (`FreeTextExtractor`), shown only while the card is open;
+  - `AnimalList`;
+  - the card (`AnimalProfileForm` with prefill hints: "typical for this breed — change if you know", plus "calculated from cited range" for a midpoint; each prefilled value is a `Fig` with `auditPrefillWeight`/`auditPrefillFat`; a typed value shows "your value");
+  - `BudgetField` (herd label);
+  - the gating line, which names each missing item with "Add at least one animal" and/or "Enter how much you can spend each day";
+  - **Next**;
+  - "Try an example".
+  - An unsaved card never blocks **Next**, and its values are kept (OQ-C4-5).
+- **`HomeFeedsScreen`** (`#/feeds`): `FeedSelector` in home mode. A tap on a listed feed adds no second row. **Calculate ration** is enabled when there are no rows or every row is valid; otherwise each invalid row shows an inline error plus the line "Enter kg per day for every feed, or remove it" (AC-C4-E4).
+- **`HerdPlanView`** (`#/result`), by `plan.status`:
+  - `'optimal'`: `ShoppingList`, then "What to give each animal" (one `AnimalPlanCard` per animal in list order), then "Not needed today" (only when non-empty), then the budget prompt;
+  - `'below_maintenance'`: only "Spend at least ₹`X` more a day";
+  - `'infeasible'`: one `InfeasibilityAlert` per failing animal (an `InfeasibilityReport` built from that animal's entry), headed "`<label>`: `<limit>` limits it", with **Edit** (sets `editingKey`, then `go('animals')`), or the joint-conflict line. A suggested feed's add action adds a home row with blank kg and goes to `#/feeds`.
+  - **Copy summary** uses `buildHerdSummary`. **Explain** appears only when `animals.length === 1`, with context `{ animal: { ...profile, budgetInrPerDay: Bd, isConfirmed: true }, requirement: perAnimal[0].requirementAtS, solution: perAnimal[0].solution, feeds: library }`.
+- **Main-view wording.** Components render main-view text only from new plain-word string ids. `RationDetails` and the drawer are the only places that use `label_stage1`, `bindingName` and similar (AC-C4-1.21).
+
+**How the description helper fills the add card** (AC-C4-1.23, AC-2.3, AC-E5.1). `onExtracted(response)` in `App.tsx`:
+1. sets `addDraft` to `{ species, breedId: response.breedId ?? '', weight: String(bodyWeightKg), milk: String(milk), fat: String(fat), weightTyped: true, fatTyped: true }`. The extracted values count as the user's own, so a later breed pick does not overwrite them;
+2. sets `herdBudget` to `String(response.budgetInrPerDay)` when it is not null;
+3. appends each `matchedFeeds` id not already listed as a home row `{ feedId, kg: '' }` (blank kg, so **Calculate ration** stays disabled until the farmer types amounts). The LLM's `maxKgAsFedPerDay` is ignored; no price exists any more;
+4. sets `prefill` (the existing `PrefillState`). The card shows the "unconfirmed" stamp; **Add** (or **Save**) confirms and stores the animal with `isConfirmed: true`; **Discard** resets the card, removes the rows the helper added and restores the budget text it replaced.
+
+The helper never supplies nutrients, prices or breed figures (AC-E5.1 is unchanged in `liveAdapter.ts`). It works on the card that is open, so in C4-M1 with one animal listed it fills the **Edit** card.
+
+### C4 mock mode
+
+`VITE_USE_MOCK_ADAPTER=true` still swaps extraction and Explain to `mockAdapter`. `planHerd` always runs the real herd LP, on `getInitialFeeds()` and `getInitialBreeds()` (prototype fixtures in mock mode). There is no mock herd solver, so the prompts, steps and cards behave the same in both modes.
+
+### C4 compatibility
+
+**Must stay unchanged:**
+- `solveRation(animal, selectedFeeds, feedLibrary?, breedLibrary?)`: function bodies, outputs, and every field value for the same inputs (AC-C4-R1);
+- `RationAppAdapter`, both adapters, `POST /api/llm`, the verifier, the template and `ExplanationRequestContext`;
+- `data/*` figures and citations, and `src/data/*.v1.json` except the two non-descript display names;
+- `eval/out/browser_results.json` content (apart from `generatedAt`) and the 18-animal SciPy suite;
+- the `sahidana.lang` storage key;
+- existing string ids. Superseded strings stay in `strings.ts` until the unused components are removed.
+
+**Other compatibility facts:**
+- There is no stored state to migrate.
+- `rationService.planRation` and `rationPlan.ts` remain as the C3 oracle for AC-C4-1.12.
+- Superseded criteria (SPEC C4.4) lose their UI; their unit tests are rewritten or deleted along with the components, only with the user's approval for deletions.
+
+### C4 directory layout (delta)
+
+```text
+src/
+├── components/
+│   ├── AnimalList.tsx              # NEW (M1)
+│   ├── AnimalPlanCard.tsx          # NEW (M1)
+│   ├── AnimalProfileForm.tsx       # CHANGED (M1): add/edit card with prefill
+│   ├── AnimalsScreen.tsx           # NEW (M1): screen 1
+│   ├── AuditDrawer.tsx             # CHANGED (M1): history entry, Back closes
+│   ├── BudgetField.tsx             # CHANGED (M1): herd budget
+│   ├── FeedSelector.tsx            # CHANGED (M1): home-feed picker
+│   ├── HerdPlan.tsx                # NEW (M1): screen 3 (HerdPlanView)
+│   ├── HomeFeedsScreen.tsx         # NEW (M1): screen 2
+│   ├── RationDetails.tsx           # NEW (M1): Details moved from RationResultsPanel
+│   └── ShoppingList.tsx            # NEW (M1): What to buy
+├── domain/
+│   ├── auditHerd.ts                # NEW (M1)
+│   ├── breeds.ts                   # + breedPrefill (M1)
+│   ├── format.ts                   # NEW (M1): display rounding
+│   ├── herdPlan.ts                 # NEW (M1): planHerd, buy order, steps, prompts
+│   ├── herdSolver.ts               # NEW (M1): joint herd LP
+│   ├── presets.ts                  # C4 examples (M1, M2)
+│   ├── solver.ts                   # export keywords only (M1)
+│   ├── summary.ts                  # + buildHerdSummary (M1)
+│   ├── types.ts                    # herd types, RationFeedLine.source (M1)
+│   └── validation.ts               # card and home-row drafts (M1)
+├── i18n/{strings.ts, format.ts}    # new strings; formatAmount, formatInrWhole (M1)
+├── lib/hashRoute.ts                # NEW (M1)
+├── services/rationService.ts       # + planHerd (M1)
+└── App.tsx                         # 3-screen Workspace (M1)
+scripts/dump_solver_results.ts      # + herd branch (M2)
+eval/cross_check_herd.py            # NEW (M2)
+eval/test_herd_animals.json         # NEW (M2)
+eval/test_scipy_herd_agreement.py   # NEW (M2)
+tests/unit/{herdSolver,herdPlan,domainFormat,breedPrefill,hashRoute}.test.ts, herdUi.test.tsx   # NEW (M1)
+tests/unit/herdPerf.slow.test.ts    # NEW (M2)
+tests/e2e/herd-flow.spec.ts         # NEW (M1)
+```
+
+### C4 tests
+
+**C4-M1:**
+- `tests/unit/herdSolver.test.ts`:
+  - **One-animal equivalence (AC-C4-1.12, AC-C4-R1).** For every entry of `eval/test_animals.json`, `solveHerd` is run with one animal, no home feeds, buy set = `entry.selectedFeeds` and `Bd = budget`. It must give:
+    - the same status;
+    - for `'optimal'`: the same ration lines (feedId, kg), `S`, `Y*`, `totalCostInr`, `bindingConstraint`, verdict kind, `costAtCapInrPerDay` and `maintenanceCostInrPerDay` as `solveRation`, within `1e-6` relative;
+    - the same `M` when below maintenance;
+    - the same `limitingNutrients` and `dmConflict` when infeasible.
+  - **Home feed (AC-C4-1.11):**
+    - herd home use `≤ q_f + 1e-6`;
+    - a feed in `C ∩ Hm` can appear as both lines;
+    - a home feed not in `C` is never bought;
+    - removing a home row never lowers `P(F)`;
+    - no home feed is forced (a useless home feed stays at 0 and lands in "Not needed").
+  - **Stage 3:**
+    - with a large home stock (for example 50 kg/day of wheat straw for one cow), home use in `F` equals a separately solved minimum of total home kg at the same `S_i` and purchase, within `1e-6`, and is well below the stock;
+    - `P(F) ≤ P* + relTol(P*)`;
+    - `stage3Applied === true` whenever home rows exist;
+    - `null` with no home rows, where `F` is identical to the Stage 2 solution.
+  - `stage2Path === 'direct'` on every case; `verifyHerdSolution` rejects a tampered plan.
+- `tests/unit/herdPlan.test.ts` (real solver, `LIVE_FEEDS`, fixed month):
+  - `Bu_H` order (supplements first);
+  - `P1` equals the feeds of C3 rung 1 and each later line equals the C3 rung order, with `ΔL_k` equal to the consecutive C3 rung milk differences (one animal, `planRation(profile, [], LIVE_FEEDS, month, solve)` as the oracle);
+  - `ΔL_k ≥ 0`;
+  - `lastStepMatchesBest`;
+  - "Nothing to buy";
+  - `notNeeded`;
+  - both prompts with their exact rules and `X` boundaries;
+  - shortfall;
+  - infeasible naming with buyable suggestions only;
+  - the three M1 examples' outcomes ("Needs feeds to buy" has at least one line; "Tight budget" shows the prompt).
+- `tests/unit/domainFormat.test.ts`:
+  - `roundKg1(1.05) = 1.1`, `roundKg1(0.04999) = 0.0`;
+  - `toGrams(0.0499996) = 50`;
+  - `roundUpInrWhole(12.0000000001) = 12`, `roundUpInrWhole(12.01) = 13`;
+  - `roundInrWhole(-0.4) = 0`;
+  - `displayAmount('common_salt', 0.03)` is `{ 30, 'g', 0 }`;
+  - `isShownAmount(1e-6) = false`.
+- `tests/unit/breedPrefill.test.ts`:
+  - Rathi gives weight 295 with its citation and fat 3.85 as a midpoint;
+  - Sahiwal gives fat 4.93 as a single value;
+  - blank breeds (Kankrej, HF crossbred, both non-descript rows) stay blank;
+  - a typed value survives a breed change;
+  - the audits match AC-C4-1.3 and AC-C4-1.4.
+- `tests/unit/hashRoute.test.ts`: no hash, `#/` or an unknown hash → `#/animals`; the guards redirect; `popstate` changes the step; the drawer entry is closed by Back without a step change.
+- `tests/unit/herdUi.test.tsx`:
+  - gating lines and the disabled **Next** (AC-C4-1.8, E1, E2);
+  - the card and the list, with the card hidden at one animal (M1);
+  - home rows, invalid rows and no price, season or month controls (AC-C4-1.9, E4);
+  - section order and headings on screen 3, the total line, "Nothing to buy today", tags, the dry card, Details collapsed then expanded;
+  - units: every main-view ₹ whole, kg 1 dp, supplements in g;
+  - plain-words scan of the main view, excluding `[data-details]` and the drawer (AC-C4-1.21);
+  - every figure is a `Fig` whose audit has the exact value.
+- `tests/unit/oneLanguage.test.tsx`, `tests/unit/i18n.test.ts`: every C4 state in both languages; no "पशु"; `g` is an exempt unit; no Devanagari outside `strings.ts`.
+- `tests/e2e/herd-flow.spec.ts`:
+  - Journey C4-A end to end;
+  - phone Back (`page.goBack()`) `#/result` → `#/feeds` → `#/animals` with inputs kept; Forward reshows the plan;
+  - the audit drawer closed by Back stays on the screen;
+  - offline;
+  - the three examples;
+  - at 375 px, the computed left and right padding of "Not needed today" equals that of "What to buy";
+  - every interactive control is at least 44 × 44 px.
+- `tests/e2e/language.spec.ts`, `tests/e2e/ration-journey.spec.ts`: rewritten for the 3-screen flow.
+
+**C4-M2:**
+- `tests/unit/herdSolver.test.ts` (herd cases):
+  - `Y_i / g_i = t*` for every milking animal, dry animals at 0 (AC-C4-2.4);
+  - maintenance met for every animal in `F` and every step from `P1` on (AC-C4-2.3);
+  - stock shared and binding;
+  - card "Buy" lines summed over animals equal the herd totals (AC-C4-2.5);
+  - one case per limit kind in which only that limit is tight (AC-C4-2.10).
+- `tests/unit/herdPlan.test.ts`: herd buy order; `ΔL_k ≥ 0`; the herd prompt with `Y = Σ floor(10 g_i)/10`; the three herd examples (AC-C4-2.11).
+- `tests/unit/herdUi.test.tsx`, `tests/e2e/herd-flow.spec.ts`:
+  - labels Cow 1, Cow 2, Buffalo 1, then Cow 3 after a removal;
+  - the 10-animal limit;
+  - **Remove** on screen 3 returns to `#/animals` with no plan;
+  - Explain is hidden for 2 or more animals; Copy includes every card.
+- `tests/unit/herdPerf.slow.test.ts`: see [C4 risks](#c4-risks).
+- **Eval (AC-C4-2.9).** `eval/test_herd_animals.json` holds at least 7 cases:
+  1. cow and buffalo;
+  2. a herd with a dry animal;
+  3. shared home stock that binds;
+  4. below maintenance;
+  5. infeasible, using a restricted `buyFeedIds`;
+  6. `t* = 1`;
+  7. a budget-tight prompt.
+
+  Format: `{ id, description, month, budgetInrPerDay, animals: [{ key, species, breedId, bodyWeightKg, milkYieldLitersPerDay, milkFatPct }], homeFeeds: [{ feedId, kgPerDay }], buyFeedIds: string[] | null, expected: { status, limitKind? } }`. With `buyFeedIds: null`, the buy set is `buildCandidates([], LIVE_FEEDS, month)`; otherwise it is those feeds at their cited prices. The fixed `month` keeps the eval deterministic despite ADR-0016.
+
+**`scripts/dump_solver_results.ts` herd branch.**
+- `main()` is unchanged and still writes `eval/out/browser_results.json` from `eval/test_animals.json` only.
+- A second function `dumpHerdCases()` runs after it, and only when `eval/test_herd_animals.json` exists. For each case it calls `solveHerd` and writes `eval/out/browser_herd_results.json` with:
+  - the resolved `buySet`;
+  - `t*`, every `S_i` and `g_i`;
+  - `P(F)`, `M_H` and `costAtCap_H`;
+  - every animal's lines with `source`;
+  - `homeUse`, `limits`, `stage2Path`, `stage3Applied` and the total home kg of `F`.
+- It throws on a status mismatch with `expected`, like the existing loop.
+- The single-animal output therefore cannot change.
+- `eval/cross_check_herd.py` reads the herd file and rebuilds, with HiGHS:
+  - `M_H`;
+  - Stage 1 (maximise `t`);
+  - Stage 2 at the browser's `S_i`, giving `P*`;
+  - **Stage 3, mirrored**: minimise total home kg subject to the Stage 2 rows plus `P ≤ P* + relTol(P*)`;
+  - `costAtCap_H`.
+
+  It also independently checks the browser `F` against every per-animal row, every shared row and the Stage 3 purchase row within `1e-6`. Stage 3 fixes the herd's total home use. The split between animals, and between equally cheap bought feeds, can still have alternative optima, so per-animal lines are checked for feasibility, not compared value by value.
+- `eval/test_scipy_herd_agreement.py` asserts:
+  - agreement within `1e-4` on `t*`, `P(F)`, `M_H`, `costAtCap_H` and the Stage 3 total home kg;
+  - infeasible or null together;
+  - `S_i = floor(10 t* g_i + 1e-7)/10` from the browser `t*`;
+  - case coverage.
+
+**Test commands** (unchanged from [Test commands](#test-commands)):
+- **Fast** (after every task): `npm test`. It must stay under about 15 seconds. If `herdSolver.test.ts` or `herdPlan.test.ts` takes more than about 1 second, its real-library cases move to `*.slow.test.ts`, as in C3.
+- **Full** (milestone end): `npm run test:full`
+- **One file:** `npx vitest run tests/unit/herdSolver.test.ts` (or `npx playwright test tests/e2e/herd-flow.spec.ts`)
+- **Also at each milestone end:** `npm run build`, `npm run compile:data`, and `npm run eval:dump && npm run eval:scipy` (from M2, `eval:scipy` also runs the herd agreement file).
+
+### C4 setup requirements
+
+None beyond [Setup requirements](#setup-requirements). No new tool, account, environment variable or local service.
+
+### C4 risks
+
+1. **LP size and time for 10 animals on a low-end phone.**
+   - **Estimate.** For 10 animals, about 25 buy feeds and 3 home rows, one joint LP has about 290 variables and 105 rows. `javascript-lp-solver` uses a dense tableau of about 105 × 400 cells. At about 200–300 pivots, that is roughly 10 M multiply-adds: about 10–30 ms on a laptop and 50–150 ms on a low-end Android phone (about 5× slower).
+   - **One tap** runs:
+     - 5 full joint LPs for `F`, plus up to 2 Stage 3 LPs of the same size when home rows exist (at `Y` and at `S`; one when `S = Y` is reused);
+     - for the steps, 3 LPs per prefix (about 6–10 prefixes; the early ones are much smaller because their buy set is short);
+     - about 8 small single-animal LPs per animal (alone checks, the verdict figures and detection).
+   - **Total:** about 0.25–0.45 s on a laptop and **about 0.8–2.3 s on a low-end phone** in the worst case (Stage 3 adds about 0.1–0.3 s on the phone). A typical 2–3 animal herd is about 5× less.
+   - **Mitigations:**
+     - prefix solves skip Stage 2 at `Y`, Stage 3, `costAtCap_H`, the alone checks and detection (`solveHerdStep`);
+     - a "Calculating…" state is painted before the synchronous solve;
+     - `tests/unit/herdPerf.slow.test.ts` asserts the worst case (10 animals, full in-season library, 3 home rows) takes `planHerd ≤ 1.0 s` in Node, and the M2 E2E measures the same herd under Chromium CPU throttling ×4 with a target `≤ 3 s`.
+   - **If either budget fails**, `planHerd` moves into a module Web Worker (`new Worker(new URL('./herdWorker.ts', import.meta.url), { type: 'module' })`, built into Vite, no new dependency). This works because `planHerd` is pure and its inputs and outputs are plain data. A second lever is to compute the per-animal detection LPs only when Details is opened.
+2. **Alternative optima.** When the LP has several cheapest rations, the herd LP could pick a different one than `solveRation` for one animal. Mitigation: the same row and variable insertion order, plus the 18-animal equivalence test. If a mismatch appears, the work stops and the user is asked. Changing `solveRation` is not an option.
+3. **Stage 2 at `S` failing for a herd.** Because Stage 1 uses `y_i ≥ t g_i` and home stock is shared, lowering milk is not always feasible at the same cost. Mitigation: the retry and fallback chain, with `stage2Path` asserted `'direct'` in every test and eval case.
+4. **The last step not equal to `F`.** This can happen if Stage 1 over `C` reached `t*` only through a feed that `F` does not use. Mitigation: `lastStepMatchesBest` is asserted in tests. At runtime the shopping amounts are always `F`'s; only that line's milk gain could read slightly low.
+5. **The fair-share rule can leave budget unused (accepted known limitation, orchestrator 2026-10-15).** One animal held back by its intake, roughage or a nutrient caps `t*` for the whole herd, even when budget remains. This is the user's fairness rule and is accepted for now ([ADR-0020](DECISIONS.md#adr-0020-joint-herd-lp-with-a-fair-share-of-each-milk-target) consequences). Mitigation: Details and the `t*` audit name the limiting animal and its limit, so the paravet can see why.
+6. **Free home feed used generously (resolved by Stage 3).** At ₹0, Stage 2 alone could give more home straw than needed, within the intake and roughage limits. Stage 3 removes this for `F`: it takes the least home feed at the cheapest purchase. Prefix solves do not need it, because their amounts are never shown.
+7. **Deadline.** C4-M2 must be accepted by Sat 17 Oct 23:00 IST, or the C4-M1 build is submitted. Every M2 change sits behind `MAX_ANIMALS`, the examples and tests, so falling back is a constant and a revert of the example set.
+
+### Expensive to change (Change 4)
+
+Plain-English list for Change 4. Each item is costly to change after C4-M2 because code, tests, the SciPy cross-check and the SPEC criteria depend on it.
+
+1. **One shared calculation for the whole herd, with the fair-share rule.** Every animal is kept healthy first; then the budget is shared so every milking animal reaches the same share of its milk target. The browser and the Python cross-check both build this calculation. Changing the rule (for example to "most total milk") means rewriting both, every expected value and the examples.
+2. **Home feed is free, limited by the daily amount, and never forced; the same feed can also be bought; the best plan uses the least home feed at the cheapest purchase (Stage 3).** This decides every plan, the "From home"/"Buy" lines and the herd cross-check. Bringing back a price for home feed or a forced minimum changes the screens, the solver and its tests.
+3. **The single-animal solver stays untouched.** The herd code reuses its internal pieces and is tested against it on all 18 benchmark animals. Changing those pieces now changes both paths at once.
+4. **The shapes `HerdAnimal`, `HomeFeed` and `HerdPlan`, with each animal's part as a normal `RationSolution`.** Every screen 3 component, the audits, the copy summary and the eval dump read them. Adding a field is cheap; renaming or removing one is not.
+5. **The buying order and the milk each later feed adds.** Supplements first, then cheapest spend first; each step is a real calculation, and only the best plan's amounts are shown. A different order means new rules, new invariants and new expected results.
+6. **Three screens on three hash addresses (`#/animals`, `#/feeds`, `#/result`).** The Back behaviour, the guards, the examples and the end-to-end tests depend on them. Moving to a router or to different screens redoes the navigation tests.
+7. **Farmer display units.** Whole rupees (prompt amounts rounded up), kg with 1 decimal, grams for mineral mixture and salt, exact values in the audit. The UI tests and the copied summary check them everywhere.
+8. **Nothing is saved between visits.** The herd lives in memory only. Saving it later needs storage, a migration story and privacy wording, which is a new design.
