@@ -119,3 +119,22 @@ Findings (non-blocking):
 3. Minor: the example pills' hairline border is ~1.4:1 against the ground, a deliberately quiet style; the label and focus ring identify the control.
 4. Minor: the "Infeasible"/"Solves" notes are jargon; the straw note is relabelled in C3-M2.
 5. Minor: DESIGN.md Layout line still names the old card order; to fix in C3-M2.
+
+## Change 3 (farmer-first flow), C3-M2 UI Review 1 (2026-10-15)
+
+**Verdict: APPROVED.**
+Screenshots: `.ui-review/c3-m2-review/` (01-initial to 11-hindi-straw at desktop & mobile).
+
+### Critical defects
+None.
+
+### Recommendations (non-blocking)
+- `src/index.css` (.feedname in .rung-feeds and .not-needed): `.feedname` defaults to `display: flex; flex-direction: column`. In inline comma-separated lists (`BuyLadder.tsx:100` and `RationResultsPanel.tsx:378`), adding `.rung-feeds .feedname, .not-needed .feedname { display: inline; }` and `.rung-feed-name { display: inline; }` will make multiple feeds wrap cleanly as fluent inline text.
+- `src/components/BuyLadder.tsx` (Rung badge text size): On narrow mobile screens (`375px`), `.rung-badge` can be kept compact with `white-space: nowrap`.
+
+### Summary of Verification
+1. **Design System & Tokens:** 0 hard-coded colors outside index.css, 0 gradients/blobs/glass, 0 emoji icons, all interactive controls retain :focus-visible outlines. "Buy" tags use `--c-accent-tint` (`#e3f4ea`), "You have" tags use `--c-sunken` (`#f1f4f1`), `BudgetShortfallAlert` uses `--c-warn-tint` (red rule strictly preserved).
+2. **Accessibility & Contrast:** All text pairs exceed 4.5:1 (primary text 14.8:1, secondary text 6.0:1, accent ink 7.3:1, warn ink 7.3:1). 44px+ touch targets on all interactive controls. Focus restoration verified across all audit sheets.
+3. **Responsive Reflow:** Zero horizontal overflow across all states at 1440px desktop, 1280px desktop, and 390px/375px mobile viewports. Side-by-side milk tiles align with 40px numbers.
+4. **C3-M2 Feature States:** Feeds section collapsed & optional (AC-C3-2.2); Calculate ration enabled with 0 feeds (AC-C3-2.1); "You have" and "Buy" tags verified (AC-C3-2.6); BuyLadder renders Rung 0 states and Rungs 1..n with non-decreasing milk (AC-C3-2.7, 2.8, 2.9); Not needed line verified (AC-C3-2.11); BudgetIncreasePrompt verified (AC-C3-2.12); Shortfall raise-by alert verified (AC-C3-2.14); Three demos verified (AC-C3-2.15).
+5. **Language & Digits:** Strict one-language isolation in English and Hindi with 0 script leakage. All numerals use Western Arabic digits `0`–`9` across all states.

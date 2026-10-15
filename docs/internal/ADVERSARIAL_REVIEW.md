@@ -69,3 +69,29 @@ Findings (non-blocking):
 2. Minor: for `below_today` / `same_as_today` the verdict sentence repeats the tile figures, and the tile says "ration" while the sentence says "budget". Deferred to UAT.
 3. Minor: `grid-template-rows: subgrid` is ignored by WebViews older than about Chrome 117, so the figures may not line up if a label wraps. Accepted.
 4. Minor: sticky bar covers nothing new.
+
+## Change 3 (farmer-first flow), C3-M2 Review 1 (2026-10-15)
+
+Verdict: REJECTED
+Test command: cmd.exe /c "npm run test:full && npm run build && npm run compile:data && npm run eval:dump && npm run eval:scipy" -> exit code 0
+
+Critical defects:
+1. `src/components/BuyLadder.tsx:26-30`: When own feeds balance the ration alone without buying anything from the library (`plan.buyFeedIds` is empty and `hasRungs` is false per OQ-C3-4 and AC-C3-2.7), `resolvedOwnedIds` fell back to `plan.candidates.filter(...)`, retaining all 20+ candidate feeds in the library. Clicking Rung 0's milk or cost figure displayed all candidate library feeds under "Feeds in this step" for "Your feeds alone", violating AC-C3-2.10.
+
+## Change 3 (farmer-first flow), C3-M2 Review 2 (2026-10-15)
+
+Verdict: APPROVED (Base: d28d90a)
+Test command: npm test && npx playwright test -> exit code 0
+
+### Summary of Review
+- Fix Verification (C3-M2-FIX-1): Fix commit a7af6ff added `ownedFeedIds: string[]` to `RationPlan` in `src/domain/rationPlan.ts`, populated it strictly from `owned.map(f => f.feedId)` in both return paths, wired `ownedFeedIds` into `BuyLadder.tsx`, and added an explicit assertion in `tests/unit/resultUi.test.tsx` verifying that all 7 owned feeds and 0 library feeds appear in the Rung 0 milk and cost audit drawers.
+- Contract & Spec Compliance: Verified against AC-C3-2.1 through AC-C3-2.15 and edge cases AC-C3-E1 through AC-C3-E9. Feeds are optional; the button enables with valid cow profile + budget; "You have" and "Buy" tags correctly differentiate owned vs bought feeds; buy ladder correctly sequences supplements first then ascending cost; budget increase prompt appears strictly under the 4 ADR-0014 criteria with exact `roundUpInr` rounding; shortfall alerts show "Raise the budget by at least ₹X/day"; and all figures open audit drawers.
+- Invariants & Solvers: SciPy HiGHS cross-check (`eval/cross_check_solver.py` and `eval/test_scipy_agreement.py`) verified 100% agreement on `costAtCapInrPerDay` across all 18 benchmark animals. Supported milk never decreases across ladder rungs, and the final rung equals the final solve within 1e-6 relative. Zero network requests during solve/plan (`AC-C3-E8`).
+- Regressions: All regression criteria AC-C3-R1 through AC-C3-R7 hold. No tests were skipped, weakened, or removed.
+
+### Critical defects:
+None.
+
+### Recommendations (non-blocking):
+1. `src/components/BuyLadder.tsx:14`: `BuyLadderProps` retains an optional `ownedFeedIds?: string[];` property. Since `plan.ownedFeedIds` is now guaranteed on `RationPlan`, `BuyLadder` can directly rely on `plan.ownedFeedIds`.
+2. `src/domain/rationPlan.ts:62-82`: `buildCandidates` assumes `owned` contains unique feeds (which the UI enforces). For programmatic safety if `planRation` is invoked directly with duplicate owned feed IDs in future tests or scripts, deduplicating `owned` by `feedId` before candidate assembly would prevent duplicate rows in the solver input.
