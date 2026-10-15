@@ -280,6 +280,42 @@ test.describe('SahiDana M1 offline vertical-slice journey', () => {
     });
   }
 
+  for (const [label, viewport] of [
+    ['375 px', { width: 375, height: 812 }],
+    ['desktop', { width: 1280, height: 900 }],
+  ] as const) {
+    test(`sets Today and This ration supports side by side with the benchmark line below, and no horizontal overflow, at ${label} (AC-C3-1.5)`, async ({
+      page,
+    }) => {
+      await page.setViewportSize(viewport);
+      await page.goto('/');
+      await page.locator('[data-preset="buffalo"]').click();
+      await expect(page.locator('#analysis')).toHaveAttribute('data-state', 'solved');
+
+      const supports = page.getByTestId('supports');
+      const tiles = supports.locator('.supports-tile');
+      await expect(tiles).toHaveCount(2);
+      await expect(tiles.nth(0)).toContainText('Today');
+      await expect(tiles.nth(1)).toContainText('This ration supports');
+
+      const todayBox = (await tiles.nth(0).boundingBox())!;
+      const supportedBox = (await tiles.nth(1).boundingBox())!;
+      const benchmarkBox = (await supports.locator('.supports-context').boundingBox())!;
+
+      // Same top offset, so neither tile wraps below the other; the second tile sits to the right of the first.
+      expect(Math.abs(todayBox.y - supportedBox.y), 'tiles share the same top').toBeLessThanOrEqual(1);
+      expect(supportedBox.x, 'second tile is to the right of the first').toBeGreaterThanOrEqual(todayBox.x + todayBox.width);
+      expect(Math.abs(todayBox.width - supportedBox.width), 'tiles are equal width').toBeLessThanOrEqual(1);
+
+      // The benchmark line sits below both tiles.
+      const tilesBottom = Math.max(todayBox.y + todayBox.height, supportedBox.y + supportedBox.height);
+      expect(benchmarkBox.y, 'benchmark line is below the tiles').toBeGreaterThanOrEqual(tilesBottom - 1);
+
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
+      expect(overflow, 'no horizontal page overflow').toBe(false);
+    });
+  }
+
   test('verifies vercel.json routing, PWA precache manifest, and bundled woff2 font budget <= 300 KB', async () => {
     const rootDir = process.cwd();
     const vercelConfig = JSON.parse(fs.readFileSync(path.join(rootDir, 'vercel.json'), 'utf8'));

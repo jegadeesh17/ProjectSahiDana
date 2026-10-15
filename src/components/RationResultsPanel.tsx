@@ -200,8 +200,6 @@ function SolvedBody({
   const byId = new Map(library.map((f) => [f.id, f]));
   const breed = breedById(profile.breedId, breeds);
   const dry = solution.verdict.kind === 'dry_animal';
-  // These two verdicts open with "This budget supports ..." themselves, so the headline would say it twice.
-  const verdictLeads = solution.verdict.kind === 'below_today' || solution.verdict.kind === 'same_as_today';
   const under = solution.budgetInrPerDay - solution.totalCostInr;
   const atBudget = under <= 0.005;
   const savings = auditSavings(solution);
@@ -209,7 +207,7 @@ function SolvedBody({
 
   return (
     <div className="solved" key={`solved-${solution.totalCostInr}-${solution.supportedMilkLPerDay}`}>
-      {breed && !dry && !verdictLeads && <SupportsHeadline solution={solution} profile={profile} breed={breed} library={library} />}
+      {breed && !dry && <SupportsHeadline solution={solution} profile={profile} breed={breed} library={library} />}
       {breed && <VerdictCard solution={solution} profile={profile} breed={breed} library={library} />}
 
       {(!solution.feeds.some((f) => f.feedId === 'mineral_mix' && f.kgAsFed > 0) ||

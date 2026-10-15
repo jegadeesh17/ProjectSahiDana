@@ -60,6 +60,61 @@ describe('result card per verdict case', () => {
     });
   }
 
+  it('shows Today and This ration supports as two tiles, each opening its own audit, with the benchmark line below', () => {
+    const { container } = render(<App />);
+    demo(container, 'gain');
+    const supports = container.querySelector('[data-testid="supports"]')!;
+    const tiles = supports.querySelectorAll('.supports-tiles > .supports-tile');
+    expect(tiles.length).toBe(2);
+    expect(tiles[0].getAttribute('data-tile')).toBe('today');
+    expect(tiles[1].getAttribute('data-tile')).toBe('supported');
+    expect(tiles[0].textContent).toContain('Today');
+    expect(tiles[1].textContent).toContain('This ration supports');
+    for (const tile of tiles) expect(tile.textContent).toContain('per day');
+
+    const benchmark = supports.querySelector('.supports-context')!;
+    expect(benchmark.textContent).toContain('Cited breed benchmark');
+    // The benchmark line follows the tiles in document order and is not inside either of them.
+    expect(supports.querySelector('.supports-tiles')!.compareDocumentPosition(benchmark) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(tiles[0].contains(benchmark) || tiles[1].contains(benchmark)).toBe(false);
+
+    const expected: [Element, string][] = [
+      [tiles[0], 'in-milk'],
+      [tiles[1], 'supported-milk'],
+      [benchmark, 'breed-cap-'],
+    ];
+    for (const [holder, auditId] of expected) {
+      const fig = holder.querySelector<HTMLButtonElement>('.fig')!;
+      expect(fig).toBeTruthy();
+      act(() => {
+        fireEvent.click(fig);
+      });
+      expect(container.querySelector('[role="dialog"]')?.getAttribute('data-audit-id')).toMatch(new RegExp(`^${auditId}`));
+    }
+  });
+
+  it('shows the milk tiles for below_today and same_as_today results too', () => {
+    for (const [key, kind] of [['below_cost', 'below_today'], ['below_no', 'below_today'], ['same', 'same_as_today']]) {
+      const { container, unmount } = render(<App />);
+      demo(container, key);
+      expect(container.querySelector('[data-testid="verdict"]')?.getAttribute('data-verdict'), key).toBe(kind);
+      const tiles = container.querySelectorAll('[data-testid="supports"] .supports-tiles > .supports-tile');
+      expect(tiles.length, key).toBe(2);
+      expect(container.querySelector('[data-testid="supports"] .supports-context')?.textContent, key).toContain('benchmark');
+      unmount();
+    }
+  });
+
+  it('Hindi mode: the milk tiles read in Hindi', () => {
+    window.localStorage.setItem(LANG_STORAGE_KEY, 'hi');
+    const { container } = render(<App />);
+    demo(container, 'gain');
+    const text = container.querySelector('[data-testid="supports"] .supports-tiles')!.textContent ?? '';
+    expect(text).toContain('आज');
+    expect(text).toContain('इस राशन से संभव');
+    expect(text).toContain('प्रति दिन');
+  });
+
   it('the caveat appears for a gain and not for the other verdicts', () => {
     const { container } = render(<App />);
     demo(container, 'gain');

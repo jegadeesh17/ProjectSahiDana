@@ -500,7 +500,7 @@ export const strings = {
   count_in_group: { hi: '{n} फ़ीड', en: '{n} feeds' },
 
   // ---- result: supported milk, verdict, fat line, cost ----------------------------------------
-  label_supports: { hi: 'यह बजट संभव करता है', en: 'This budget supports' },
+  label_supports: { hi: 'इस राशन से संभव', en: 'This ration supports' },
   label_today_milk: { hi: 'आज', en: 'Today' },
   verdict_gain: { hi: '+{x}/दिन संभव', en: '+{x}/day possible' },
   verdict_at_level: { hi: 'पहले से नस्ल के स्तर पर', en: 'Already at the breed level' },

@@ -39,39 +39,41 @@ const TONE: Record<RationSolution['verdict']['kind'], 'good' | 'neutral' | 'warn
   below_today: 'warn',
 };
 
-/** "This budget supports 9.6 L per day", with today's milk and the breed benchmark beside it (AC-5.1). */
+/** Today's milk and what the ration supports as two equal tiles, with the breed benchmark on one line below (AC-C3-1.5). */
 export function SupportsHeadline({ solution, profile, breed, library }: Props) {
   const todayMilk = profile.milkYieldLitersPerDay;
   const today = litresNatural(todayMilk);
   return (
     <div className="supports" data-testid="supports">
-      <p className="supports-label">
-        <Bi id="label_supports" />
-      </p>
-      <p className="supports-figure">
-        <Fig audit={auditSupportedMilk(solution, new Map(library.map((f) => [f.id, f])))} className="supports-fig">
-          {litres1(solution.supportedMilkLPerDay)}
-        </Fig>
-        <span className="supports-unit">
-          <Bi id="label_per_day" />
-        </span>
-      </p>
-      <p className="supports-context num">
-        <span>
-          <Bi id="label_today_milk" />{' '}
-          <Fig inline audit={auditUserInput('in-milk', t('label_milk'), today, todayMilk)}>
+      <div className="supports-tiles">
+        <div className="supports-tile" data-tile="today">
+          <p className="supports-tile-label">
+            <Bi id="label_today_milk" />
+          </p>
+          <Fig audit={auditUserInput('in-milk', t('label_milk'), today, todayMilk)} className="today-fig">
             {today}
           </Fig>
-        </span>
-        <span className="sep" aria-hidden="true">
-          ·
-        </span>
-        <span>
-          <Bi id={CAP_BASIS_LABEL[breed.capBasis]} />{' '}
-          <Fig inline audit={auditBreedCap(breed, todayMilk)}>
-            {formatLitres(solution.milkCapLPerDay, 2)}
+          <p className="supports-tile-unit">
+            <Bi id="label_per_day" />
+          </p>
+        </div>
+        <div className="supports-tile supports-tile-main" data-tile="supported">
+          <p className="supports-tile-label">
+            <Bi id="label_supports" />
+          </p>
+          <Fig audit={auditSupportedMilk(solution, new Map(library.map((f) => [f.id, f])))} className="supports-fig">
+            {litres1(solution.supportedMilkLPerDay)}
           </Fig>
-        </span>
+          <p className="supports-tile-unit">
+            <Bi id="label_per_day" />
+          </p>
+        </div>
+      </div>
+      <p className="supports-context num">
+        <Bi id={CAP_BASIS_LABEL[breed.capBasis]} />{' '}
+        <Fig inline audit={auditBreedCap(breed, todayMilk)}>
+          {formatLitres(solution.milkCapLPerDay, 2)}
+        </Fig>
       </p>
     </div>
   );

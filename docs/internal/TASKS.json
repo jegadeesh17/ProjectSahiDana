@@ -271,7 +271,7 @@
             "tests/unit/resultUi.test.tsx"
           ],
           "acceptance_criteria": "SPEC AC-C3-1.5, AC-C3-1.7; regression AC-C3-R2, AC-C3-R7: tests/unit/resultUi.test.tsx renders a feasible result with T > 0 and asserts the 'Today' and 'This ration supports' tiles inside data-testid=\"supports\", that tapping each opens the same audit as before, and that the breed benchmark line sits below the tiles and opens its source audit; the 375 px side-by-side check is covered in the milestone-end e2e run. Verify: npm test exits 0.",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "C3-M1-T4",
