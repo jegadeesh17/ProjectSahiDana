@@ -17,9 +17,9 @@ Repository: `https://github.com/jegadeesh17/ProjectSahiDana`
 - **Frontend / PWA:** TypeScript 5, React 18, Vite 5, Tailwind CSS 3, `vite-plugin-pwa`, `javascript-lp-solver`, `vaul`, `@radix-ui/react-dialog`, `@radix-ui/react-accordion`, `@radix-ui/react-slot`, `class-variance-authority`, `lucide-react`. 100% offline-capable core.
 - **Backend / Serverless:** Vercel serverless function (`api/llm.ts`) proxying OpenRouter with IP rate limiting (20 req/min/IP) and model fallback chain (`meta-llama/llama-3.3-70b-instruct:free`, `google/gemma-3-27b-it:free`, `qwen/qwen-2.5-72b-instruct:free`).
 - **Verification Suites:**
-  - TypeScript unit tests: `npm test` (176 tests passing).
+  - TypeScript unit tests: `npm test` (276 tests passing).
   - Benchmark animals & SciPy HiGHS agreement: 18 benchmark animals in `eval/test_animals.json` evaluated across 23 SciPy agreement test cases in `eval/test_scipy_agreement.py` (`npm run eval:dump && npm run eval:scipy`, 100% agreement).
-  - Playwright E2E tests: `npx playwright test` (13 tests passing).
+  - Playwright E2E tests: `npx playwright test` (30 tests passing).
   - Data compilation pipeline: `npm run compile:data` (strict citation & schema verification).
 
 ## Key Constraints & Guardrails

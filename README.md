@@ -28,7 +28,7 @@ SahiDana is an offline-first, auditable Progressive Web Application (PWA) design
 
 ## Live Demo & Quick Access
 
-- **Live app:** [https://sahidana.vercel.app](https://sahidana.vercel.app) (installable PWA). Tap **Lactating buffalo** (हिंदी: *दुधारू भैंस*) for a balanced ration, or **Straw only** (*सिर्फ़ भूसा*) for an infeasible one with the missing nutrients named, under **One-tap demo** (*एक-टैप डेमो*). The हिंदी / English toggle in the top bar switches every label.
+- **Live app:** [https://sahidana.vercel.app](https://sahidana.vercel.app) (installable PWA). Tap **Lactating buffalo** (हिंदी: *दुधारू भैंस*) for a balanced ration, **Straw only** (*सिर्फ़ भूसा*) for feeds to buy via progressive ladder, or **Tight budget** (*कम बजट*) for a budget raise prompt, under **One-tap demo** (*एक-टैप डेमो*). The हिंदी / English toggle in the top bar switches every label.
 - **What works offline vs online:** the solver, requirements, feed library, audit drawer, demos and the template explanation work fully offline. The two AI features call `/api/llm` and need internet plus an `OPENROUTER_API_KEY` on the server: without a key, **Explain** falls back to the template explanation, and **Fill from description** shows an error, so enter the animal by hand. The AI uses only OpenRouter's free router (`openrouter/free`, no paid models): it typically answers in 10-25 s, and Hindi descriptions sometimes time out (45 s limit), in which case the app shows "AI service temporarily unavailable" and manual entry still works.
 - **Local run (for development):** `npm run dev`, then open `http://localhost:5173`. Use `npm run build && npm run preview` to test the installable offline PWA locally.
 - **Offline PWA:** installable to an Android home screen; the service worker caches the app shell, fonts and feed/breed datasets on first visit, so the solver core works at the doorstep with no network.
@@ -66,6 +66,13 @@ SahiDana is an offline-first, auditable Progressive Web Application (PWA) design
 - **Strict Bilingual UI Isolation (ADR-0009):** Header language toggle (English / हिंदी). Zero Devanagari script leakage in English mode, zero unexempted Latin words in Hindi mode, and universal Latin digits across all numeric displays (SPEC AC-L1.1 to AC-L1.7).
 - **Multilingual Free-Text Extraction:** Accepts spoken or typed field notes in English, Hindi (Devanagari), or Hinglish, mapping quantities, animal attributes, and feed names via `/api/llm` with strict nutrient and price safety gates, and sliding-window IP rate limiting (20 req/min/IP).
 - **Tap-to-Audit Transparency:** Every displayed number (requirements, feed composition, costs, savings) is tappable, opening the Audit Drawer to reveal primary citations (document title, table, page number), mathematical equations, or dual LP binding constraints.
+
+### D.04: Farmer-First Flow & Progressive Buy Ladder
+- **Zero-Feed One-Tap Solve:** Farmers do not need to manually configure feeds before balancing; tapping **Calculate ration** (**राशन हिसाब लगाएं**) works immediately with optional on-farm feeds and automatically sources needed feeds from the cited regional library.
+- **Progressive Buy Ladder:** Step-by-step guidance showing what on-farm feeds support alone (Rung 0), followed by economic rungs that add missing feeds in prioritized sequence (supplements first, then ascending cost order) until requirements are met.
+- **"You have" vs "Buy" Tags:** Clear badges on every feed row in the ration table indicating whether the feed is already owned on the farm or needs to be purchased from a local dealer.
+- **Actionable Budget Increase Guidance:** Identifies when adding ₹X/day to the daily feed budget unlocks significant extra milk (+Y L/day) up to the breed potential cap, backed by full tap-to-audit dual calculations.
+
 
 ---
 
@@ -184,9 +191,9 @@ The compilation script (`scripts/compile_data.mjs`):
 
 | Suite | Command | Scope |
 |---|---|---|
-| **Fast Unit Tests** | `npm test` | Vitest unit test suite (176 tests, ~10s): solver, requirements, breeds, season, adapter, i18n, rate limiting, UI. |
+| **Fast Unit Tests** | `npm test` | Vitest unit test suite (276 tests, ~10s): solver, requirements, breeds, season, adapter, i18n, rate limiting, UI, buy ladder, rationPlan. |
 | **All Unit Tests** | `npx vitest run` | Complete Vitest test suite including data compilation and verification gates. |
-| **Playwright E2E** | `npx playwright test` | End-to-end user journeys and bilingual tests in headless Chromium. |
+| **Playwright E2E** | `npx playwright test` | End-to-end user journeys and bilingual tests in headless Chromium (30 tests passing). |
 | **Language Isolation E2E** | `npx playwright test tests/e2e/language.spec.ts` | Strict AC-L1.1–L1.7 verification: zero Devanagari leakage, zero Latin in Hindi, Latin digits, font readiness. |
 | **Solver Cross-Check Dump** | `npm run eval:dump` | Headless execution of browser solver across 18 benchmark animals (`eval/out/browser_results.json`). |
 | **SciPy Solver Cross-Check** | `python -m pytest -q eval/test_scipy_agreement.py` | Pytest verification: browser solver agrees 100% with SciPy HiGHS simplex optimizer across 23 tests. |
@@ -334,7 +341,7 @@ ProjectSahiDana/
 - [docs/SPEC.md](docs/SPEC.md): Complete specifications and Given/When/Then acceptance criteria for all user journeys.
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): Technical architecture, mathematical formulations, and data schemas.
 - [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md): Primary document citations and extraction methodology for Jaipur feeds and breeds.
-- [docs/DECISIONS.md](docs/DECISIONS.md): Architectural Decision Records (ADR-0001 through ADR-0006).
+- [docs/DECISIONS.md](docs/DECISIONS.md): Architectural Decision Records (ADR-0001 through ADR-0017).
 - [docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md): Current implementation status and milestone verification checklist.
 
 ---
