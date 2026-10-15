@@ -163,6 +163,15 @@ def test_animal_scipy_agreement(
         assert comp["diff_B"] <= 1e-4, f"{aid}: Stage 2' cost at T (B) diff {comp['diff_B']} > 1e-4"
         assert comp["diff_Z"] <= 1e-4, f"{aid}: Saving Z diff {comp['diff_Z']} > 1e-4"
 
+        # Exact costAtCap agreement and null-together check (AC-C3-2.13)
+        assert comp["cost_at_cap_null_match"] is True, (
+            f"{aid}: costAtCap null mismatch scipy={s_out.get('costAtCapInrPerDay')} vs browser={b_out.get('costAtCapInrPerDay')}"
+        )
+        if s_out.get("costAtCapInrPerDay") is not None:
+            assert comp["diff_cost_at_cap"] <= 1e-4, (
+                f"{aid}: costAtCap diff {comp['diff_cost_at_cap']} > 1e-4"
+            )
+
         # Exact stage2 at T feasibility agreement
         assert (s_out["costAtTodayMilkInrPerDay"] is not None) == (
             b_out["costAtTodayMilkInrPerDay"] is not None
@@ -324,6 +333,14 @@ def test_optimal_invariants_and_unpriced_feed_exclusion(
                     assert float(out["totalCostInr"]) == pytest.approx(
                         float(out["maintenanceCostInrPerDay"]), abs=1e-6
                     )
+                    assert out.get("costAtCapInrPerDay") is None
+                else:
+                    if out.get("effectiveCapSource") == "today_milk":
+                        assert out.get("costAtCapInrPerDay") == pytest.approx(
+                            float(out["costAtTodayMilkInrPerDay"]), abs=1e-6
+                        )
+                    if "budget" in out.get("tightConstraints", []) and out.get("costAtCapInrPerDay") is not None:
+                        assert float(out["costAtCapInrPerDay"]) >= float(out["totalCostInr"]) - 1e-5
 
         elif b_out["status"] == "budget_below_maintenance":
             for label, out in (("browser", b_out), ("scipy", s_out)):

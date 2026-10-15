@@ -142,8 +142,14 @@ describe('rationService & RationAppAdapter contract (mockAdapter and liveAdapter
           expect(optimal.roughageMinSharePct).toBeCloseTo(40, 5);
           expect(optimal.roughageSharePct).toBeGreaterThanOrEqual(40 - 1e-4);
           expect(optimal.totalCostInr).toBeLessThanOrEqual(SAMPLE_ANIMAL.budgetInrPerDay + 1e-6);
-          if (mode === 'live') {
+          expect('costAtCapInrPerDay' in optimal).toBe(true);
+          expect(optimal.costAtCapInrPerDay === null || typeof optimal.costAtCapInrPerDay === 'number').toBe(true);
+          if (mode === 'mock') {
+            expect(optimal.costAtCapInrPerDay).toBeNull();
+          } else {
             expect(optimal.sourceKey).toBe('SOLVER-LP-V1');
+            expect(typeof optimal.costAtCapInrPerDay).toBe('number');
+            expect(optimal.costAtCapInrPerDay).toBeGreaterThan(0);
           }
         }
 

@@ -942,6 +942,7 @@ export function solveRation(
       feedLimitIds: maint.lines.filter((l) => l.atCap).map((l) => l.feedId),
       verdict: { kind: 'dry_animal' },
       costAtTodayMilkInrPerDay: maintenanceCost,
+      costAtCapInrPerDay: null,
       fatComparison: null,
       maintenanceCostInrPerDay: maintenanceCost,
       budgetInrPerDay: budget,
@@ -1083,6 +1084,7 @@ export function solveRation(
   // Step 6: Stage 2' at today's milk T (no budget limit, no breed cap).
   const stage2AtT = solveFixedMilk(inputs, reqModel, todayMilk, null);
   const costAtTodayMilkInrPerDay = stage2AtT ? stage2AtT.totalCost : null;
+  const costAtCapInrPerDay = solveFixedMilk(inputs, reqModel, effectiveCap, null)?.totalCost ?? null;
   let limitingAtToday: LimitingKey[] = [];
   if (yStar < todayMilk - TOL && costAtTodayMilkInrPerDay === null) {
     const diagT = diagnoseAtMilk(inputs, reqModel, todayMilk, feedLibrary);
@@ -1137,6 +1139,7 @@ export function solveRation(
     feedLimitIds,
     verdict,
     costAtTodayMilkInrPerDay,
+    costAtCapInrPerDay,
     fatComparison,
     maintenanceCostInrPerDay: maintenanceCost,
     budgetInrPerDay: budget,

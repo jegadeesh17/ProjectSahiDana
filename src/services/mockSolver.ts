@@ -434,6 +434,7 @@ export function solveRation(animal: AnimalProfile, inputs: SelectedFeedInput[]):
     feedLimitIds,
     verdict,
     costAtTodayMilkInrPerDay: atT ? atT.cost : null,
+    costAtCapInrPerDay: null,
     fatComparison:
       T > 0
         ? {

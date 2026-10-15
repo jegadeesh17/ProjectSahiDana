@@ -743,4 +743,48 @@ describe('preset sanity across all 4 quick-pick animals', () => {
       expect(out.roughageSharePct + 1e-6).toBeGreaterThanOrEqual(out.roughageMinSharePct);
     });
   }
+
+  describe('costAtCapInrPerDay solver field (ADR-0013, AC-C3-2.13, AC-C3-E5, AC-C3-E6)', () => {
+    it('costAtCapInrPerDay >= totalCostInr when the budget is tight (AC-C3-2.13)', () => {
+      const out = solveRation(baseAnimal, richFeeds);
+      expect(out.status).toBe('optimal');
+      if (out.status !== 'optimal') return;
+      expect(out.tightConstraints).toContain('budget');
+      expect(out.costAtCapInrPerDay).not.toBeNull();
+      expect(out.costAtCapInrPerDay!).toBeGreaterThanOrEqual(out.totalCostInr - 1e-6);
+    });
+
+    it('costAtCapInrPerDay is null when the cap is infeasible (AC-C3-E5)', () => {
+      const cappedFeeds: SelectedFeedInput[] = [
+        { feedId: 'berseem', priceInrPerKgAsFed: 4, maxKgAsFedPerDay: 12, currentKgAsFedPerDay: 10 },
+        { feedId: 'wheat_straw', priceInrPerKgAsFed: 6, maxKgAsFedPerDay: 6, currentKgAsFedPerDay: 4 },
+        { feedId: 'mustard_cake', priceInrPerKgAsFed: 32, maxKgAsFedPerDay: 1, currentKgAsFedPerDay: 1 },
+        { feedId: 'wheat_bran', priceInrPerKgAsFed: 22, maxKgAsFedPerDay: 1, currentKgAsFedPerDay: 1 },
+        { feedId: 'mineral_mix', priceInrPerKgAsFed: 90, maxKgAsFedPerDay: 0.1, currentKgAsFedPerDay: 0.05 },
+      ];
+      const out = solveRation({ ...baseAnimal, milkYieldLitersPerDay: 2, budgetInrPerDay: 500 }, cappedFeeds);
+      expect(out.status).toBe('optimal');
+      if (out.status !== 'optimal') return;
+      expect(out.costAtCapInrPerDay).toBeNull();
+    });
+
+    it('costAtCapInrPerDay is null for a dry animal (AC-C3-E6)', () => {
+      const out = solveRation({ ...baseAnimal, milkYieldLitersPerDay: 0 }, richFeeds);
+      expect(out.status).toBe('optimal');
+      if (out.status !== 'optimal') return;
+      expect(out.verdict.kind).toBe('dry_animal');
+      expect(out.costAtCapInrPerDay).toBeNull();
+    });
+
+    it('costAtCapInrPerDay equals costAtTodayMilkInrPerDay when T > cap (ADR-0013)', () => {
+      const out = solveRation({ ...baseAnimal, milkYieldLitersPerDay: 11, budgetInrPerDay: 500 }, richFeeds);
+      expect(out.status).toBe('optimal');
+      if (out.status !== 'optimal') return;
+      expect(out.effectiveCapSource).toBe('today_milk');
+      expect(out.effectiveCapLPerDay).toBe(11);
+      expect(out.costAtCapInrPerDay).not.toBeNull();
+      expect(out.costAtTodayMilkInrPerDay).not.toBeNull();
+      expect(out.costAtCapInrPerDay).toBeCloseTo(out.costAtTodayMilkInrPerDay!, 5);
+    });
+  });
 });

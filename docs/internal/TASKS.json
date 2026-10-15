@@ -312,7 +312,7 @@
             "tests/unit/adapter.test.ts"
           ],
           "acceptance_criteria": "SPEC AC-C3-2.13, AC-C3-E5 (null when the cap LP is infeasible), AC-C3-E6 (null for a dry animal); regression AC-C3-R1, AC-C3-R7: tests/unit/solver.test.ts covers the four costAtCap cases above and every existing solver expected value is unchanged; eval/test_scipy_agreement.py asserts costAtCap agreement on all 18 benchmark animals and that every pre-existing case still agrees 100%. Verify: npm test, then npm run eval:dump && npm run eval:scipy, then npm run build all exit 0.",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "C3-M2-T2",

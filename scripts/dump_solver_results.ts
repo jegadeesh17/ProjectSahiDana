@@ -72,6 +72,7 @@ function main(): void {
 
     let stage2CostAtYStarInrPerDay: number | null = null;
     let stage2CostAtSInrPerDay: number | null = null;
+    let costAtCapInrPerDay: number | null = null;
     let constraintsVerified = false;
     let verificationRecord: {
       authorizedCount: number;
@@ -94,6 +95,7 @@ function main(): void {
       constraintsSatisfiedCount += 1;
 
       stage2CostAtSInrPerDay = outcome.totalCostInr;
+      costAtCapInrPerDay = outcome.costAtCapInrPerDay;
       const yStar = outcome.supportedMilkExactLPerDay ?? outcome.supportedMilkLPerDay;
       if (entry.animal.milkYieldLitersPerDay <= 0) {
         stage2CostAtYStarInrPerDay = outcome.maintenanceCostInrPerDay;
@@ -238,6 +240,7 @@ function main(): void {
         : null,
       stage2CostAtYStarInrPerDay,
       stage2CostAtSInrPerDay,
+      costAtCapInrPerDay,
       constraintsVerified,
       outcome,
       verification: verificationRecord,

@@ -878,6 +878,7 @@ def solve_ration_scipy(
             "feedLimitIds": [l["feedId"] for l in maint["lines"] if l["atCap"]],
             "verdict": {"kind": "dry_animal"},
             "costAtTodayMilkInrPerDay": maintenance_cost,
+            "costAtCapInrPerDay": None,
             "maintenanceCostInrPerDay": maintenance_cost,
             "stage2CostAtYStarInrPerDay": maintenance_cost,
             "stage2CostAtSInrPerDay": maint["totalCost"],
@@ -1011,6 +1012,8 @@ def solve_ration_scipy(
     # Step 6: Stage 2' at today's milk T (no budget limit, no breed cap).
     stage2_at_t = solve_fixed_milk(inputs, req_model, today_milk, None)
     cost_at_today_milk = float(stage2_at_t["totalCost"]) if stage2_at_t is not None else None
+    stage2_at_cap = solve_fixed_milk(inputs, req_model, effective_cap, None)
+    cost_at_cap = float(stage2_at_cap["totalCost"]) if stage2_at_cap is not None else None
     limiting_at_today: list[str] = []
     if y_star < today_milk - TOL and cost_at_today_milk is None:
         diag_t = diagnose_at_milk(inputs, req_model, today_milk, feed_library)
@@ -1051,6 +1054,7 @@ def solve_ration_scipy(
         "feedLimitIds": feed_limit_ids,
         "verdict": verdict,
         "costAtTodayMilkInrPerDay": cost_at_today_milk,
+        "costAtCapInrPerDay": cost_at_cap,
         "maintenanceCostInrPerDay": maintenance_cost,
         "stage2CostAtYStarInrPerDay": float(stage2_at_y_star["totalCost"]),
         "stage2CostAtSInrPerDay": float(stage2_at_s["totalCost"]),
@@ -1092,6 +1096,7 @@ def cross_check_all(
         "stage2_cost_at_S": 0.0,
         "B": 0.0,
         "Z": 0.0,
+        "cost_at_cap": 0.0,
     }
 
     for entry in animals:
@@ -1136,6 +1141,14 @@ def cross_check_all(
                 else 0.0
             )
 
+            cap_val_s = s_out.get("costAtCapInrPerDay")
+            cap_val_b = b_out.get("costAtCapInrPerDay")
+            diff_cap = (
+                abs(float(cap_val_s) - float(cap_val_b))
+                if (cap_val_s is not None and cap_val_b is not None)
+                else 0.0
+            )
+
             max_diffs["M"] = max(max_diffs["M"], diff_m)
             max_diffs["Y_star"] = max(max_diffs["Y_star"], diff_y_star)
             max_diffs["S"] = max(max_diffs["S"], diff_s)
@@ -1143,6 +1156,7 @@ def cross_check_all(
             max_diffs["stage2_cost_at_S"] = max(max_diffs["stage2_cost_at_S"], diff_c_s)
             max_diffs["B"] = max(max_diffs["B"], diff_b)
             max_diffs["Z"] = max(max_diffs["Z"], diff_z)
+            max_diffs["cost_at_cap"] = max(max_diffs["cost_at_cap"], diff_cap)
 
             comp.update(
                 {
@@ -1153,6 +1167,8 @@ def cross_check_all(
                     "diff_stage2_cost_at_S": diff_c_s,
                     "diff_B": diff_b,
                     "diff_Z": diff_z,
+                    "diff_cost_at_cap": diff_cap,
+                    "cost_at_cap_null_match": (cap_val_s is None) == (cap_val_b is None),
                     "verdict_match": s_out["verdict"]["kind"] == b_out["verdict"]["kind"],
                     "binding_match": s_out["bindingConstraint"] == b_out["bindingConstraint"],
                 }

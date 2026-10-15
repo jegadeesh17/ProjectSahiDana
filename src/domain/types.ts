@@ -273,6 +273,8 @@ export interface RationSolution {
   verdict: SolvedVerdict;
   /** Stage 2 with milk fixed at today's milk and no budget limit; null when no ration can support it. */
   costAtTodayMilkInrPerDay: number | null;
+  /** Cost in ₹/day of least-cost ration supporting effectiveCapLPerDay with no budget limit; null when infeasible or dry (ADR-0013). */
+  costAtCapInrPerDay: number | null;
   /** Null when today's milk is 0 (AC-5.9 applies only above 0). */
   fatComparison: FatComparison | null;
   /** M: the cheapest ration cost at 0 L/day (extension, for the audit). */
