@@ -26,5 +26,5 @@
 - [x] C3 Phase 2: SPEC amendment, ADRs and Change 3 architecture section, tasks in docs/internal/TASKS.json
 - [x] C3-M1: layout and wording built, verified, reviewed (code and UI), UAT accepted
 - [x] C3-M2: farmer-first solve built, verified, reviewed (code and UI), UAT accepted
-- [ ] C3 close-out: README/CLAUDE.md/CHANGELOG updated, merged to main with the user's yes, full tests green on main
+- [x] C3 close-out: README/CLAUDE.md/CHANGELOG updated, merged to main with the user's yes, full tests green on main
 
