@@ -20,5 +20,10 @@
 - **Verification:** Full test suite (`npm run test:full && python -m pytest -q eval/`) exits 0 with 174 unit tests, 13 Playwright E2E tests, and 68 Python evaluation tests.
 - **Deliverables:** D.01 Two-stage LP optimizer, D.02 Jaipur regional feed library & breed table, D.03 Offline field-paravet PWA.
 
+## Change 3: Farmer-first flow (branch `feat/farmer-flow`, base `d28d90a`)
 
-
+- [x] C3 Phase 0/1: scope approved by the user (2026-10-15), branch created, retro started
+- [ ] C3 Phase 2: SPEC amendment, ADRs and Change 3 architecture section, tasks in docs/internal/TASKS.json
+- [ ] C3-M1: layout and wording built, verified, reviewed (code and UI), UAT accepted
+- [ ] C3-M2: farmer-first solve built, verified, reviewed (code and UI), UAT accepted
+- [ ] C3 close-out: README/CLAUDE.md/CHANGELOG updated, merged to main with the user's yes, full tests green on main

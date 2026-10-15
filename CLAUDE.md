@@ -7,7 +7,7 @@ Repository: `https://github.com/jegadeesh17/ProjectSahiDana`
 
 ## Working Rules & Deadlines
 - **Read `docs/internal/BRAINSTORM.md` first.** It holds the rules, the track decision, the data fact-check (what feed and requirement data really exists), competitors, the SahiDana idea, risks, the team split, and next steps.
-- **Deadlines (IST):** submission **Thu 15 Oct 2026, 11:59 PM**; top 10 announced Sun 18 Oct; in-person finale Wed 28 Oct at PGIVER Jaipur (5 min pitch + 3 min Q&A).
+- **Deadlines (IST):** submission **Sun 18 Oct 2026, 11:59 PM** (extended from Thu 15 Oct); in-person finale Wed 28 Oct at PGIVER Jaipur (5 min pitch + 3 min Q&A).
 - **Hard rules:** one problem statement per team. The team lead submits at https://impacthackathon.com/submit with the registration ID and registered email. The PPT is a Google Drive link set to "Anyone with the link". The GitHub repo must be public. Links can be edited until the deadline.
 - **Build constraints:** CPU-only, no model training. Every number shown to a farmer comes from the solver or a cited source row, never from the LLM.
 - **Secrets rule:** A `.env` exists in this folder. Never read, print, or commit it; it is off-limits.

@@ -13,7 +13,7 @@ Status: **Track chosen (T6). Product named (SahiDana). Team registered (2026-10-
 **Dates (IST)**
 - 3 Oct: start; problem statements and rules released
 - 3–15 Oct: online build period
-- **Thu 15 Oct 2026, 11:59 PM: submission deadline** (PPT + GitHub)
+- **Sun 18 Oct 2026, 11:59 PM: submission deadline** (PPT + GitHub; extended from Thu 15 Oct, user 2026-10-15)
 - 16–18 Oct: evaluation
 - Sun 18 Oct: top 10 announced
 - Wed 28 Oct: finale at PGIVER (Post Graduate Institute of Veterinary Education and Research), Jaipur. Check-in 10:00 AM with ID; pitches 11:30–1:00; winners announced 2:00 PM.
@@ -220,3 +220,13 @@ Tagline: **"Sahi dana, har number ka hisaab."** (Right feed, every number accoun
 - **Verification status:** every feed, breed and requirement row has `verifiedOn` empty. The audit drawer shows "Expert check: pending" on these cited figures, including the forced mineral mixture and salt minimums (team-asserted). It is hidden on figures the user typed (own prices).
 - **Deploy:** live at https://sahidana.vercel.app (Vercel project `sahidana`). No OpenRouter key on the server yet, so Explain uses the template and Fill from description is unavailable there.
 - **Known gap:** the offline font E2E test runs on the dev server, which has no service worker, so it does not prove offline font self-hosting. Testing a production build is deferred.
+- **Deadline extended (user, 2026-10-15):** submission now closes Sun 18 Oct 2026, 11:59 PM IST.
+
+## 11. Decision log: farmer-first flow, Change 3 (2026-10-15)
+
+- **Flow:** cow or buffalo, then budget, then Calculate. Feeds the farmer already has are optional and used first at their price and cap; the solver fills the gap from in-season library feeds that have a cited price.
+- **Wording:** "Your cow or buffalo" / "आपकी गाय या भैंस" replaces "Animal".
+- **Feeds to buy:** an upgrade ladder, cheapest first (by ₹/day in the final ration); every rung is a real solver run.
+- **Budget prompt:** "Add ₹X/day" where X = least-cost ration at the effective cap with no budget, minus the budget (a solver output).
+- **No invented caps:** library feeds get no per-feed inclusion caps, because none are cited.
+- Work on branch `feat/farmer-flow`; merge to `main` after both milestones are accepted.

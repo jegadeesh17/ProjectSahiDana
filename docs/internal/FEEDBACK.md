@@ -59,3 +59,13 @@ Source: the official Track 6 card. "Formulate algorithmic nutritional balancing 
 |---|---|---|---|
 | 1 | "accepted but i would like a one line how to use section on top so anybody using it can do" | UI | Add a concise one-line "How to use" banner at the top of the workspace (below the app bar, above the main inputs) in the active language (`src/i18n/strings.ts`, English and Hindi). Prototype is accepted. |
 
+## Round 5 (Change 3 request, 2026-10-15)
+
+| # | Feedback (user's words, condensed) | Class | Action |
+|---|---|---|---|
+| 1 | "order of the cards in the left to be Animal then budget then feeds" | UI | C3-M1: reorder to cow/buffalo, budget, feeds. |
+| 2 | "i dont like the word Animal cuz farmers wouldnt like it" | UI | C3-M1: "Your cow or buffalo" / "आपकी गाय या भैंस" (user's choice). |
+| 3 | "i would have the two milk comparison side to side" | UI | C3-M1: today's milk and the supported milk as two tiles in one row. |
+| 4 | "move the demo mode somewhere else" | UI | C3-M1: demo moves below the Calculate button as "Try an example". |
+| 5 | Farmer fills the cow, then the budget, then calculates directly; optional dropdown to add feeds they have; solver optimises within budget including those feeds | Contract | C3-M2: library-wide candidate set, owned feeds used first (user's choice), new `rationPlan` module. |
+| 6 | Tell them what to add, cheapest to best; if budget is the constraint, say increase by X for the best result | Contract | C3-M2: upgrade ladder (user's choice) and the `costAtCapInrPerDay` solver field behind "Add ₹X/day". |

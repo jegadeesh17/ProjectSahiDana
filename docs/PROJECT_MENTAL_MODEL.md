@@ -97,3 +97,19 @@ Prototype, meaning the thinnest working path per milestone. Exception: the solve
 3. README and claims audit: only true, verified statements.
 4. Full test and review gate, then push.
 5. UI usable and simple for farmers and paravets, clear instructions, and one unified start-to-end flow toward the goal (a balanced, least-cost ration).
+
+
+---
+
+# Change 3: Farmer-first flow (started 2026-10-15)
+
+- **Change:** make the input flow farmer-first. (1) Left column order: cow/buffalo, then budget, then feeds. (2) Replace "Animal" with "Your cow or buffalo" / "आपकी गाय या भैंस" ("Your cow" / "Your buffalo" once the species is picked). (3) Today's milk and the supported milk side by side. (4) Move the one-tap demo out of the top of the input column. (5) Calculate with only the cow and the budget: the solver picks from the in-season regional library; an optional "Feeds you already have" dropdown adds the farmer's own feeds, used first at their price and cap. (6) The result lists feeds to buy as a cheapest-to-best upgrade ladder, and when the budget limits milk it says "Add ₹X/day to reach the breed's best".
+- **Change type:** Feature. Keep the incumbent design world in root `PRODUCT.md` and `DESIGN.md`.
+- **Posture:** Prototype, matching the project. Solver and number-honesty checks keep thorough tests.
+- **Branch:** `feat/farmer-flow`, merged to `main` only after both milestones are accepted and the user says yes.
+- **Base commit:** `d28d90a`.
+- **Deadline:** submission extended to Sun 18 Oct 2026, 11:59 PM IST (user, 2026-10-15).
+- **Milestones:** C3-M1 layout and wording (items 1–4, UI only); C3-M2 farmer-first solve (items 5–6).
+- **Tracking files:** `docs/internal/TASKS.json`, `docs/internal/QA_RESULTS.json`, `docs/internal/ADVERSARIAL_REVIEW.md`, `docs/internal/FEEDBACK.md` (Round 5).
+- **Project facts:** `ui` yes, `deploy` yes, `sensitive-data` no, `existing-code` yes.
+- **Team retro:** `~/.se-agents/retros/ProjectSahiDana-2026-10-15.md`
