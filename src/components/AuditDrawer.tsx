@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { ReactNode } from 'react';
 import { Check, X, BookOpen } from 'lucide-react';
 import type { AuditMeta } from '../domain/types';
+import { useAuditDrawerHistory } from '../lib/hashRoute';
 import { Bi } from '../i18n/Bi';
 import type { BiText, StringId } from '../i18n/strings';
 import { Button } from './ui/button';
@@ -33,6 +34,8 @@ export function AuditProvider({ children }: { children: ReactNode }) {
     setMeta(null);
     returnFocus.current?.focus();
   }, []);
+
+  useAuditDrawerHistory(meta !== null, close);
 
   useEffect(() => {
     if (prevMeta.current && !meta && returnFocus.current?.isConnected) {

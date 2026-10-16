@@ -190,6 +190,14 @@
     "exit_code": 0,
     "summary": "21 unit test files passed, 385 tests passed (including 23 tests in tests/unit/domainFormat.test.ts, 16 tests in tests/unit/breedPrefill.test.ts, and 15 tests in tests/unit/hashRoute.test.ts verifying farmer display units, mineral mix / common salt whole gram display, breed prefill and midpoint citations, plain-words summary text across optimal/dry/below-maintenance states, hash routing #/animals, #/feeds, #/result and audit drawer history Back behavior)",
     "failure_output": ""
+  },
+  {
+    "task_id": "C4-M1-T4",
+    "attempt": 1,
+    "command": "cmd.exe /c \"npm test && npx playwright test tests/e2e/herd-flow.spec.ts\"",
+    "exit_code": 0,
+    "summary": "22 unit test files passed (403 tests, including 18 tests in tests/unit/herdUi.test.tsx covering screen 1 gating and disabled Next, add card/list with MAX_ANIMALS=1 limit, screen 2 home feeds with no price/season/month, section order, display units, plain words scan, and number tap audits) and 7 Playwright E2E tests passed in tests/e2e/herd-flow.spec.ts (Journey C4-A end to end, phone Back/Forward navigation, drawer closed by Back, offline execution, three deterministic examples, 375px padding parity, and 44x44px touch targets)",
+    "failure_output": ""
   }
 ]
 

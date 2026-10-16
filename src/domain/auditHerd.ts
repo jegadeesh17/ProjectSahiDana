@@ -127,7 +127,7 @@ export function auditShoppingCost(line: ShoppingLine, feed: FeedItem): AuditMeta
 export function auditStepGain(
   later: ShoppingList['later'][number],
   byId: Map<string, FeedItem>,
-  labels?: Map<string, AnimalLabel>,
+  _labels?: Map<string, AnimalLabel>,
 ): AuditMeta {
   const names = (ids: string[]): BiText => ({
     hi: ids.map((id) => (byId.has(id) ? feedNameBi(byId.get(id)!).hi : id)).join(', '),
@@ -210,16 +210,17 @@ export function auditHerdMilk(label: AnimalLabel, sol: HerdAnimalSolution, share
 
 /** Share t* in Details (ARCHITECTURE line 1668). */
 export function auditShare(best: HerdSolution, animals: HerdAnimal[]): AuditMeta {
-  const breakdown = `t* = ${formatNumber(best.shareT, 4)}; ` +
-    animals.map((a, i) => `${labelText(a.label)}: ${formatNumber(best.shareT, 3)} × ${formatNumber(best.perAnimal[i]?.milkTargetLPerDay ?? 0, 1)} = ${formatNumber(best.perAnimal[i]?.milkExactLPerDay ?? 0, 2)} L`).join('; ');
+  const breakdown = `t* = ${formatNumber(best.shareT, 3)}; ` +
+    animals.map((a, i) => `${labelText(a.label)}: ${formatNumber(best.shareT, 3)} × ${formatNumber(best.animals[i]?.milkTargetLPerDay ?? 0, 1)} = ${formatNumber(best.animals[i]?.milkExactLPerDay ?? 0, 2)} L`).join('; ');
 
+  const limitKinds = best.limits.map((l) => l.kind).join(', ');
   return solverOutput(
     'herd-share-t',
     t('c4_det_share'),
     formatNumber(best.shareT, 3),
     best.shareT,
     t('c4_audit_role_stage1'),
-    { hi: best.limits.join(', '), en: best.limits.join(', ') },
+    { hi: limitKinds, en: limitKinds },
     breakdown,
   );
 }

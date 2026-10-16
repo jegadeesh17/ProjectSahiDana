@@ -9,7 +9,6 @@ import type {
   BenchmarkAnimalEntry,
   FeedItem,
   HerdAnimal,
-  HerdPlan,
   HomeFeed,
 } from '../../src/domain/types';
 import { currentMonth } from '../../src/i18n/months';
@@ -101,8 +100,10 @@ describe('herdPlan (Change 4 pure herd plan engine)', () => {
 
     // Delta milk equals consecutive C3 rung milk differences
     for (let i = 0; i < hPlan.shopping.later.length; i++) {
-      const prevC3Milk = c3Plan.rungs[i].outcome.status === 'optimal' ? c3Plan.rungs[i].outcome.supportedMilkLPerDay : 0;
-      const curC3Milk = c3Plan.rungs[i + 1].outcome.status === 'optimal' ? c3Plan.rungs[i + 1].outcome.supportedMilkLPerDay : 0;
+      const prev = c3Plan.rungs[i].outcome;
+      const cur = c3Plan.rungs[i + 1].outcome;
+      const prevC3Milk = prev.status === 'optimal' ? prev.supportedMilkLPerDay : 0;
+      const curC3Milk = cur.status === 'optimal' ? cur.supportedMilkLPerDay : 0;
       const expectedDelta = floorMilk1(curC3Milk - prevC3Milk);
       expect(hPlan.shopping.later[i].deltaMilkL).toBeCloseTo(expectedDelta, 1);
     }

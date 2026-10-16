@@ -1,11 +1,12 @@
-// Change 4 clickable prototype: the 3-screen herd flow (Your animals, Feed you already have, Your plan).
-// Rendered only when the URL has ?c4. It runs on the mock `planHerdPrototypeMock`, so the plan is a canned fixture.
+// Change 4: the 3-screen herd flow (Your animals, Feed you already have, Your plan).
+// Runs on the real joint solver via rationService.planHerd (docs/ARCHITECTURE.md, "C4 LP formulation").
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Copy } from 'lucide-react';
 import { MAX_ANIMALS, EMPTY_COUNTERS, nextAnimalLabel } from '../domain/herdPlan';
 import type { LabelCounters } from '../domain/herdPlan';
-import type { BreedStandard, FeedItem, HerdAnimal, HerdAnimalProfile, HomeFeed, Species } from '../domain/types';
+import type { BreedStandard, FeedItem, HerdAnimal, HerdAnimalProfile, HerdPlan, HomeFeed } from '../domain/types';
 import { breedById, breedPrefill } from '../domain/breeds';
+import { buildHerdSummary } from '../domain/summary';
 import { EMPTY_CARD, validateBudget, validateHomeFeed } from '../domain/validation';
 import type { AnimalCardDraft, HomeFeedDraft } from '../domain/validation';
 import { Bi } from '../i18n/Bi';
@@ -13,20 +14,74 @@ import { useLang } from '../i18n/LanguageProvider';
 import { bi } from '../i18n/strings';
 import { useHashStep } from '../lib/hashRoute';
 import type { Step } from '../lib/hashRoute';
-import { loadHerdFixtures, planHerdPrototypeMock } from '../services/planHerdPrototypeMock';
-import type { HerdExampleId, HerdFixture, PrototypePlanResult } from '../services/planHerdPrototypeMock';
-import { getInitialBreeds, getInitialFeeds } from '../services/rationService';
+import type { HerdExampleId } from '../services/planHerdPrototypeMock';
+import { getInitialBreeds, getInitialFeeds, rationService } from '../services/rationService';
 import { AnimalsScreen } from './AnimalsScreen';
 import { ConnectivityBanner } from './ConnectivityBanner';
-import { HerdPlanView, buildPlanSummary } from './HerdPlan';
+import { HerdPlanView } from './HerdPlan';
 import { HomeFeedsScreen } from './HomeFeedsScreen';
 import { LanguageToggle } from './LanguageToggle';
 import { StepBar, StepIndicator } from './StepNav';
 import { Badge } from './ui/badge';
 
 const TITLE = { animals: 'c4_screen_animals', feeds: 'c4_screen_feeds', result: 'c4_screen_result' } as const;
-/** How long "Calculating…" stays on screen. The real solver replaces the wait with its own time. */
-const CALCULATING_MS = 350;
+
+const M1_EXAMPLES: Record<HerdExampleId, { animal: HerdAnimal; budget: number; homeFeeds: HomeFeed[] }> = {
+  cow_buffalo: {
+    animal: {
+      key: 'a1',
+      label: { species: 'buffalo', n: 1 },
+      profile: {
+        species: 'buffalo',
+        breedId: 'murrah',
+        bodyWeightKg: 500,
+        milkYieldLitersPerDay: 8,
+        milkFatPct: 7.0,
+      },
+      weightSource: 'typed',
+      fatSource: 'typed',
+      isConfirmed: true,
+    },
+    budget: 220,
+    homeFeeds: [],
+  },
+  straw_only: {
+    animal: {
+      key: 'a1',
+      label: { species: 'cow', n: 1 },
+      profile: {
+        species: 'cow',
+        breedId: 'hariana',
+        bodyWeightKg: 325,
+        milkYieldLitersPerDay: 5,
+        milkFatPct: 4.5,
+      },
+      weightSource: 'typed',
+      fatSource: 'typed',
+      isConfirmed: true,
+    },
+    budget: 150,
+    homeFeeds: [{ feedId: 'wheat_straw', kgPerDay: 5 }],
+  },
+  tight_budget: {
+    animal: {
+      key: 'a1',
+      label: { species: 'cow', n: 1 },
+      profile: {
+        species: 'cow',
+        breedId: 'sahiwal',
+        bodyWeightKg: 298,
+        milkYieldLitersPerDay: 10,
+        milkFatPct: 4.93,
+      },
+      weightSource: 'typed',
+      fatSource: 'typed',
+      isConfirmed: true,
+    },
+    budget: 80,
+    homeFeeds: [],
+  },
+};
 
 function useOnline(): boolean {
   const [online, setOnline] = useState(() => (typeof navigator === 'undefined' ? true : navigator.onLine));
@@ -57,20 +112,11 @@ export function HerdFlow() {
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [herdBudget, setHerdBudget] = useState('');
   const [homeFeeds, setHomeFeeds] = useState<HomeFeedDraft[]>([]);
-  const [result, setResult] = useState<PrototypePlanResult | null>(null);
+  const [plan, setPlan] = useState<HerdPlan | null>(null);
   const [calculating, setCalculating] = useState(false);
-  const [fixtures, setFixtures] = useState<HerdFixture[] | null>(null);
   const [toast, setToast] = useState<{ text: string; key: number } | null>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const calcTimer = useRef<number | null>(null);
-
-  useEffect(() => {
-    let alive = true;
-    loadHerdFixtures().then((f) => alive && setFixtures(f));
-    return () => {
-      alive = false;
-    };
-  }, []);
 
   useEffect(() => {
     if (!toast) return;
@@ -86,7 +132,7 @@ export function HerdFlow() {
 
   /** Every edit makes a calculated plan stale, so it is dropped rather than shown against changed inputs (AC-C4-1.22). */
   const clearPlan = useCallback(() => {
-    setResult(null);
+    setPlan(null);
   }, []);
 
   const budgetValue = validateBudget(herdBudget).value;
@@ -99,8 +145,8 @@ export function HerdFlow() {
   // Guards: screens 2 and 3 need an animal and a budget; screen 3 needs a plan.
   useEffect(() => {
     if ((step === 'feeds' || step === 'result') && (animals.length === 0 || budgetValue === null)) go('animals', { replace: true });
-    else if (step === 'result' && result === null && !calculating) go('feeds', { replace: true });
-  }, [step, animals.length, budgetValue, result, calculating, go]);
+    else if (step === 'result' && plan === null && !calculating) go('feeds', { replace: true });
+  }, [step, animals.length, budgetValue, plan, calculating, go]);
 
   // A new screen starts at the top with the focus on its title. The ref keeps StrictMode's double effect from focusing on load.
   const shownStep = useRef(step);
@@ -164,16 +210,16 @@ export function HerdFlow() {
   };
 
   const loadExample = (id: HerdExampleId) => {
-    const fixture = fixtures?.find((f) => f.id === id);
-    if (!fixture) return;
-    const p = fixture.plan;
+    const ex = M1_EXAMPLES[id];
+    if (!ex) return;
+    const a = ex.animal;
     const c: LabelCounters = { cow: 0, buffalo: 0 };
-    for (const a of p.animals) c[a.label.species as Species] = Math.max(c[a.label.species as Species], a.label.n);
-    setAnimals(p.animals.map((a) => ({ ...a })));
+    c[a.label.species] = a.label.n;
+    setAnimals([{ ...a }]);
     setCounters(c);
-    setNextKey(p.animals.length + 1);
-    setHerdBudget(String(p.budgetInrPerDay));
-    setHomeFeeds(p.homeFeeds.map((h) => ({ feedId: h.feedId, kg: String(h.kgPerDay) })));
+    setNextKey(2);
+    setHerdBudget(String(ex.budget));
+    setHomeFeeds(ex.homeFeeds.map((h) => ({ feedId: h.feedId, kg: String(h.kgPerDay) })));
     setEditingKey(null);
     setDraft(EMPTY_CARD);
     clearPlan();
@@ -196,15 +242,15 @@ export function HerdFlow() {
   };
 
   const calculate = () => {
-    if (budgetValue === null || animals.length === 0 || !homeValid || !fixtures || calculating) return;
+    if (budgetValue === null || animals.length === 0 || !homeValid || calculating) return;
     setCalculating(true);
-    // Paint "Calculating…" first, then run the synchronous mock (the real solver is synchronous too).
     calcTimer.current = window.setTimeout(() => {
       calcTimer.current = null;
-      setResult(planHerdPrototypeMock(animals, homeInputs, budgetValue, fixtures));
+      const computedPlan = rationService.planHerd(animals, homeInputs, budgetValue);
+      setPlan(computedPlan);
       setCalculating(false);
       go('result');
-    }, CALCULATING_MS);
+    }, 0);
   };
 
   // ---- screen 3 --------------------------------------------------------------------------------
@@ -214,9 +260,9 @@ export function HerdFlow() {
   };
 
   const copySummary = async () => {
-    if (!result) return;
+    if (!plan) return;
     try {
-      await navigator.clipboard.writeText(buildPlanSummary(result.plan, library));
+      await navigator.clipboard.writeText(buildHerdSummary(plan, library));
       showToast(bi('toast_copied'));
     } catch {
       showToast(bi('toast_copy_failed'));
@@ -267,7 +313,7 @@ export function HerdFlow() {
             onBudgetChange={onBudgetChange}
             onNext={() => go('feeds')}
             onExample={loadExample}
-            examplesReady={fixtures !== null}
+            examplesReady={true}
           />
         )}
 
@@ -280,13 +326,20 @@ export function HerdFlow() {
             onRemove={removeHomeFeed}
             onBack={() => goBack('animals')}
             onCalculate={calculate}
-            calculating={calculating || fixtures === null}
+            calculating={calculating}
           />
         )}
 
-        {step === 'result' && result && (
+        {step === 'result' && plan && (
           <>
-            <HerdPlanView plan={result.plan} library={library} breeds={breeds} nearest={!result.exact} onRemoveAnimal={removeFromPlan} />
+            <HerdPlanView
+              plan={plan}
+              library={library}
+              breeds={breeds}
+              onRemoveAnimal={removeFromPlan}
+              onEditAnimal={editAnimal}
+              onAddHomeFeed={addHomeFeed}
+            />
             <StepBar
               reasonId="c4-result-reason"
               onBack={() => goBack('feeds')}

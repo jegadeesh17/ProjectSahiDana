@@ -1,16 +1,17 @@
 import { ChevronDown, Trash2 } from 'lucide-react';
 import { auditBreedCap } from '../domain/auditMilk';
-import { auditCardKg, auditFixtureFigure, auditHerdMilk } from '../domain/auditHerd';
+import { auditCoverage, auditRequirement, auditRoughageMin, auditSupplied } from '../domain/audit';
+import { auditCardKg, auditHerdMilk, auditShare } from '../domain/auditHerd';
 import { NUTRIENT_STRING_ID } from '../domain/feedNames';
 import { displayAmount, isShownAmount } from '../domain/format';
 import { formatNutrient, REQ_FIELD } from '../domain/nutrition';
-import type { BreedStandard, FeedItem, HerdAnimal, HerdAnimalSolution, HerdLimit, NutrientKey } from '../domain/types';
+import type { BreedStandard, FeedItem, HerdAnimal, HerdAnimalSolution, HerdLimit, HerdSolution, NutrientKey } from '../domain/types';
 import { NUTRIENT_KEYS } from '../domain/types';
 import { breedLabel, isNonDescript } from '../domain/breeds';
 import { formatAmount, formatLitres, formatNumber, formatPct } from '../i18n/format';
 import { Bi, BiRich } from '../i18n/Bi';
 import { useLang } from '../i18n/LanguageProvider';
-import { bi, t } from '../i18n/strings';
+import { bi } from '../i18n/strings';
 import { FeedName } from './FeedName';
 import { Fig } from './Fig';
 import { StatusPill } from './StatusPill';
@@ -32,9 +33,10 @@ interface Props {
 /** The bar scale runs 0 to 120% so the 100% mark sits inside the track, as on the Change 3 result. */
 const SCALE_MAX = 120;
 
-/** Nutrient coverage for one animal at its planned milk. Same look as the Change 3 bars; every figure is a prototype fixture. */
-function FixtureBars({ sol }: { sol: HerdAnimalSolution }) {
+/** Nutrient coverage for one animal at its planned milk. */
+function NutrientBars({ sol, byId }: { sol: HerdAnimalSolution; byId: Map<string, FeedItem> }) {
   const { solution, requirementAtS: req } = sol;
+  const feedList = Array.from(byId.values());
   return (
     <ul className="nutrients">
       {NUTRIENT_KEYS.map((n: NutrientKey) => {
@@ -44,7 +46,6 @@ function FixtureBars({ sol }: { sol: HerdAnimalSolution }) {
         const coverage = solution.coveragePct[n];
         const fill = Math.min(coverage, SCALE_MAX) / SCALE_MAX;
         const met = isDm ? coverage <= 100 + 1e-6 : coverage >= 100 - 1e-6;
-        const name = t(NUTRIENT_STRING_ID[n]);
         return (
           <li key={n} className="nutrient" data-nutrient={n}>
             <div className="nutrient-head">
@@ -53,15 +54,7 @@ function FixtureBars({ sol }: { sol: HerdAnimalSolution }) {
                 <Bi id={NUTRIENT_STRING_ID[n]} />
               </span>
               <span className="nutrient-pct">
-                <Fig
-                  audit={auditFixtureFigure(
-                    `c4-cov-${sol.key}-${n}`,
-                    name,
-                    formatPct(coverage, 0),
-                    coverage,
-                    `${formatNutrient(n, supplied)} ÷ ${formatNutrient(n, required)} = ${formatPct(coverage, 1)}`,
-                  )}
-                >
+                <Fig audit={auditCoverage(n, solution, req)}>
                   {formatPct(coverage, 0)}
                 </Fig>
               </span>
@@ -84,7 +77,7 @@ function FixtureBars({ sol }: { sol: HerdAnimalSolution }) {
                   <Bi id={isDm ? 'label_limit' : 'label_required'} />
                 </dt>
                 <dd>
-                  <Fig audit={auditFixtureFigure(`c4-req-${sol.key}-${n}`, name, formatNutrient(n, required), required, formatNutrient(n, required))}>
+                  <Fig audit={auditRequirement(n, req)}>
                     {formatNutrient(n, required)}
                   </Fig>
                 </dd>
@@ -94,7 +87,7 @@ function FixtureBars({ sol }: { sol: HerdAnimalSolution }) {
                   <Bi id={isDm ? 'label_used' : 'label_supplied'} />
                 </dt>
                 <dd>
-                  <Fig audit={auditFixtureFigure(`c4-sup-${sol.key}-${n}`, name, formatNutrient(n, supplied), supplied, formatNutrient(n, supplied))}>
+                  <Fig audit={auditSupplied(n, solution, feedList, req)}>
                     {formatNutrient(n, supplied)}
                   </Fig>
                 </dd>
@@ -111,10 +104,29 @@ function FixtureBars({ sol }: { sol: HerdAnimalSolution }) {
 }
 
 /** What the paravet reads: the share of the milk target, its cap, what limits it, roughage, and the nutrient bars. */
-function ParavetDetails({ animal, sol, shareT, limits, breed }: Pick<Props, 'animal' | 'sol' | 'shareT' | 'limits' | 'breed'>) {
+function ParavetDetails({ animal, sol, shareT, limits, breed, byId }: Pick<Props, 'animal' | 'sol' | 'shareT' | 'limits' | 'breed' | 'byId'>) {
   const { solution } = sol;
   const dry = sol.milkTargetLPerDay === 0;
   const limitText = limits[0]?.kind === 'milk_target' ? 'c4_det_limit_target' : 'c4_det_limit_budget';
+  const mockBest: HerdSolution = {
+    shareT,
+    limits,
+    animals: [sol],
+    buyTotals: [],
+    homeUse: [],
+    purchaseCostInrPerDay: solution.totalCostInr,
+    budgetInrPerDay: solution.budgetInrPerDay,
+    costAtTargetInrPerDay: null,
+    maintenanceCostInrPerDay: solution.maintenanceCostInrPerDay ?? 0,
+    budgetTight: false,
+    stage1Feasible: true,
+    stage2Path: 'direct',
+    stage3Applied: null,
+    stage2PurchaseInrPerDay: solution.totalCostInr,
+    solvedOn: new Date().toISOString(),
+    sourceKey: 'SOLVER-HERD-LP-V1',
+    status: 'optimal',
+  };
   return (
     <div className="details" data-details="true">
       <dl className="detail-list c4-detail-list">
@@ -125,15 +137,7 @@ function ParavetDetails({ animal, sol, shareT, limits, breed }: Pick<Props, 'ani
                 <Bi id="c4_det_share" />
               </dt>
               <dd>
-                <Fig
-                  audit={auditFixtureFigure(
-                    `c4-share-${sol.key}`,
-                    t('c4_det_share'),
-                    formatPct(shareT * 100, 0),
-                    shareT,
-                    `t* = ${formatNumber(shareT, 3)}; ${formatNumber(shareT, 3)} × ${formatNumber(sol.milkTargetLPerDay, 2)} = ${formatNumber(sol.milkExactLPerDay, 3)} L`,
-                  )}
-                >
+                <Fig audit={auditShare(mockBest, [animal])}>
                   {formatPct(shareT * 100, 0)}
                 </Fig>
                 <span className="detail-note">
@@ -160,15 +164,7 @@ function ParavetDetails({ animal, sol, shareT, limits, breed }: Pick<Props, 'ani
             <Bi id="c4_det_roughage" />
           </dt>
           <dd>
-            <Fig
-              audit={auditFixtureFigure(
-                `c4-rough-${sol.key}`,
-                t('c4_det_roughage'),
-                formatPct(solution.roughageSharePct, 0),
-                solution.roughageSharePct,
-                `${formatPct(solution.roughageSharePct, 1)} ≥ ${formatPct(solution.roughageMinSharePct, 0)}`,
-              )}
-            >
+            <Fig audit={auditRoughageMin(solution.roughageMinSharePct)}>
               {formatPct(solution.roughageSharePct, 0)}
             </Fig>
             <span className="detail-note">
@@ -177,7 +173,7 @@ function ParavetDetails({ animal, sol, shareT, limits, breed }: Pick<Props, 'ani
           </dd>
         </div>
       </dl>
-      <FixtureBars sol={sol} />
+      <NutrientBars sol={sol} byId={byId} />
     </div>
   );
 }
@@ -261,7 +257,7 @@ export function AnimalPlanCard({ animal, sol, shareT, limits, breed, byId, canRe
             <Bi id="c4_details" />
           </AccordionTrigger>
           <AccordionContent>
-            <ParavetDetails animal={animal} sol={sol} shareT={shareT} limits={limits} breed={breed} />
+            <ParavetDetails animal={animal} sol={sol} shareT={shareT} limits={limits} breed={breed} byId={byId} />
           </AccordionContent>
         </AccordionItem>
       </Accordion>

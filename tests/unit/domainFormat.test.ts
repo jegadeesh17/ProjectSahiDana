@@ -284,7 +284,7 @@ describe('domain/format (Change 4 display rounding rules)', () => {
           breedId: 'rathi',
           bodyWeightKg: 350,
           milkYieldLitersPerDay: 0,
-          milkFatPct: null,
+          milkFatPct: 0,
         },
         weightSource: 'typed',
         fatSource: 'typed',

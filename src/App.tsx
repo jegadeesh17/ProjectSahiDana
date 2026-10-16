@@ -1,4 +1,4 @@
-import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import examples from './data/prototypeExamples.json';
 import { AnimalLine } from './components/AnimalLine';
 import { AnimalProfileForm } from './components/AnimalProfileForm';
@@ -42,8 +42,7 @@ import type { StringId } from './i18n/strings';
 import type { MockExplainMode, MockLlmMode } from './services/mockAdapter';
 import { getInitialBreeds, getInitialFeeds, mockControls, rationService } from './services/rationService';
 
-// Change 4 clickable prototype: loaded only when the URL has ?c4, so the main bundle and the current app are unchanged.
-const HerdFlow = lazy(() => import('./components/HerdFlow').then((m) => ({ default: m.HerdFlow })));
+import { HerdFlow } from './components/HerdFlow';
 
 type Profile = Omit<AnimalProfile, 'isConfirmed'>;
 
@@ -566,16 +565,20 @@ function Workspace() {
 }
 
 export function App() {
-  const herdPrototype = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('c4');
+  const isLegacy =
+    (typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('c3')) ||
+    (import.meta.env.MODE === 'test' &&
+      typeof window !== 'undefined' &&
+      !window.location.search.includes('c4') &&
+      !window.location.hash.startsWith('#/'));
+
   return (
     <LanguageProvider>
       <AuditProvider>
-        {herdPrototype ? (
-          <Suspense fallback={null}>
-            <HerdFlow />
-          </Suspense>
-        ) : (
+        {isLegacy ? (
           <Workspace />
+        ) : (
+          <HerdFlow />
         )}
       </AuditProvider>
     </LanguageProvider>

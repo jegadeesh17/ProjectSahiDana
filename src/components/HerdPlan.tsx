@@ -1,13 +1,13 @@
 import { useMemo } from 'react';
-import { auditPromptX, auditPromptY, auditShortfallX } from '../domain/auditHerd';
+import { auditPromptX, auditPromptY, auditSeasonSet, auditShortfallX } from '../domain/auditHerd';
 import { breedById } from '../domain/breeds';
-import { displayAmount, isShownAmount, roundInrWhole } from '../domain/format';
 import type { AnimalLabel, BreedStandard, FeedItem, HerdPlan } from '../domain/types';
-import { formatAmount, formatInrWhole, formatNumber } from '../i18n/format';
-import { feedLabel } from '../i18n/feedLabel';
+import { formatInrWhole, formatNumber } from '../i18n/format';
 import { Bi, BiRich } from '../i18n/Bi';
-import { getActiveLang } from '../i18n/lang';
+import { useLang } from '../i18n/LanguageProvider';
+import { monthName } from '../i18n/months';
 import { bi } from '../i18n/strings';
+import { buildHerdSummary } from '../domain/summary';
 import { AnimalPlanCard } from './AnimalPlanCard';
 import { FeedName } from './FeedName';
 import { Fig } from './Fig';
@@ -17,25 +17,31 @@ interface Props {
   plan: HerdPlan;
   library: FeedItem[];
   breeds: BreedStandard[];
-  /** The plan comes from the nearest example, not from this exact herd (prototype only). */
-  nearest: boolean;
   onRemoveAnimal: (key: string) => void;
+  onEditAnimal?: (key: string) => void;
+  onAddHomeFeed?: (feedId: string) => void;
 }
 
-/** Screen 3, "Your plan": what to buy, what to give each animal, what is not needed, and the budget prompt. */
-export function HerdPlanView({ plan, library, breeds, nearest, onRemoveAnimal }: Props) {
+/** Screen 3, "Your plan": season line, what to buy, what to give each animal, what is not needed, and the budget prompt. */
+export function HerdPlanView({ plan, library, breeds, onRemoveAnimal }: Props) {
+  const { lang } = useLang();
   const byId = useMemo(() => new Map(library.map((f) => [f.id, f])), [library]);
   const labels = useMemo(() => new Map<string, AnimalLabel>(plan.animals.map((a) => [a.key, a.label])), [plan.animals]);
 
-  const notice = (
-    <p className="c4-notice" role="note" data-c4="prototype-notice">
-      <Bi id="notice_prototype_fixture" />
-      {nearest && (
-        <>
-          {' '}
-          <Bi id="c4_notice_nearest" />
-        </>
-      )}
+  const day = parseInt(plan.planDate.split('-')[2] ?? '1', 10);
+  const dateStr = `${day} ${monthName(plan.month, lang)}`;
+  const seasonLine = (
+    <p className="c4-season-line" data-c4="season-line">
+      <BiRich
+        id="c4_season_line"
+        nodes={{
+          date: (
+            <Fig inline audit={auditSeasonSet(plan, library)}>
+              {dateStr}
+            </Fig>
+          ),
+        }}
+      />
     </p>
   );
 
@@ -43,7 +49,7 @@ export function HerdPlanView({ plan, library, breeds, nearest, onRemoveAnimal }:
     const s = plan.shortfall;
     return (
       <>
-        {notice}
+        {seasonLine}
         <section className="c4-card c4-prompt-card" data-c4="shortfall">
           <p className="c4-prompt-text">
             <BiRich
@@ -65,7 +71,7 @@ export function HerdPlanView({ plan, library, breeds, nearest, onRemoveAnimal }:
   if (plan.status === 'infeasible') {
     return (
       <>
-        {notice}
+        {seasonLine}
         <section className="c4-card c4-prompt-card" role="alert" data-c4="infeasible">
           <p className="c4-prompt-text">
             <Bi id="c4_infeasible" />
@@ -79,7 +85,7 @@ export function HerdPlanView({ plan, library, breeds, nearest, onRemoveAnimal }:
   const prompt = plan.budgetPrompt;
   return (
     <>
-      {notice}
+      {seasonLine}
 
       <ShoppingList shopping={plan.shopping} budgetInrPerDay={plan.budgetInrPerDay} byId={byId} labels={labels} />
 
@@ -156,51 +162,5 @@ export function HerdPlanView({ plan, library, breeds, nearest, onRemoveAnimal }:
 
 /** The plain text copied by "Copy summary", in the active language and the main-view units. */
 export function buildPlanSummary(plan: HerdPlan, library: FeedItem[]): string {
-  const lang = getActiveLang();
-  const byId = new Map(library.map((f) => [f.id, f]));
-  const name = (id: string) => (byId.has(id) ? feedLabel(byId.get(id)!, lang) : id);
-  const rupees = (v: number) => formatInrWhole(roundInrWhole(v));
-  const lines: string[] = [`SahiDana · ${bi('c4_summary_title')}`];
-
-  if (plan.status === 'below_maintenance') {
-    lines.push(bi('c4_prompt_short', { x: formatInrWhole(plan.shortfall.extraInrPerDay) }));
-  } else if (plan.status === 'infeasible') {
-    lines.push(bi('c4_infeasible'));
-  } else {
-    const { shopping } = plan;
-    lines.push('', bi('c4_shop_title'));
-    if (shopping.buyFirst.length === 0 && shopping.later.length === 0) lines.push(bi('c4_shop_none'));
-    else {
-      lines.push(bi('c4_shop_first'));
-      for (const l of shopping.buyFirst) {
-        if (isShownAmount(l.kgPerDay)) lines.push(`- ${name(l.feedId)} ${formatAmount(displayAmount(l.feedId, l.kgPerDay))} (${rupees(l.costInrPerDay)})`);
-      }
-      if (shopping.later.length > 0) lines.push(bi('c4_shop_later'));
-      for (const s of shopping.later) {
-        const gain = s.deltaMilkL > 0 ? bi('c4_shop_gain', { l: formatNumber(s.deltaMilkL, 1) }) : bi('c4_shop_same');
-        lines.push(`- ${name(s.line.feedId)} ${formatAmount(displayAmount(s.line.feedId, s.line.kgPerDay))} (${rupees(s.line.costInrPerDay)}) ${gain}`);
-      }
-      lines.push(bi('c4_shop_total', { a: rupees(shopping.totalInr), b: rupees(plan.budgetInrPerDay) }));
-    }
-
-    lines.push('', bi('c4_cards_title'));
-    for (const sol of plan.perAnimal) {
-      const animal = plan.animals.find((a) => a.key === sol.key);
-      if (!animal) continue;
-      const label = bi(animal.label.species === 'cow' ? 'label_cow_n' : 'label_buffalo_n', { n: animal.label.n });
-      const feedsText = sol.solution.feeds
-        .filter((l) => isShownAmount(l.kgAsFed))
-        .map((l) => `${name(l.feedId)} ${formatAmount(displayAmount(l.feedId, l.kgAsFed))} (${l.source === 'home' ? bi('c4_tag_home') : bi('tag_buy')})`)
-        .join(' · ');
-      const tail = sol.milkTargetLPerDay === 0 ? bi('c4_card_dry') : bi('c4_card_enough', { l: formatNumber(sol.milkLPerDay, 1) });
-      lines.push(`${label}: ${feedsText} — ${tail}`);
-    }
-
-    if (plan.notNeeded.length > 0) lines.push('', `${bi('c4_not_needed_title')}: ${plan.notNeeded.map(name).join(', ')}`);
-    if (plan.budgetPrompt) {
-      lines.push('', bi('c4_prompt_add', { x: formatInrWhole(plan.budgetPrompt.extraInrPerDay), y: formatNumber(plan.budgetPrompt.targetMilkL, 1) }));
-    }
-  }
-  lines.push('', bi('notice_prototype_fixture'));
-  return lines.join('\n');
+  return buildHerdSummary(plan, library);
 }

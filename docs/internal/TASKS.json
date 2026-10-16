@@ -430,7 +430,7 @@
             "src/components/ShoppingList.tsx"
           ],
           "acceptance_criteria": "SPEC AC-C4-1.1 through AC-C4-1.25, AC-C4-E1 through AC-C4-E8, AC-C4-R1 through AC-C4-R9: npm test passes all unit tests, npm run test:full passes all vitest and playwright tests, and npm run build succeeds.",
-          "status": "pending"
+          "status": "completed"
         }
       ]
     },

@@ -603,7 +603,7 @@ export interface HerdShortfallPrompt {
   budgetInrPerDay: number;
 }
 
-interface HerdPlanBase {
+export interface HerdPlanBase {
   animals: HerdAnimal[];
   homeFeeds: HomeFeed[];
   budgetInrPerDay: number;
@@ -653,3 +653,16 @@ export type HerdPlan =
       shortfall: null;
       infeasible: HerdInfeasible;
     });
+
+export interface BenchmarkAnimalEntry {
+  id: string;
+  description: string;
+  animal: AnimalProfile;
+  selectedFeeds: SelectedFeedInput[];
+  budget: number;
+  expected: {
+    status: 'optimal' | 'below_maintenance' | 'infeasible';
+    bindingConstraint?: string;
+    gainVerdict?: string;
+  };
+}

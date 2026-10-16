@@ -3,7 +3,6 @@
 // fair-share milk target t*, Stage 3 home-feed tie-break, and 1e-6 numerical verification.
 
 import type { LpModel } from 'javascript-lp-solver';
-import feedsV1 from '../data/feeds.v1.json';
 import { BREEDS, breedById } from './breeds';
 import { isRoughage, MIN_NUTRIENTS, perKgFed, REQ_FIELD } from './nutrition';
 import { buildRequirementModel, computeRequirements, evaluateRequirementsAtMilk } from './requirements';
@@ -13,7 +12,6 @@ import {
   SolverError,
   relTol,
   runLp,
-  buildFeedLinesAndTotals,
   solveFixedMilk,
   diagnoseAtMilk,
   detectTightConstraintsAtYStar,
@@ -21,7 +19,6 @@ import {
   type FixedMilkSolveResult,
 } from './solver';
 import {
-  BINDING_ORDER,
   NUTRIENT_KEYS,
   type BindingConstraint,
   type BreedStandard,
@@ -40,7 +37,6 @@ import {
   type RationFeedLine,
   type RationSolution,
   type RequirementModel,
-  type RequirementResult,
   type SelectedFeedInput,
   type ShoppingLine,
 } from './types';
@@ -56,7 +52,7 @@ export function verifyHerdSolution(
   buySet: readonly SelectedFeedInput[],
   homeFeeds: readonly HomeFeed[],
   feedLibrary: readonly FeedItem[] = DEFAULT_FEED_LIBRARY,
-  breedLibrary: readonly BreedStandard[] = BREEDS,
+  _breedLibrary: readonly BreedStandard[] = BREEDS,
 ): void {
   if (solution.status !== 'optimal') {
     throw new SolverError('Cannot verify non-optimal herd solution');
@@ -105,12 +101,6 @@ export function verifyHerdSolution(
     if (!aSol) {
       throw new SolverError(`Missing animal solution for ${animal.key}`);
     }
-
-    const breed =
-      breedLibrary.find((b) => b.id === animal.profile.breedId) ??
-      breedById(animal.profile.breedId) ??
-      breedLibrary.find((b) => b.species === animal.profile.species)!;
-
     const reqModel = buildRequirementModel({
       ...animal.profile,
       budgetInrPerDay: solution.budgetInrPerDay,
@@ -422,7 +412,6 @@ function solveHerdFixedMilk(
   for (const ctx of animals) {
     const milk = milkLevels[ctx.animal.key] ?? 0;
     const reqAtY = evaluateRequirementsAtMilk(ctx.reqModel, milk);
-    const r = ctx.reqModel.roughage.minShareOfDm;
     const caMaxRatio = ctx.reqModel.calciumMax?.value ?? 2.5;
     const caMaxDm = ctx.reqModel.calciumMax?.maxGramsPerKgDm ?? 15;
 
@@ -619,7 +608,6 @@ function solveHerdStage3(
   for (const ctx of animals) {
     const milk = milkLevels[ctx.animal.key] ?? 0;
     const reqAtY = evaluateRequirementsAtMilk(ctx.reqModel, milk);
-    const r = ctx.reqModel.roughage.minShareOfDm;
     const caMaxRatio = ctx.reqModel.calciumMax?.value ?? 2.5;
     const caMaxDm = ctx.reqModel.calciumMax?.maxGramsPerKgDm ?? 15;
 

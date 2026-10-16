@@ -20,8 +20,8 @@ import type {
 } from './types';
 import { currentMonth } from '../i18n/months';
 
-/** The most animals a herd can hold (SPEC AC-C4-E5). One constant so the limit is changed in one place. */
-export const MAX_ANIMALS = 10;
+/** The most animals a herd can hold (SPEC AC-C4-1.6, AC-C4-E5). 1 for C4-M1, 10 for C4-M2. */
+export const MAX_ANIMALS = 1;
 
 export type LabelCounters = Record<Species, number>;
 

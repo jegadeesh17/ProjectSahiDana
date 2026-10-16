@@ -160,7 +160,7 @@ describe('herdSolver home feeds (AC-C4-1.11, AC-C4-1.11a)', () => {
   it('never buys a home feed that is not in C', () => {
     const animal = toHerdAnimal(baseEntry);
     // Remove berseem from buy set, pass it only as home feed
-    const buySetWithoutBerseem = baseEntry.selectedFeeds.filter((f) => f.feedId !== 'berseem');
+    const buySetWithoutBerseem = baseEntry.selectedFeeds.filter((f: SelectedFeedInput) => f.feedId !== 'berseem');
     const homeFeeds: HomeFeed[] = [{ feedId: 'berseem', kgPerDay: 15 }];
     const outcome = solveHerd([animal], buySetWithoutBerseem, homeFeeds, baseEntry.animal.budgetInrPerDay);
 
