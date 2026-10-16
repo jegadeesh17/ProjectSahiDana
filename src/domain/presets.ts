@@ -2,6 +2,7 @@
 // Every verdict case of SPEC AC-5.6 to AC-5.11 and AC-E7.1 has a preset, so a reviewer can reach it in one tap.
 import type { StringId } from '../i18n/strings';
 import { getRationAdapterMode } from '../services/rationService';
+import type { HerdAnimal, HomeFeed } from './types';
 import type { AnimalDraft, FeedDraft } from './validation';
 
 export interface Preset {
@@ -186,3 +187,155 @@ export const DEMO_CASES: DemoCase[] = [
   { key: 'roughage', labelId: 'demo_roughage', preset: PRESET_ROUGHAGE },
   { key: 'dry', labelId: 'demo_dry', preset: PRESET_DRY },
 ];
+
+// -------------------------------------------------------------------------------------------------
+// C4-M2 Herd Examples (SPEC AC-C4-2.11)
+// -------------------------------------------------------------------------------------------------
+
+export type HerdExampleId = 'cow_buffalo' | 'straw_only' | 'tight_budget';
+export const HERD_EXAMPLE_IDS: readonly HerdExampleId[] = ['cow_buffalo', 'straw_only', 'tight_budget'];
+
+export interface HerdExample {
+  id: HerdExampleId;
+  title: string;
+  animals: HerdAnimal[];
+  homeFeeds: HomeFeed[];
+  budget: number;
+  budgetInrPerDay: number;
+  animal?: HerdAnimal;
+}
+
+/** 1. 'Cow + Buffalo' (cow_buffalo): feasible plan for both animals (AC-C4-2.11) */
+export const HERD_EXAMPLE_COW_BUFFALO: HerdExample = {
+  id: 'cow_buffalo',
+  title: 'Cow + Buffalo',
+  animals: [
+    {
+      key: 'a1',
+      label: { species: 'cow', n: 1 },
+      profile: {
+        species: 'cow',
+        breedId: 'rathi',
+        bodyWeightKg: 295,
+        milkYieldLitersPerDay: 6,
+        milkFatPct: 3.85,
+      },
+      weightSource: 'breed',
+      fatSource: 'breed_midpoint',
+      isConfirmed: true,
+    },
+    {
+      key: 'a2',
+      label: { species: 'buffalo', n: 1 },
+      profile: {
+        species: 'buffalo',
+        breedId: 'murrah',
+        bodyWeightKg: 516,
+        milkYieldLitersPerDay: 8,
+        milkFatPct: 7.34,
+      },
+      weightSource: 'breed',
+      fatSource: 'breed',
+      isConfirmed: true,
+    },
+  ],
+  homeFeeds: [{ feedId: 'wheat_straw', kgPerDay: 10 }],
+  budget: 400,
+  budgetInrPerDay: 400,
+  get animal() {
+    return this.animals[0];
+  },
+};
+
+/** 2. 'Straw only' (straw_only): home wheat straw with a 'What to buy' list of at least one line (AC-C4-2.11) */
+export const HERD_EXAMPLE_STRAW_ONLY: HerdExample = {
+  id: 'straw_only',
+  title: 'Straw only',
+  animals: [
+    {
+      key: 'a1',
+      label: { species: 'cow', n: 1 },
+      profile: {
+        species: 'cow',
+        breedId: 'hariana',
+        bodyWeightKg: 325,
+        milkYieldLitersPerDay: 5,
+        milkFatPct: 4.5,
+      },
+      weightSource: 'breed',
+      fatSource: 'breed',
+      isConfirmed: true,
+    },
+    {
+      key: 'a2',
+      label: { species: 'cow', n: 2 },
+      profile: {
+        species: 'cow',
+        breedId: 'nondescript_cow',
+        bodyWeightKg: 280,
+        milkYieldLitersPerDay: 3,
+        milkFatPct: 4.2,
+      },
+      weightSource: 'typed',
+      fatSource: 'typed',
+      isConfirmed: true,
+    },
+  ],
+  homeFeeds: [{ feedId: 'wheat_straw', kgPerDay: 12 }],
+  budget: 250,
+  budgetInrPerDay: 250,
+  get animal() {
+    return this.animals[0];
+  },
+};
+
+/** 3. 'Tight budget' (tight_budget): shows 'Add ₹X/day to reach Y L' budget prompt (AC-C4-2.11) */
+export const HERD_EXAMPLE_TIGHT_BUDGET: HerdExample = {
+  id: 'tight_budget',
+  title: 'Tight budget',
+  animals: [
+    {
+      key: 'a1',
+      label: { species: 'cow', n: 1 },
+      profile: {
+        species: 'cow',
+        breedId: 'sahiwal',
+        bodyWeightKg: 298,
+        milkYieldLitersPerDay: 10,
+        milkFatPct: 4.93,
+      },
+      weightSource: 'breed',
+      fatSource: 'breed',
+      isConfirmed: true,
+    },
+    {
+      key: 'a2',
+      label: { species: 'buffalo', n: 1 },
+      profile: {
+        species: 'buffalo',
+        breedId: 'murrah',
+        bodyWeightKg: 516,
+        milkYieldLitersPerDay: 8,
+        milkFatPct: 7.34,
+      },
+      weightSource: 'breed',
+      fatSource: 'breed',
+      isConfirmed: true,
+    },
+  ],
+  homeFeeds: [{ feedId: 'wheat_straw', kgPerDay: 8 }],
+  budget: 200,
+  budgetInrPerDay: 200,
+  get animal() {
+    return this.animals[0];
+  },
+};
+
+export const HERD_EXAMPLES: Record<HerdExampleId, HerdExample> = {
+  cow_buffalo: HERD_EXAMPLE_COW_BUFFALO,
+  straw_only: HERD_EXAMPLE_STRAW_ONLY,
+  tight_budget: HERD_EXAMPLE_TIGHT_BUDGET,
+};
+
+export const HERD_PRESETS = HERD_EXAMPLES;
+export const M2_EXAMPLES = HERD_EXAMPLES;

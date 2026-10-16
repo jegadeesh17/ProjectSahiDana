@@ -465,7 +465,7 @@
             "tests/unit/herdPlan.test.ts"
           ],
           "acceptance_criteria": "SPEC AC-C4-2.1, AC-C4-2.6, AC-C4-2.7, AC-C4-2.8, AC-C4-2.11: vitest tests pass and 10-animal worst case solves <= 1.0 s in Node.",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "C4-M2-T3",

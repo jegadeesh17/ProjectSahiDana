@@ -2,7 +2,13 @@ import { describe, expect, it } from 'vitest';
 import feedsV1 from '../../src/data/feeds.v1.json';
 import { BREEDS } from '../../src/domain/breeds';
 import { floorMilk1, roundUpInrWhole } from '../../src/domain/format';
-import { EMPTY_COUNTERS, formatLocalDateIso, nextAnimalLabel, planHerd } from '../../src/domain/herdPlan';
+import { EMPTY_COUNTERS, formatLocalDateIso, MAX_ANIMALS, nextAnimalLabel, planHerd } from '../../src/domain/herdPlan';
+import {
+  HERD_EXAMPLE_COW_BUFFALO,
+  HERD_EXAMPLE_STRAW_ONLY,
+  HERD_EXAMPLE_TIGHT_BUDGET,
+  HERD_EXAMPLES,
+} from '../../src/domain/presets';
 import { planRation } from '../../src/domain/rationPlan';
 import { solveRation } from '../../src/domain/solver';
 import type {
@@ -123,6 +129,59 @@ describe('herdPlan (Change 4 pure herd plan engine)', () => {
     }
   });
 
+  it('ensures multi-animal shopping steps have non-decreasing milk gains (ΔL_k >= 0) and valid prefixes (AC-C4-2.6)', () => {
+    const cow: HerdAnimal = {
+      key: 'a1',
+      label: { species: 'cow', n: 1 },
+      profile: {
+        species: 'cow',
+        breedId: 'sahiwal',
+        bodyWeightKg: 350,
+        milkYieldLitersPerDay: 9,
+        milkFatPct: 4.5,
+      },
+      weightSource: 'breed',
+      fatSource: 'breed',
+      isConfirmed: true,
+    };
+    const buffalo: HerdAnimal = {
+      key: 'a2',
+      label: { species: 'buffalo', n: 1 },
+      profile: {
+        species: 'buffalo',
+        breedId: 'murrah',
+        bodyWeightKg: 500,
+        milkYieldLitersPerDay: 8,
+        milkFatPct: 7.0,
+      },
+      weightSource: 'breed',
+      fatSource: 'breed',
+      isConfirmed: true,
+    };
+
+    const homeFeeds: HomeFeed[] = [{ feedId: 'wheat_straw', kgPerDay: 10 }];
+    const budget = 350;
+    const plan = planHerd([cow, buffalo], homeFeeds, budget, LIVE_FEEDS, BREEDS, month);
+
+    expect(plan.status).toBe('optimal');
+    if (plan.status !== 'optimal') return;
+
+    expect(plan.buyOrder.length).toBeGreaterThan(0);
+    expect(plan.shopping.buyFirst.length).toBeGreaterThan(0);
+
+    // Each later step satisfies deltaMilkExactL >= 0 and deltaMilkL >= 0
+    let lastMilk = plan.shopping.firstStep?.totalMilkL ?? 0;
+    for (const step of plan.shopping.later) {
+      expect(step.deltaMilkExactL).toBeGreaterThanOrEqual(0);
+      expect(step.deltaMilkL).toBeGreaterThanOrEqual(0);
+      expect(step.step.totalMilkL).toBeGreaterThanOrEqual(lastMilk - 1e-6);
+      lastMilk = step.step.totalMilkL;
+    }
+
+    // Last step matches best
+    expect(plan.lastStepMatchesBest).toBe(true);
+  });
+
   it('asserts lastStepMatchesBest holds on optimal plans', () => {
     const entry = benchmarkEntries[0];
     const animal = toHerdAnimal(entry);
@@ -207,6 +266,190 @@ describe('herdPlan (Change 4 pure herd plan engine)', () => {
     expect(amplePlan.budgetPrompt).toBeNull();
   });
 
+  it('computes multi-animal herd budget prompt correctly per AC-C4-2.8', () => {
+    const cow: HerdAnimal = {
+      key: 'a1',
+      label: { species: 'cow', n: 1 },
+      profile: {
+        species: 'cow',
+        breedId: 'sahiwal',
+        bodyWeightKg: 298,
+        milkYieldLitersPerDay: 10,
+        milkFatPct: 4.93,
+      },
+      weightSource: 'breed',
+      fatSource: 'breed',
+      isConfirmed: true,
+    };
+    const buffalo: HerdAnimal = {
+      key: 'a2',
+      label: { species: 'buffalo', n: 1 },
+      profile: {
+        species: 'buffalo',
+        breedId: 'murrah',
+        bodyWeightKg: 516,
+        milkYieldLitersPerDay: 8,
+        milkFatPct: 7.34,
+      },
+      weightSource: 'breed',
+      fatSource: 'breed',
+      isConfirmed: true,
+    };
+    const dryBuffalo: HerdAnimal = {
+      key: 'a3',
+      label: { species: 'buffalo', n: 2 },
+      profile: {
+        species: 'buffalo',
+        breedId: 'surti',
+        bodyWeightKg: 420,
+        milkYieldLitersPerDay: 0, // dry animal
+        milkFatPct: 7.5,
+      },
+      weightSource: 'breed',
+      fatSource: 'breed',
+      isConfirmed: true,
+    };
+
+    // Budget of 240 is enough for maintenance of all 3 animals, but tight for milk targets
+    const budget = 240;
+    const plan = planHerd([cow, buffalo, dryBuffalo], [], budget, LIVE_FEEDS, BREEDS, month);
+
+    expect(plan.status).toBe('optimal');
+    if (plan.status !== 'optimal') return;
+
+    expect(plan.best.budgetTight).toBe(true);
+    expect(plan.budgetPrompt).not.toBeNull();
+    const prompt = plan.budgetPrompt!;
+
+    // Formula checks per AC-C4-2.8:
+    // extraInrPerDay = roundUpInrWhole(costAtTargetInrPerDay - budgetInrPerDay)
+    expect(prompt.extraInrPerDay).toBe(roundUpInrWhole(prompt.costAtTargetInrPerDay - budget));
+    expect(prompt.costAtTargetInrPerDay).toBe(plan.best.costAtTargetInrPerDay);
+    expect(prompt.budgetInrPerDay).toBe(budget);
+
+    // Dry animal must be excluded from targetMilkL and perAnimalTargetL
+    expect(prompt.perAnimalTargetL.some((p) => p.key === 'a3')).toBe(false);
+    expect(prompt.perAnimalTargetL.length).toBe(2);
+
+    // targetMilkL = sum of floor(10*g_i)/10 over milking animals
+    const expectedSum = Math.round(prompt.perAnimalTargetL.reduce((sum, p) => sum + p.targetL, 0) * 10) / 10;
+    expect(prompt.targetMilkL).toBe(expectedSum);
+
+    for (const p of prompt.perAnimalTargetL) {
+      const aSol = plan.best.animals.find((a) => a.key === p.key)!;
+      expect(p.targetL).toBe(floorMilk1(aSol.milkTargetLPerDay));
+    }
+  });
+
+  it('provides per-animal cards in list order including dry animal with maintenance ration (AC-C4-2.7)', () => {
+    const cow: HerdAnimal = {
+      key: 'a1',
+      label: { species: 'cow', n: 1 },
+      profile: {
+        species: 'cow',
+        breedId: 'sahiwal',
+        bodyWeightKg: 300,
+        milkYieldLitersPerDay: 9,
+        milkFatPct: 4.5,
+      },
+      weightSource: 'breed',
+      fatSource: 'breed',
+      isConfirmed: true,
+    };
+    const dryBuffalo: HerdAnimal = {
+      key: 'a2',
+      label: { species: 'buffalo', n: 1 },
+      profile: {
+        species: 'buffalo',
+        breedId: 'surti',
+        bodyWeightKg: 400,
+        milkYieldLitersPerDay: 0,
+        milkFatPct: 7.0,
+      },
+      weightSource: 'breed',
+      fatSource: 'breed',
+      isConfirmed: true,
+    };
+    const buffalo: HerdAnimal = {
+      key: 'a3',
+      label: { species: 'buffalo', n: 2 },
+      profile: {
+        species: 'buffalo',
+        breedId: 'murrah',
+        bodyWeightKg: 500,
+        milkYieldLitersPerDay: 8,
+        milkFatPct: 7.0,
+      },
+      weightSource: 'breed',
+      fatSource: 'breed',
+      isConfirmed: true,
+    };
+
+    const plan = planHerd([cow, dryBuffalo, buffalo], [], 350, LIVE_FEEDS, BREEDS, month);
+
+    expect(plan.status).toBe('optimal');
+    if (plan.status !== 'optimal') return;
+
+    expect(plan.perAnimal.length).toBe(3);
+    expect(plan.perAnimal.map((a) => a.key)).toEqual(['a1', 'a2', 'a3']);
+
+    // Milking animals show S_i(F) > 0 and positive target
+    expect(plan.perAnimal[0].milkLPerDay).toBeGreaterThan(0);
+    expect(plan.perAnimal[0].milkTargetLPerDay).toBeGreaterThan(0);
+    expect(plan.perAnimal[2].milkLPerDay).toBeGreaterThan(0);
+    expect(plan.perAnimal[2].milkTargetLPerDay).toBeGreaterThan(0);
+
+    // Dry animal shows 0 milk and 0 milk target
+    expect(plan.perAnimal[1].milkLPerDay).toBe(0);
+    expect(plan.perAnimal[1].milkTargetLPerDay).toBe(0);
+    expect(plan.perAnimal[1].solution.feeds.length).toBeGreaterThan(0);
+  });
+
+  it('returns below_maintenance shortfall when multi-animal herd budget is below M_H (AC-C4-2.3, AC-C4-2.8)', () => {
+    const cow: HerdAnimal = {
+      key: 'a1',
+      label: { species: 'cow', n: 1 },
+      profile: {
+        species: 'cow',
+        breedId: 'sahiwal',
+        bodyWeightKg: 350,
+        milkYieldLitersPerDay: 8,
+        milkFatPct: 4.5,
+      },
+      weightSource: 'breed',
+      fatSource: 'breed',
+      isConfirmed: true,
+    };
+    const buffalo: HerdAnimal = {
+      key: 'a2',
+      label: { species: 'buffalo', n: 1 },
+      profile: {
+        species: 'buffalo',
+        breedId: 'murrah',
+        bodyWeightKg: 500,
+        milkYieldLitersPerDay: 9,
+        milkFatPct: 7.0,
+      },
+      weightSource: 'breed',
+      fatSource: 'breed',
+      isConfirmed: true,
+    };
+
+    // Budget of ₹10 is far below maintenance for two large animals
+    const plan = planHerd([cow, buffalo], [], 10, LIVE_FEEDS, BREEDS, month);
+
+    expect(plan.status).toBe('below_maintenance');
+    if (plan.status !== 'below_maintenance') return;
+
+    expect(plan.best).toBeNull();
+    expect(plan.shortfall).not.toBeNull();
+    expect(plan.shortfall.maintenanceCostInrPerDay).toBeGreaterThan(10);
+    expect(plan.shortfall.extraInrPerDay).toBe(
+      roundUpInrWhole(plan.shortfall.maintenanceCostInrPerDay - 10),
+    );
+    expect(plan.shortfall.budgetInrPerDay).toBe(10);
+  });
+
   it('returns below_maintenance shortfall when budget is below M_H (AC-C4-1.18)', () => {
     const entry = benchmarkEntries[0];
     const animal = toHerdAnimal(entry);
@@ -267,79 +510,64 @@ describe('herdPlan (Change 4 pure herd plan engine)', () => {
     }
   });
 
-  describe('three M1 examples (AC-C4-1.25)', () => {
-    it('Example 1: Lactating buffalo has a feasible optimal plan', () => {
-      const buffalo: HerdAnimal = {
-        key: 'a1',
-        label: { species: 'buffalo', n: 1 },
-        profile: {
-          species: 'buffalo',
-          breedId: 'murrah',
-          bodyWeightKg: 500,
-          milkYieldLitersPerDay: 8,
-          milkFatPct: 7.0,
-        },
-        weightSource: 'typed',
-        fatSource: 'typed',
-        isConfirmed: true,
-      };
+  describe('three herd examples for C4-M2 (AC-C4-2.11)', () => {
+    it('Example 1: "Cow + Buffalo" (cow_buffalo) has a feasible plan for both animals', () => {
+      const ex = HERD_EXAMPLE_COW_BUFFALO;
+      expect(ex.id).toBe('cow_buffalo');
+      expect(ex.animals.length).toBe(2);
 
-      const plan = planHerd([buffalo], [], 220, LIVE_FEEDS, BREEDS, month);
+      const plan = planHerd(ex.animals, ex.homeFeeds, ex.budget, LIVE_FEEDS, BREEDS, month);
       expect(plan.status).toBe('optimal');
       if (plan.status !== 'optimal') return;
-      expect(plan.perAnimal[0].milkLPerDay).toBeGreaterThan(0);
+
+      expect(plan.perAnimal.length).toBe(2);
+      expect(plan.best.animals[0].milkLPerDay).toBeGreaterThan(0);
+      expect(plan.best.animals[1].milkLPerDay).toBeGreaterThan(0);
+      expect(plan.lastStepMatchesBest).toBe(true);
     });
 
-    it('Example 2: Cow with home feed wheat straw only ("Needs feeds to buy") has shopping lines', () => {
-      const cow: HerdAnimal = {
-        key: 'a1',
-        label: { species: 'cow', n: 1 },
-        profile: {
-          species: 'cow',
-          breedId: 'hariana',
-          bodyWeightKg: 325,
-          milkYieldLitersPerDay: 5,
-          milkFatPct: 4.5,
-        },
-        weightSource: 'typed',
-        fatSource: 'typed',
-        isConfirmed: true,
-      };
+    it('Example 2: "Straw only" (straw_only) with home wheat straw has a "What to buy" list of at least one line', () => {
+      const ex = HERD_EXAMPLE_STRAW_ONLY;
+      expect(ex.id).toBe('straw_only');
+      expect(ex.homeFeeds.some((h) => h.feedId === 'wheat_straw')).toBe(true);
 
-      const homeFeeds: HomeFeed[] = [{ feedId: 'wheat_straw', kgPerDay: 5 }];
-      const plan = planHerd([cow], homeFeeds, 150, LIVE_FEEDS, BREEDS, month);
-
+      const plan = planHerd(ex.animals, ex.homeFeeds, ex.budget, LIVE_FEEDS, BREEDS, month);
       expect(plan.status).toBe('optimal');
       if (plan.status !== 'optimal') return;
 
-      // Must have feeds to buy
-      expect(plan.buyOrder.length).toBeGreaterThan(0);
-      expect(plan.shopping.buyFirst.length + plan.shopping.later.length).toBeGreaterThan(0);
+      // "What to buy" list has at least one line (buyFirst + later)
+      const whatToBuyCount = plan.shopping.buyFirst.length + plan.shopping.later.length;
+      expect(whatToBuyCount).toBeGreaterThanOrEqual(1);
+      expect(plan.buyOrder.length).toBeGreaterThanOrEqual(1);
+      expect(plan.lastStepMatchesBest).toBe(true);
     });
 
-    it('Example 3: "Tight budget" example shows the budget prompt', () => {
-      const cow: HerdAnimal = {
-        key: 'a1',
-        label: { species: 'cow', n: 1 },
-        profile: {
-          species: 'cow',
-          breedId: 'sahiwal',
-          bodyWeightKg: 298,
-          milkYieldLitersPerDay: 10,
-          milkFatPct: 4.93,
-        },
-        weightSource: 'typed',
-        fatSource: 'typed',
-        isConfirmed: true,
-      };
+    it('Example 3: "Tight budget" (tight_budget) shows "Add ₹X/day to reach Y L" budget prompt', () => {
+      const ex = HERD_EXAMPLE_TIGHT_BUDGET;
+      expect(ex.id).toBe('tight_budget');
 
-      const plan = planHerd([cow], [], 80, LIVE_FEEDS, BREEDS, month);
-
+      const plan = planHerd(ex.animals, ex.homeFeeds, ex.budget, LIVE_FEEDS, BREEDS, month);
       expect(plan.status).toBe('optimal');
       if (plan.status !== 'optimal') return;
 
+      expect(plan.best.budgetTight).toBe(true);
       expect(plan.budgetPrompt).not.toBeNull();
-      expect(plan.budgetPrompt?.extraInrPerDay).toBeGreaterThan(0);
+      const prompt = plan.budgetPrompt!;
+      expect(prompt.extraInrPerDay).toBeGreaterThan(0);
+      expect(prompt.targetMilkL).toBeGreaterThan(0);
+
+      // Exact prompt arithmetic per AC-C4-2.8
+      expect(prompt.extraInrPerDay).toBe(roundUpInrWhole(prompt.costAtTargetInrPerDay - ex.budget));
+      const expectedTargetMilkL = Math.round(prompt.perAnimalTargetL.reduce((sum, a) => sum + a.targetL, 0) * 10) / 10;
+      expect(prompt.targetMilkL).toBe(expectedTargetMilkL);
+      expect(plan.lastStepMatchesBest).toBe(true);
+    });
+
+    it('exports all 3 herd examples via HERD_EXAMPLES record', () => {
+      expect(Object.keys(HERD_EXAMPLES)).toEqual(['cow_buffalo', 'straw_only', 'tight_budget']);
+      expect(HERD_EXAMPLES.cow_buffalo).toBe(HERD_EXAMPLE_COW_BUFFALO);
+      expect(HERD_EXAMPLES.straw_only).toBe(HERD_EXAMPLE_STRAW_ONLY);
+      expect(HERD_EXAMPLES.tight_budget).toBe(HERD_EXAMPLE_TIGHT_BUDGET);
     });
   });
 
@@ -376,6 +604,7 @@ describe('herdPlan (Change 4 pure herd plan engine)', () => {
   });
 
   it('nextAnimalLabel increments counters per species monotonically and never reuses removed numbers (SPEC AC-C4-2.1)', () => {
+    expect(MAX_ANIMALS).toBe(10);
     let counters = EMPTY_COUNTERS;
     const { label: cow1, counters: c1 } = nextAnimalLabel(counters, 'cow');
     expect(cow1).toEqual({ species: 'cow', n: 1 });
