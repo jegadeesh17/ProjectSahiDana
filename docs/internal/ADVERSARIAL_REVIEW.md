@@ -95,3 +95,36 @@ None.
 ### Recommendations (non-blocking):
 1. `src/components/BuyLadder.tsx:14`: `BuyLadderProps` retains an optional `ownedFeedIds?: string[];` property. Since `plan.ownedFeedIds` is now guaranteed on `RationPlan`, `BuyLadder` can directly rely on `plan.ownedFeedIds`.
 2. `src/domain/rationPlan.ts:62-82`: `buildCandidates` assumes `owned` contains unique feeds (which the UI enforces). For programmatic safety if `planRation` is invoked directly with duplicate owned feed IDs in future tests or scripts, deduplicating `owned` by `feedId` before candidate assembly would prevent duplicate rows in the solver input.
+
+## Change 4 (herd and 3-step flow), C4-M1 Review 1 (2026-10-16)
+
+Verdict: REJECTED
+Base commit: `2134ab6` (Head: `9a0c05b`)
+Test command: `npm test && npx playwright test tests/e2e/herd-flow.spec.ts && npm run build && npm run eval:scipy` (exit code 0)
+
+### Critical defects (must fix; any defect means REJECTED):
+1. `src/components/ShoppingList.tsx:57` and `src/domain/summary.ts:112`: Later shopping steps in "What to buy" display "→ same milk" (`c4_shop_same` / "→ उतना ही दूध") for a dry-only herd instead of having no milk part. Violates SPEC AC-C4-1.14 and AC-C4-1.24. Fix: check `isDryHerd` and omit the milk gain element completely on UI and in summary.
+2. `src/components/AuditDrawer.tsx:33-36` and `src/lib/hashRoute.ts:114-133`: Closing the audit drawer via the on-screen "Close" button, Escape key, or backdrop overlay fails to pop the history entry created on drawer open. Violates ARCHITECTURE.md line 1317 and SPEC AC-C4-1.22/AC-C4-R5. Fix: call `window.history.back()` when closing via non-popstate triggers.
+
+### Recommendations (non-blocking):
+- `src/services/planHerdPrototypeMock.ts`: Prototype mock fixture `src/data/herdPrototype.json` is no longer used by runtime code; prune once confirmed.
+- `src/App.tsx:568-574`: Legacy toggle will be fully retired upon C4 completion.
+- Localized date formatting for `feed.priceDate` in `auditShoppingCost`.
+
+## Change 4 (herd and 3-step flow), C4-M1 Review 2 (2026-10-16)
+
+Verdict: APPROVED
+Base commit: `2134ab6` (Head: `cfcdf8e`)
+Test command: `npm test && npx playwright test tests/e2e/herd-flow.spec.ts && npm run build && npm run eval:scipy` (exit code 0, 405 unit tests, 8 Playwright E2E tests)
+
+### Summary of Review:
+- **Fix Verification for Defect 1 (Dry herd shopping milk gain omission):** `cfcdf8e` introduced `isDryHerd` gating in both `ShoppingList.tsx` and `domain/summary.ts`. In `ShoppingList.tsx:45`, the `c4-shop-gain` element is omitted entirely for dry herds (`{gain && !isDryHerd && ...}`). In `domain/summary.ts:111-120`, plain text summary generation for dry herds appends only the feed line base without the milk gain suffix. Verified by explicit unit tests in `tests/unit/herdUi.test.tsx` and `tests/unit/domainFormat.test.ts` (AC-C4-1.14, AC-C4-1.24).
+- **Fix Verification for Defect 2 (Audit drawer history cleanup on non-popstate close):** `cfcdf8e` refactored `useAuditDrawerHistory` in `src/lib/hashRoute.ts`. When the drawer opens, `pushState` is recorded. If dismissed via non-popstate triggers (Close button, Escape key, backdrop click), the cleanup effect calls `window.history.back()` to drop the pushed history entry. If closed via browser `popstate` (hardware Back), `poppedByHistory` prevents redundant back calls. Verified by unit tests in `tests/unit/hashRoute.test.ts` and E2E in `tests/e2e/herd-flow.spec.ts` (AC-C4-1.22, AC-C4-R5, ARCHITECTURE line 1317).
+- **Full Test Suite & Parity:** All 405 unit tests passed, all 8 Playwright E2E tests passed, `npm run build` passed with zero errors, SciPy 23 tests passed.
+
+### Critical defects:
+None.
+
+### Recommendations (non-blocking):
+- `src/domain/herdPlan.ts`: Consider exporting a reusable helper `export function isDryHerd(plan: HerdPlan): boolean` in `herdPlan.ts` to share between `HerdPlan.tsx` and `domain/summary.ts` ahead of C4-M2.
+- `src/lib/hashRoute.ts:136`: Guard `window.history.state?.drawerOpen` before calling `window.history.back()` for extra defense against external unmounts.

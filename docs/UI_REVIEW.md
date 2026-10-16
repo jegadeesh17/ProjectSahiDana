@@ -138,3 +138,42 @@ None.
 3. **Responsive Reflow:** Zero horizontal overflow across all states at 1440px desktop, 1280px desktop, and 390px/375px mobile viewports. Side-by-side milk tiles align with 40px numbers.
 4. **C3-M2 Feature States:** Feeds section collapsed & optional (AC-C3-2.2); Calculate ration enabled with 0 feeds (AC-C3-2.1); "You have" and "Buy" tags verified (AC-C3-2.6); BuyLadder renders Rung 0 states and Rungs 1..n with non-decreasing milk (AC-C3-2.7, 2.8, 2.9); Not needed line verified (AC-C3-2.11); BudgetIncreasePrompt verified (AC-C3-2.12); Shortfall raise-by alert verified (AC-C3-2.14); Three demos verified (AC-C3-2.15).
 5. **Language & Digits:** Strict one-language isolation in English and Hindi with 0 script leakage. All numerals use Western Arabic digits `0`–`9` across all states.
+
+## Change 4 (herd and 3-step flow), C4-M1 UI Review 1 (2026-10-16)
+
+Verdict: APPROVED
+Screenshots:
+- `.ui-review/C4-M1/screen1-animals-empty-desktop.png`
+- `.ui-review/C4-M1/screen1-animals-empty-mobile.png`
+- `.ui-review/C4-M1/screen1-animals-filled-desktop.png`
+- `.ui-review/C4-M1/screen1-animals-filled-mobile.png`
+- `.ui-review/C4-M1/screen2-feeds-desktop.png`
+- `.ui-review/C4-M1/screen2-feeds-mobile.png`
+- `.ui-review/C4-M1/screen3-result-desktop.png`
+- `.ui-review/C4-M1/screen3-result-mobile.png`
+- `.ui-review/C4-M1/screen3-result-mobile-375.png`
+- `.ui-review/C4-M1/screen3-result-details-desktop.png`
+- `.ui-review/C4-M1/screen3-result-details-mobile.png`
+- `.ui-review/C4-M1/screen3-audit-drawer-desktop.png`
+- `.ui-review/C4-M1/screen3-audit-drawer-mobile.png`
+- `.ui-review/C4-M1/screen3-result-hindi-desktop.png`
+- `.ui-review/C4-M1/screen3-result-hindi-mobile.png`
+
+### Verification Summary
+- **Test command:** `cmd.exe /c "npm test && npx playwright test tests/e2e/herd-flow.spec.ts"` exited with code 0 (22 unit test files / 405 tests passed, all 8 Playwright E2E tests passed).
+- **Design Tokens & Fidelity:** Strict compliance with DESIGN.md color ramp (`--c-ground`, `--c-surface`, `--c-accent`, `--c-accent-ink`, `--c-accent-tint`, etc.). Grep pattern scan found zero hardcoded hex/rgb outside `src/index.css`.
+- **Refuse List Scan:** Exit code 1 / zero hits for gradients, frosted glass, backdrop blur, emoji icons, placeholder copy, invented metrics, or removed focus outlines.
+- **Motion:** Transitions and animations respect `prefers-reduced-motion` in `src/index.css`.
+- **WCAG 2.2 AA Contrast:** All text and control borders meet or exceed standards (body text 14.8:1, secondary text 6.0:1 on surface and 5.6:1 on ground, accent buttons 5.0:1, controls 3.3:1).
+- **Touch Targets:** Verified >= 44x44 px for all buttons, chips, links, and interactive figures (e.g., primary buttons 56px, secondary 48px, interactive figures 44px hit area with `.fig`).
+- **Mobile Viewport & Symmetry (AC-C4-1.18):** Verified at 390px and 375px; sections "What to buy" and "Not needed today" share `.c4-card` with identical padding, verified both visually and via Playwright test #7.
+- **Language Isolation & Numerals:** Strict one-language isolation in English and Hindi toggle states. Latin digits (`0-9`) used consistently in both languages with standard units (`kg`, `g`, `L`, `₹`, `%`) per AC-C4-R10 and DESIGN.md.
+- **Audit Drawer:** Bottom sheet with grab handle, value at 40px, proper provenance rows (`cited_source`, `solver_output`, `user_input`), accessible focus management (focus moves to Close on open, returns to figure on close), and history push/pop support.
+
+### Critical defects (must fix; any defect means REJECTED)
+None.
+
+### Recommendations (non-blocking)
+- `src/components/HerdPlan.tsx`: In the season line, the figure button `<Fig inline>` applies `--s-1` (4px) horizontal padding, which slightly separates the date from enclosing parentheses `( 16 October )`. Removing the outer whitespace inside the string or adjusting the inline fig margin would yield tighter typographical parentheses without reducing target height.
+- `src/components/AnimalPlanCard.tsx`: On desktop (1440px), the expanded "Details (for paravet)" nutrient bars look clean, but adding a slight background tint or card separator to the expanded accordion container could further visually distinguish paravet technical data from the farmer's primary plan view.
+- Desktop multi-column anticipation: Currently the 3-screen flow is centered single-column (max 640px). When C4-M2 introduces multiple herd animals, consider whether multi-animal cards could sit side-by-side on wide viewports to minimize page scrolling.
