@@ -128,6 +128,56 @@ export const stringsC4 = {
   },
   c4_audit_row_low: { hi: 'सीमा का निचला सिरा', en: 'Low end of the range' },
   c4_audit_row_high: { hi: 'सीमा का ऊपरी सिरा', en: 'High end of the range' },
+
+  // ---- C4 season line & real solver audit metadata -------------------------------------------
+  c4_season_line: {
+    hi: 'ख़रीदने का चारा आज ({date}) मौसम में मिलने वाले चारे से चुना गया है',
+    en: 'Feeds to buy are chosen from what is in season today ({date})',
+  },
+  c4_audit_season_set: { hi: 'मौसम: आज उपलब्ध चारा', en: 'Season: feeds in season today' },
+  c4_audit_rule_season: {
+    hi: 'प्रमाणित क़ीमत वाले फ़ीड जो इस महीने उपलब्ध हैं',
+    en: 'library feeds with a cited price that are available in this month',
+  },
+  c4_audit_row_date: {
+    hi: 'हिसाब लगाते समय इस फ़ोन की तारीख़',
+    en: 'Date on this phone when you tapped Calculate',
+  },
+  c4_audit_row_month: { hi: 'इस्तेमाल हुआ महीना', en: 'Month used' },
+  c4_audit_row_in_season_count: { hi: 'उपलब्ध चारे की संख्या (|C(m)|)', en: 'Feeds in season (|C(m)|)' },
+  c4_audit_row_in_season: { hi: 'सीज़न में उपलब्ध चारे', en: 'Feeds in season' },
+  c4_audit_row_excluded: {
+    hi: 'सीज़न से बाहर फ़ीड (शामिल नहीं)',
+    en: 'Priced library feeds excluded as out of season',
+  },
+  c4_audit_note_home_season: {
+    hi: 'घर का चारा किसी भी महीने इस्तेमाल हो सकता है (ADR-0019)',
+    en: 'home feeds are used in any month (ADR-0019)',
+  },
+  c4_audit_note_wrong_date: {
+    hi: 'फ़ोन की ग़लत तारीख़ से ग़लत मौसम चुना जाएगा (ADR-0016)',
+    en: 'a wrong phone date gives the wrong season (ADR-0016 consequence)',
+  },
+  c4_audit_role_stage1: {
+    hi: 'चरण 1 (झुंड): हर दूध लक्ष्य का सबसे बड़ा समान हिस्सा',
+    en: 'Stage 1 (herd): largest equal share of every milk target',
+  },
+  c4_audit_role_stage2: { hi: 'चरण 2 (झुंड): दूध स्तर S पर राशन', en: 'Stage 2 at S (herd)' },
+  c4_audit_role_step_k: { hi: 'ख़रीद क्रम चरण {k}', en: 'Buying order step {k}' },
+  c4_audit_constraint_shop_kg: { hi: 'सभी गाय-भैंस की कुल ख़रीद', en: 'Total purchased for all animals' },
+  c4_audit_constraint_shop_cost: { hi: 'दैनिक ख़र्च = मात्रा × प्रमाणित भाव', en: 'Cost per day = amount × cited price' },
+  c4_audit_constraint_step_gain: { hi: 'अतिरिक्त दूध का हिसाब', en: 'Step milk increment' },
+  c4_audit_note_home_free: { hi: 'घर के चारे का ख़र्च ₹0 है', en: 'home feed costs ₹0' },
+  c4_audit_row_available: { hi: 'उपलब्ध महीने', en: 'Available' },
+  c4_audit_row_prev_milk: { hi: 'पहले चरण का कुल दूध', en: 'Total milk before this step' },
+  c4_audit_row_step_milk: { hi: 'इस चरण का कुल दूध', en: 'Total milk after this step' },
+  c4_audit_maintenance_title: { hi: 'झुंड रखरखाव लागत (0 L, बिना बजट)', en: 'Herd maintenance cost (0 L, no budget)' },
+  c4_audit_maintenance_role: { hi: 'झुंड रखरखाव', en: 'Herd maintenance' },
+  c4_audit_maintenance_constraint: { hi: 'रखरखाव आवश्यकताएँ', en: 'Maintenance requirements' },
+  c4_audit_cost_target_title: { hi: 'सभी दूध लक्ष्यों पर झुंड लागत', en: 'Herd cost at every milk target (no budget)' },
+  c4_audit_cost_target_role: { hi: 'दूध लक्ष्य लागत', en: 'Milk target cost' },
+  c4_audit_cost_target_constraint: { hi: 'नस्ल सीमा', en: 'Breed caps' },
+  c4_audit_row_rule: { hi: 'नियम', en: 'Rule' },
 } as const satisfies Record<string, BiText>;
 
 export type StringIdC4 = keyof typeof stringsC4;

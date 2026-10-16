@@ -182,8 +182,17 @@
     "exit_code": 0,
     "summary": "18 unit test files passed, 331 tests passed (including 17 tests in tests/unit/herdPlan.test.ts verifying buy order, C3 oracle alignment, non-decreasing marginal milk ΔL_k >= 0, lastStepMatchesBest, Nothing to buy, notNeeded home feeds in row order, budgetPrompt bounds and suppression, below_maintenance shortfall, dry animal T=0 handling, and mock/live adapter integration)",
     "failure_output": ""
+  },
+  {
+    "task_id": "C4-M1-T3",
+    "attempt": 1,
+    "command": "npm test",
+    "exit_code": 0,
+    "summary": "21 unit test files passed, 385 tests passed (including 23 tests in tests/unit/domainFormat.test.ts, 16 tests in tests/unit/breedPrefill.test.ts, and 15 tests in tests/unit/hashRoute.test.ts verifying farmer display units, mineral mix / common salt whole gram display, breed prefill and midpoint citations, plain-words summary text across optimal/dry/below-maintenance states, hash routing #/animals, #/feeds, #/result and audit drawer history Back behavior)",
+    "failure_output": ""
   }
 ]
+
 
 
 
