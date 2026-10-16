@@ -87,7 +87,13 @@ export function HerdPlanView({ plan, library, breeds, onRemoveAnimal }: Props) {
     <>
       {seasonLine}
 
-      <ShoppingList shopping={plan.shopping} budgetInrPerDay={plan.budgetInrPerDay} byId={byId} labels={labels} />
+      <ShoppingList
+        shopping={plan.shopping}
+        budgetInrPerDay={plan.budgetInrPerDay}
+        byId={byId}
+        labels={labels}
+        isDryHerd={plan.perAnimal.length > 0 && plan.perAnimal.every((a) => a.milkTargetLPerDay === 0)}
+      />
 
       <section className="c4-cards" aria-labelledby="c4-cards-h" data-c4="cards">
         <h2 id="c4-cards-h" className="c4-section-title c4-section-title-plain">

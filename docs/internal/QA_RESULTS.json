@@ -198,8 +198,17 @@
     "exit_code": 0,
     "summary": "22 unit test files passed (403 tests, including 18 tests in tests/unit/herdUi.test.tsx covering screen 1 gating and disabled Next, add card/list with MAX_ANIMALS=1 limit, screen 2 home feeds with no price/season/month, section order, display units, plain words scan, and number tap audits) and 7 Playwright E2E tests passed in tests/e2e/herd-flow.spec.ts (Journey C4-A end to end, phone Back/Forward navigation, drawer closed by Back, offline execution, three deterministic examples, 375px padding parity, and 44x44px touch targets)",
     "failure_output": ""
+  },
+  {
+    "task_id": "C4-M1-FIX-1",
+    "attempt": 1,
+    "command": "cmd.exe /c \"npm test && npx playwright test tests/e2e/herd-flow.spec.ts\"",
+    "exit_code": 0,
+    "summary": "22 unit test files passed (405 tests, including dry herd shopping list milk omission per AC-C4-1.14/AC-C4-1.24 in tests/unit/herdUi.test.tsx and tests/unit/domainFormat.test.ts, and audit drawer history cleanup on non-popstate close per AC-C4-1.22/AC-C4-R5/ARCHITECTURE line 1317 in tests/unit/hashRoute.test.ts) and 8 Playwright E2E tests passed in tests/e2e/herd-flow.spec.ts (including single page.goBack() navigation to #/feeds after closing audit drawer with Close button)",
+    "failure_output": ""
   }
 ]
+
 
 
 

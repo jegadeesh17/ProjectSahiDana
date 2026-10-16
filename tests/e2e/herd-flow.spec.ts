@@ -168,6 +168,34 @@ test.describe('Herd Flow (Change 4 Milestone 1: 3-screen flow for 1 animal)', ()
     await expect(page.locator('[data-c4="shopping"]')).toBeVisible();
   });
 
+  test('Closing audit drawer with Close button allows single page.goBack() to navigate to #/feeds (AC-C4-1.22, AC-C4-R5, ARCHITECTURE line 1317)', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    await page.locator('[data-example="cow_buffalo"]').click();
+    await page.getByRole('button', { name: 'Next' }).click();
+    await expect(page).toHaveURL(/#\/feeds/);
+    await page.getByRole('button', { name: 'Calculate ration' }).click();
+    await expect(page).toHaveURL(/#\/result/);
+
+    // Tap season line figure to open drawer
+    const seasonFig = page.locator('[data-c4="season-line"] .fig');
+    await seasonFig.click();
+
+    const drawer = page.locator('[data-audit-id="season-set"]');
+    await expect(drawer).toBeVisible();
+
+    // Close audit drawer using the Close button
+    const closeBtn = drawer.getByRole('button', { name: 'Close' });
+    await closeBtn.click();
+    await expect(page.locator('[data-audit-id]')).toHaveCount(0);
+    await expect(page).toHaveURL(/#\/result/);
+
+    // Single page.goBack() must navigate directly back to #/feeds
+    await page.goBack();
+    await expect(page).toHaveURL(/#\/feeds/);
+  });
+
   test('Works offline without network connection (AC-C4-1.34)', async ({ page, context }) => {
     await page.goto('/');
     await context.setOffline(true);

@@ -275,7 +275,7 @@ describe('domain/format (Change 4 display rounding rules)', () => {
   });
 
   describe('buildHerdSummary branch coverage (dry animal, below maintenance, infeasible, empty shopping)', () => {
-    it('formats summary for a dry animal with dry animal phrasing', () => {
+    it('formats summary for a dry animal with dry animal phrasing and omits milk gain suffix (AC-C4-1.14)', () => {
       const dryCow: HerdAnimal = {
         key: 'd1',
         label: { species: 'cow', n: 1 },
@@ -292,11 +292,39 @@ describe('domain/format (Change 4 display rounding rules)', () => {
       };
       const dryPlan = planHerd([dryCow], [], 100, LIVE_FEEDS, BREEDS, 10);
       expect(dryPlan.status).toBe('optimal');
+      if (dryPlan.status !== 'optimal') throw new Error('dryPlan must be optimal');
       const textEn = buildHerdSummary(dryPlan, LIVE_FEEDS, 'en');
       expect(textEn).toContain('keeps her healthy (dry)');
+      expect(textEn).not.toContain('→ same milk');
 
       const textHi = buildHerdSummary(dryPlan, LIVE_FEEDS, 'hi');
       expect(textHi).toContain('सूखी गाय/भैंस का गुज़ारा');
+      expect(textHi).not.toContain('→ उतना ही दूध');
+
+      // Even if shopping list has later steps, dry herd omits gain suffix entirely
+      const planWithLater = {
+        ...dryPlan,
+        shopping: {
+          ...dryPlan.shopping,
+          later: [
+            {
+              line: { feedId: 'mustard_cake', kgPerDay: 1.0, costInrPerDay: 30, priceInrPerKg: 30, perAnimalKg: [{ key: 'd1', kg: 1.0 }] },
+              deltaMilkExactL: 0,
+              deltaMilkL: 0,
+              step: { k: 2, prefixFeedIds: ['wheat_straw', 'mustard_cake'], addedFeedIds: ['mustard_cake'], shareT: 0, totalMilkL: 0, purchaseCostInrPerDay: 50 },
+              previous: { k: 1, prefixFeedIds: ['wheat_straw'], addedFeedIds: ['wheat_straw'], shareT: 0, totalMilkL: 0, purchaseCostInrPerDay: 20 },
+            },
+          ],
+        },
+      };
+
+      const laterTextEn = buildHerdSummary(planWithLater, LIVE_FEEDS, 'en');
+      expect(laterTextEn).toContain('Mustard cake');
+      expect(laterTextEn).not.toContain('→ same milk');
+
+      const laterTextHi = buildHerdSummary(planWithLater, LIVE_FEEDS, 'hi');
+      expect(laterTextHi).toContain('सरसों खली');
+      expect(laterTextHi).not.toContain('→ उतना ही दूध');
     });
 
     it('formats summary for below_maintenance shortfall', () => {

@@ -180,5 +180,41 @@ describe('hashRoute (Change 4 hash navigation, guards and drawer history)', () =
       expect(stepResult.current[0]).toBe('animals');
       expect(window.location.hash).toBe('#/animals');
     });
+
+    it('drops pushed history entry via history.back() when drawer closes without popstate (AC-C4-R5, ARCHITECTURE line 1317)', () => {
+      const backSpy = vi.spyOn(window.history, 'back');
+      const onClose = vi.fn();
+      const { rerender, unmount } = renderHook(
+        ({ isOpen }) => useAuditDrawerHistory(isOpen, onClose),
+        { initialProps: { isOpen: false } },
+      );
+
+      // Open drawer -> pushes history entry
+      act(() => {
+        rerender({ isOpen: true });
+      });
+      expect(backSpy).not.toHaveBeenCalled();
+
+      // Close without popstate (via close button, Escape, or backdrop)
+      act(() => {
+        rerender({ isOpen: false });
+      });
+
+      // Calls history.back() to drop the pushed history entry
+      expect(backSpy).toHaveBeenCalledTimes(1);
+
+      // Re-opening and unmounting also drops the entry
+      act(() => {
+        rerender({ isOpen: true });
+      });
+      expect(backSpy).toHaveBeenCalledTimes(1);
+
+      act(() => {
+        unmount();
+      });
+      expect(backSpy).toHaveBeenCalledTimes(2);
+
+      backSpy.mockRestore();
+    });
   });
 });

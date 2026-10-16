@@ -315,6 +315,59 @@ describe('herdUi (Change 4 Milestone 1 UI and 3-screen flow)', () => {
       expect(container.textContent).not.toContain('enough for about');
     });
 
+    it('omits gain/milk element from later shop rows for a dry herd (AC-C4-1.14)', () => {
+      const dryCow: HerdAnimal = {
+        key: 'a1',
+        label: { species: 'cow', n: 1 },
+        profile: {
+          species: 'cow',
+          breedId: 'hariana',
+          bodyWeightKg: 350,
+          milkYieldLitersPerDay: 0,
+          milkFatPct: 0,
+        },
+        weightSource: 'typed',
+        fatSource: 'typed',
+        isConfirmed: true,
+      };
+      const dryPlan = planHerd([dryCow], [], 100, DEFAULT_FEED_LIBRARY as FeedItem[], BREEDS, 10, '2026-10-16');
+      if (dryPlan.status !== 'optimal') throw new Error('dryPlan must be optimal');
+
+      const dryPlanWithLater = {
+        ...dryPlan,
+        shopping: {
+          ...dryPlan.shopping,
+          later: [
+            {
+              line: { feedId: 'mustard_cake', kgPerDay: 1.0, costInrPerDay: 30, priceInrPerKg: 30, perAnimalKg: [{ key: 'a1', kg: 1.0 }] },
+              deltaMilkExactL: 0,
+              deltaMilkL: 0,
+              step: { k: 2, prefixFeedIds: ['wheat_straw', 'mustard_cake'], addedFeedIds: ['mustard_cake'], shareT: 0, totalMilkL: 0, purchaseCostInrPerDay: 50 },
+              previous: { k: 1, prefixFeedIds: ['wheat_straw'], addedFeedIds: ['wheat_straw'], shareT: 0, totalMilkL: 0, purchaseCostInrPerDay: 20 },
+            },
+          ],
+        },
+      };
+
+      const { container } = render(
+        <LanguageProvider>
+          <AuditProvider>
+            <HerdPlanView plan={dryPlanWithLater} library={DEFAULT_FEED_LIBRARY as FeedItem[]} breeds={BREEDS} onRemoveAnimal={() => {}} />
+          </AuditProvider>
+        </LanguageProvider>,
+      );
+
+      const laterGroup = container.querySelector('[data-group="later"]');
+      expect(laterGroup).toBeTruthy();
+      const laterRow = laterGroup?.querySelector('.c4-shop-row');
+      expect(laterRow).toBeTruthy();
+
+      // c4-shop-gain span must be omitted when isDryHerd is true
+      expect(laterGroup?.querySelector('.c4-shop-gain')).toBeNull();
+      expect(laterRow?.textContent).not.toContain('same milk');
+      expect(laterRow?.textContent).not.toContain('उतना ही दूध');
+    });
+
     it('enforces farmer display units on main view (AC-C4-1.19)', () => {
       const plan = planHerd([cow], [{ feedId: 'wheat_straw', kgPerDay: 5 }], 150, DEFAULT_FEED_LIBRARY as FeedItem[], BREEDS, 10, '2026-10-16');
       const { container } = render(

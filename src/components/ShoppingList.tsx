@@ -13,6 +13,7 @@ interface Props {
   budgetInrPerDay: number;
   byId: Map<string, FeedItem>;
   labels: Map<string, AnimalLabel>;
+  isDryHerd?: boolean;
 }
 
 interface RowProps {
@@ -21,9 +22,10 @@ interface RowProps {
   labels: Map<string, AnimalLabel>;
   /** "Then, if you can" lines show the cost in brackets and end with the milk it adds. */
   gain?: ShoppingListData['later'][number];
+  isDryHerd?: boolean;
 }
 
-function ShopRow({ line, byId, labels, gain }: RowProps) {
+function ShopRow({ line, byId, labels, gain, isDryHerd }: RowProps) {
   const feed = byId.get(line.feedId);
   if (!feed || !isShownAmount(line.kgPerDay)) return null;
   const amount = formatAmount(displayAmount(line.feedId, line.kgPerDay));
@@ -40,7 +42,7 @@ function ShopRow({ line, byId, labels, gain }: RowProps) {
       <Fig audit={auditShoppingCost(line, feed)} className="c4-shop-fig">
         {gain ? `(${cost})` : cost}
       </Fig>
-      {gain && (
+      {gain && !isDryHerd && (
         <span className="c4-shop-gain">
           {gain.deltaMilkL > 0 ? (
             <BiRich
@@ -63,7 +65,7 @@ function ShopRow({ line, byId, labels, gain }: RowProps) {
 }
 
 /** "What to buy": the Buy first group, the Then, if you can lines with the milk each adds, and the total against the budget. */
-export function ShoppingList({ shopping, budgetInrPerDay, byId, labels }: Props) {
+export function ShoppingList({ shopping, budgetInrPerDay, byId, labels, isDryHerd }: Props) {
   const empty = shopping.buyFirst.length === 0 && shopping.later.length === 0;
   const budgetText = formatInr(budgetInrPerDay, budgetInrPerDay % 1 === 0 ? 0 : 2);
   return (
@@ -96,7 +98,14 @@ export function ShoppingList({ shopping, budgetInrPerDay, byId, labels }: Props)
               </h3>
               <ul className="c4-shop-list">
                 {shopping.later.map((step) => (
-                  <ShopRow key={step.line.feedId} line={step.line} byId={byId} labels={labels} gain={step} />
+                  <ShopRow
+                    key={step.line.feedId}
+                    line={step.line}
+                    byId={byId}
+                    labels={labels}
+                    gain={step}
+                    isDryHerd={isDryHerd}
+                  />
                 ))}
               </ul>
             </div>

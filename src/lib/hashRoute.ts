@@ -112,22 +112,29 @@ export function useHashStep(
  * so the phone's Back button closes the drawer without changing the screen.
  */
 export function useAuditDrawerHistory(isOpen: boolean, onClose: () => void): void {
-  const isOpenRef = useRef(isOpen);
-  isOpenRef.current = isOpen;
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     if (!isOpen) return;
 
+    let pushed = false;
+    let poppedByHistory = false;
+
     window.history.pushState({ ...window.history.state, drawerOpen: true }, '', window.location.hash);
+    pushed = true;
 
     const onPop = () => {
-      if (isOpenRef.current) {
-        onClose();
-      }
+      poppedByHistory = true;
+      onCloseRef.current();
     };
     window.addEventListener('popstate', onPop);
+
     return () => {
       window.removeEventListener('popstate', onPop);
+      if (pushed && !poppedByHistory) {
+        window.history.back();
+      }
     };
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 }

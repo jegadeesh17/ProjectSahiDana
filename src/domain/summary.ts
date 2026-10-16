@@ -105,12 +105,18 @@ export function buildHerdSummary(
         }
       }
       if (shopping.later.length > 0) {
+        const isDryHerd = plan.perAnimal.length > 0 && plan.perAnimal.every((a) => a.milkTargetLPerDay === 0);
         lines.push(t('c4_shop_later')[lang]);
         for (const s of shopping.later) {
-          const gain = s.deltaMilkL > 0
-            ? t('c4_shop_gain', { l: formatNumber(s.deltaMilkL, 1) })[lang]
-            : t('c4_shop_same')[lang];
-          lines.push(`- ${name(s.line.feedId)} ${formatAmount(displayAmount(s.line.feedId, s.line.kgPerDay))} (${rupees(s.line.costInrPerDay)}) ${gain}`);
+          const base = `- ${name(s.line.feedId)} ${formatAmount(displayAmount(s.line.feedId, s.line.kgPerDay))} (${rupees(s.line.costInrPerDay)})`;
+          if (isDryHerd) {
+            lines.push(base);
+          } else {
+            const gain = s.deltaMilkL > 0
+              ? t('c4_shop_gain', { l: formatNumber(s.deltaMilkL, 1) })[lang]
+              : t('c4_shop_same')[lang];
+            lines.push(`${base} ${gain}`);
+          }
         }
       }
       lines.push(t('c4_shop_total', { a: rupees(shopping.totalInr), b: rupees(plan.budgetInrPerDay) })[lang]);
