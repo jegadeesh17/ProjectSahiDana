@@ -24,6 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Pure ration planning domain module `src/domain/rationPlan.ts` with `buildCandidates` and `planRation` algorithm (`C3-M2-T2`)
 - Solver `costAtCapInrPerDay` field with SciPy HiGHS LP agreement cross-check across all 18 benchmark animals (`C3-M2-T1`)
 - Three farmer-focused presets: Buffalo (Murrah 12 L), Straw-only (needs feeds to buy), and Tight budget (shows raise-by prompt) (`C3-M2-T3`)
+- Joint herd solver with single-animal equivalence across all 18 benchmark cases (`C4-M1-T1`)
+- Pure herd plan module and rationService integration with buy order ladder (`C4-M1-T2`)
+- Farmer display units, cited breed prefill, herd audits, plain text summary, and hash routing (`C4-M1-T3`)
+- Dedicated 3-screen herd flow UI (`#/animals`, `#/feeds`, `#/result`) and C4-M1 test suites (`C4-M1-T4`)
 
 ### Changed
 - Reordered form layout into farmer-first sequence: description extractor, cow or buffalo card, daily feed budget, optional own feeds, and prominent "Calculate ration" action (`C3-M1-T1`)
@@ -31,7 +35,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Redesigned milk results into side-by-side comparison tiles ("Today" and "This ration supports") with benchmark line and tap-to-audit figures (`C3-M1-T3`)
 - Enabled ration calculation with zero feeds selected, treating own feeds as optional and sourcing needed feeds from library (`C3-M2-T3`)
 - Tagged ration feed rows explicitly as "You have" vs "Buy" in results table (`C3-M2-T3`)
+- Defaulted application view to 3-screen herd flow with single animal limit and today's season line (`C4-M1-T4`)
 
 ### Fixed
 - Scoped Rung 0 audit drawer feeds strictly to owned feeds when own feeds balance alone (`C3-M2-FIX-1`)
+- Omitted milk increment suffix on shopping rows for dry herds (`AC-C4-1.14`, `AC-C4-1.24`)
+- Cleaned up audit drawer history entry on non-popstate close to prevent trapping phone Back button (`AC-C4-1.22`, `AC-C4-R5`)
+
 
