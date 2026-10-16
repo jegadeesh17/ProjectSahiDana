@@ -166,8 +166,17 @@
     "exit_code": 0,
     "summary": "npm test: 16 unit test files passed, 276 tests passed (including 50 tests in tests/unit/resultUi.test.tsx with Rung 0 audit drawer verifying only owned feeds and zero library candidates). npx playwright test: 30 passed in 54.6s.",
     "failure_output": ""
+  },
+  {
+    "task_id": "C4-M1-T1",
+    "attempt": 1,
+    "command": "npm test",
+    "exit_code": 0,
+    "summary": "17 unit test files passed, 314 tests passed (including 38 tests in tests/unit/herdSolver.test.ts verifying exact solveRation equivalence on all 18 benchmark animals, home feed bounds, Stage 3 tie-break, numerical verification with verifyHerdSolution, and multi-animal joint LP)",
+    "failure_output": ""
   }
 ]
+
 
 
 

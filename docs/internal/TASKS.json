@@ -375,7 +375,7 @@
             "src/domain/solver.ts"
           ],
           "acceptance_criteria": "SPEC AC-C4-1.11, AC-C4-1.12, AC-C4-R1; ARCHITECTURE 'C4 tests': npx vitest run tests/unit/herdSolver.test.ts passes with zero errors, confirming exact equivalence with solveRation on all 18 benchmark animals, home feed usage bounded by stock, and Stage 3 tie-break minimizing home feed.",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "C4-M1-T2",
