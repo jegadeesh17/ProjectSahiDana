@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-Key technical, hosting, solver, AI integration, data and language decisions for SahiDana, referenced by [ARCHITECTURE.md](ARCHITECTURE.md) and [SPEC.md](SPEC.md). Last updated: 2026-10-15 (ADR-0019 and ADR-0020 added for Change 4, herd and 3-step flow, with the status of ADR-0010, ADR-0011, ADR-0012 and ADR-0014 updated; ADR-0010 to ADR-0018 added for Change 3 and its UI primitives; ADR-0001 to ADR-0009 unchanged since the freeze on 2026-10-12).
+Key technical, hosting, solver, AI integration, data and language decisions for SahiDana, referenced by [ARCHITECTURE.md](ARCHITECTURE.md) and [SPEC.md](SPEC.md). Last updated: 2026-10-15 (ADR-0021 added for the Change 4 Round 6 amendment and amended at the Change 4 freeze: the month comes from today's date, the herd explanation is never cut, and unitless number matching is accepted; ADR-0016 unchanged; ADR-0019 and ADR-0020 added for Change 4, herd and 3-step flow, with the status of ADR-0010, ADR-0011, ADR-0012 and ADR-0014 updated; ADR-0010 to ADR-0018 added for Change 3 and its UI primitives; ADR-0001 to ADR-0009 unchanged since the freeze on 2026-10-12).
 
 | ID | Title | Status | Date |
 |---|---|---|---|
@@ -24,6 +24,7 @@ Key technical, hosting, solver, AI integration, data and language decisions for 
 | [ADR-0018](#adr-0018-ui-primitives-vaul-radix-shadcn-style-components-lucide) | UI Primitives: vaul, Radix, shadcn-Style Components, lucide | Accepted | 2026-10-15 |
 | [ADR-0019](#adr-0019-home-feed-at-0-capped-by-the-herds-daily-amount-with-a-separate-buy-option) | Home Feed at ₹0, Capped by the Herd's Daily Amount, with a Separate Buy Option | Accepted | 2026-10-15 |
 | [ADR-0020](#adr-0020-joint-herd-lp-with-a-fair-share-of-each-milk-target) | Joint Herd LP with a Fair Share of Each Milk Target | Accepted | 2026-10-15 |
+| [ADR-0021](#adr-0021-herd-ai-layers-and-visible-season) | Herd AI Layers and Visible Season | Accepted | 2026-10-15 |
 
 ---
 
@@ -741,4 +742,89 @@ The existing single-animal calculation (`solveRation`, [ADR-0007](#adr-0007-two-
   - The per-animal rows are written again in `herdSolver.ts`, and drift from `solver.ts` is caught only by the equivalence tests.
   - Because Stage 1 uses "at least `t` times the target", the Stage 2 calculation at the rounded milk can in rare cases need a retry. Tests assert it never does on the benchmark cases.
 - **Known limitation (accepted 2026-10-15):** one animal can hold the whole herd back. If one animal is stopped by its own intake, roughage or a nutrient limit, the shared share `t` stops there for every animal, even when budget is left over. This is accepted for now. Details and the audit of `t` name the limiting animal and its limit, so the paravet can see why.
+
+---
+
+## ADR-0021: Herd AI Layers and Visible Season
+
+Date: 2026-10-15
+Status: Accepted
+
+### Context
+
+The user reviewed the Change 4 prototype and asked for three things ([FEEDBACK.md](internal/FEEDBACK.md) Round 6):
+- the AI helpers at both ends of the 3-step flow: a description helper on screen 1 that can read several animals, and an explanation of the whole herd plan on screen 3;
+- the seasons made visible.
+
+The earlier Change 4 design kept the AI only for one animal. It left the description helper reading one animal through the existing `extract` action, which needs a body weight and fills a missing fat percentage with a fixed default. The season was used silently: the buy list holds only feeds in season in the device's month ([ADR-0016](#adr-0016-candidate-month-is-the-devices-current-month)), but screen 3 never said so.
+
+A first version of this ADR also let the paravet change the month. The user withdrew that on 2026-10-15, before the Change 4 architecture was frozen. In the same decision the user made the herd explanation a part that is never cut, and accepted the number check as it is. This record reflects those decisions.
+
+The founding rule still holds: the solver and cited tables own every number, and the AI only reads text in and writes text out.
+
+### Decision
+
+1. **A new, versioned request `extract_herd` for the description helper; `extract` is left unchanged.**
+   - The new request returns:
+     - a list of up to 10 animals (species, breed, milk, and an optional weight and fat);
+     - the farmer's home feeds with kg per day;
+     - the herd budget.
+   - Weight and fat are left empty when the text does not state them, so the cited breed figures fill them in. No default is ever invented.
+   - The server builds the answer only from a fixed list of allowed fields, so any price, nutrient or season figure the model returns is thrown away. It also cuts the list to 10 animals.
+   - Everything lands as an unconfirmed review list that the farmer must confirm.
+2. **Explain covers the whole herd plan.**
+   - The model receives only the plan's own figures (shopping list, each animal's ration, the share of target, the limit, the prompts) with English names.
+   - Every number it writes must match a figure in that plan, the inputs or a cited row, or the app shows a fixed, pre-checked template instead. There is one retry, then the template.
+   - The explanation stays in English in both language modes.
+   - Offline, or when the server has no key, the template is shown.
+   - Rate limits and timeouts are unchanged.
+   - The herd explanation is never cut for time. The template is the fallback, not a replacement.
+3. **The season is shown with today's date and cannot be changed.**
+   - The month is read from the phone's date when **Calculate ration** is tapped, exactly as ADR-0016 decides. It is not kept as a screen setting.
+   - Screen 3 says, for example, "Feeds to buy: in season today (15 October)".
+   - Tapping the date opens the audit, which shows:
+     - the date and month used;
+     - the in-season priced feeds and the excluded ones;
+     - that home feeds count in any month.
+   - There is no month control and no "try another month" hint. ADR-0016 is not superseded.
+4. **The number check stays unitless (accepted limitation).**
+   - The explanation check matches each number against the allowed numbers by value only, not by unit or meaning.
+   - The user declined unit-aware matching.
+5. **Placement.**
+   - **C4-M1:** the one-animal helper (with the new request), the one-animal Explain, and the season line with today's date.
+   - **C4-M2:** the helper opens to 10 animals, and the herd Explain is added.
+   - **If time runs short:** only the multi-animal helper is cut.
+
+### Alternatives considered
+
+- **Extend `extract` with an animals list (Rejected):**
+  - It would change a contract that the extraction eval and its tests measure.
+  - It would keep the forced weight and the uncited fat default, which clash with the breed figures.
+  - The server would have to guess which shape it was given.
+- **Let the model return nutrient or price figures for unknown feeds (Rejected):** These are uncited numbers. Unknown feeds go to the farmer to map or drop, as before.
+- **Template only for the herd, no AI explanation (Rejected by the user's feedback):** The template is kept only as the fallback.
+- **A "Change month" control on screen 3 (Rejected by the user, 2026-10-15):** The advice should match what is in season today. A control adds state, a recompute path and a way to give advice for the wrong season.
+- **Solve all 12 months automatically and suggest the best one (Rejected):** That is 11 more full herd calculations on a slow phone, for a choice the user does not want offered.
+- **A month field on screen 1 (Rejected):** It adds an input the farmer does not need.
+- **Unit-aware number matching (Rejected by the user, 2026-10-15):** It would tie each number to its unit (kg, L, ₹, %) before matching. It is more work and more brittle across the varied ways a model writes units.
+
+### Consequences
+
+- **Positive:**
+  - The AI now appears at both ends of the flow, as the user asked, without ever supplying a number.
+  - Seasons are visible and auditable, with the exact date used.
+  - Offline users always get a checked explanation.
+- **Negative:**
+  - It adds about 11–13 hours to C4-M1 and 13–15 hours to C4-M2 ([ARCHITECTURE.md](ARCHITECTURE.md) "Effort, risk and cut order"). If time runs short, only the multi-animal helper is cut.
+  - Planning for a future month is not possible, and a phone with a wrong date gives the wrong season.
+  - A second extraction prompt must be maintained.
+  - The live site needs the `OPENROUTER_API_KEY` set in Vercel before either AI layer works. Until then both fall back to the template or to manual entry.
+- **Known limitation (accepted by the user, 2026-10-15): unitless number matching.**
+  - **How the check works.** A number in the AI text passes if its value matches any allowed number, whatever unit is written next to it.
+  - **What can slip through.** The herd's set of allowed numbers is larger, and includes small whole numbers such as animal labels and counts. So a stray "3 kg" passes when the herd has 3 animals, and a kg figure could pass as a rupee figure.
+  - **What limits the risk:**
+    - only the plan's own figures are sent to the model;
+    - the tolerance is unchanged;
+    - tests inject untraced numbers and check they are caught;
+    - every figure on the screen itself still comes from the solver or a cited row.
 

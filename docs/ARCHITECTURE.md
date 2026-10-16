@@ -1215,7 +1215,12 @@ Plain-English list for Change 3. Each item is costly to change after C3-M2 becau
 
 ## Change 4: Herd and 3-step flow (2026-10-15)
 
-Status: DRAFT
+Status: FROZEN
+Frozen 2026-10-15 with user approval; AI layers deferred.
+
+**AI layers deferred (user decision, 2026-10-15, [FEEDBACK.md](internal/FEEDBACK.md) Round 6 item 5).** The active C4 flow has no description helper and no **Explain**. The AI design is kept unchanged in [Deferred: AI layers](#deferred-ai-layers) so it can return later through a change request.
+
+`api/llm.ts`, `src/components/FreeTextExtractor.tsx`, `src/components/ExplanationCard.tsx`, `src/domain/verifier.ts`, the adapters' `extractFromText`/`explainRation`, and their tests and eval stay in the repository **unchanged**. The C4 flow does not render or call them.
 
 This section is a **superseding addition** to the frozen architecture and to the Change 3 section above, for Change 4 ([SPEC.md](SPEC.md) "Change 4: Herd and 3-step flow", [ADR-0019](DECISIONS.md#adr-0019-home-feed-at-0-capped-by-the-herds-daily-amount-with-a-separate-buy-option) and [ADR-0020](DECISIONS.md#adr-0020-joint-herd-lp-with-a-fair-share-of-each-milk-target)). Earlier sections are not edited. Where this section differs from them, it applies from the milestone marked. Change type: Feature. Posture: Prototype. Branch `feat/herd-flow` from `2134ab6`. No new runtime or dev dependency, no new tool, account or environment variable.
 
@@ -1237,9 +1242,9 @@ New and changed parts only (additions to the [Components](#components) diagram):
 flowchart TD
     Hash["src/lib/hashRoute.ts: useHashStep (pushState + popstate)"]
     App["App.tsx: step, animals[], addDraft, editingKey, herdBudget, homeFeeds[], plan"]
-    S1["AnimalsScreen.tsx: FreeTextExtractor, AnimalList, AnimalProfileForm (card), BudgetField, Next, examples"]
+    S1["AnimalsScreen.tsx: AnimalList, AnimalProfileForm (card), BudgetField, Next, examples"]
     S2["HomeFeedsScreen.tsx: FeedSelector (home rows), Back, Calculate ration"]
-    S3["HerdPlan.tsx (HerdPlanView): ShoppingList, AnimalPlanCard[], Not needed, prompts, Copy / Explain"]
+    S3["HerdPlan.tsx (HerdPlanView): season line, ShoppingList, AnimalPlanCard[], Not needed, prompts, Copy"]
     Card["AnimalPlanCard.tsx: From home / Buy lines + RationDetails (paravet)"]
     Svc["rationService.planHerd (src/services/rationService.ts)"]
     Plan["planHerd (src/domain/herdPlan.ts, pure): buy set C, F, buy order, steps, prompts"]
@@ -1275,10 +1280,10 @@ flowchart TD
 | `src/domain/format.ts` | M1 | Pure display-rounding rules (numbers in, numbers out). Strings are still built only by `src/i18n/format.ts`, so the "only `src/i18n/format.ts` uses `Intl.NumberFormat`" scan still holds. |
 | `src/domain/auditHerd.ts` | M1 | `AuditMeta` builders for the new numbers (see [C4 audit metadata](#c4-audit-metadata)). Kept apart from `auditMilk.ts`, which already holds the C3 builders. |
 | `src/lib/hashRoute.ts` | M1 | `parseHash`, `hashFor` and the `useHashStep` hook. About 40 lines, no router dependency. |
-| `src/components/AnimalsScreen.tsx` | M1 | Screen 1 layout: title, "Describe your animal" helper, list, add card, budget, gating line, **Next**, "Try an example". |
+| `src/components/AnimalsScreen.tsx` | M1 | Screen 1 layout: title, list, add card, budget, gating line, **Next**, "Try an example". No description helper (deferred). |
 | `src/components/AnimalList.tsx` | M1 | Listed animals (label, breed, today's milk, **Edit**, **Remove**), the add card's **Add**/**Save**, and the 10-animal message. |
 | `src/components/HomeFeedsScreen.tsx` | M1 | Screen 2 layout: "Skip if you have nothing at home.", the home-feed picker, the invalid-row line, **Back**, **Calculate ration**. |
-| `src/components/HerdPlan.tsx` (exports `HerdPlanView`) | M1 | Screen 3 container: "What to buy", "What to give each animal", "Not needed today", both prompts, the infeasible alert, **Copy summary**, **Explain** (one animal only). |
+| `src/components/HerdPlan.tsx` (exports `HerdPlanView`) | M1 | Screen 3 container: "What to buy", "What to give each animal", "Not needed today", both prompts, the infeasible alert, **Copy summary**, the season line with today's date ([C4 visible season](#c4-visible-season-round-6-amendment)). No **Explain** (deferred). |
 | `src/components/ShoppingList.tsx` | M1 | "What to buy": "Buy first" group, "Then, if you can" lines with `ΔL_k`, the total line, "Nothing to buy today". |
 | `src/components/AnimalPlanCard.tsx` | M1 | One card per animal: lines tagged "From home"/"Buy" (two lines when one feed is both), milk `S_i` or "keeps her healthy (dry)", **Remove** (M2), and "Details (for paravet)". |
 | `src/components/RationDetails.tsx` | M1 | The `Details` function **moved** unchanged out of `RationResultsPanel.tsx` so each card reuses it. It gains rows for `g_i`, `t*` and the herd limit. |
@@ -1304,13 +1309,12 @@ flowchart TD
 | `src/domain/breeds.ts` | M1 | `breedPrefill(breed)` (below). |
 | `src/domain/presets.ts` | M1, M2 | Three one-animal examples (M1, AC-C4-1.25), replaced by three herd examples (M2, AC-C4-2.11). |
 | `src/domain/summary.ts` | M1 | `buildHerdSummary(plan, lang)` for **Copy summary**. `buildSummary` stays for the adapter tests. |
-| `src/services/rationService.ts` | M1 | `planHerd(animals, homeFeeds, budget)` added to `RationService`. `planRation` stays, because tests use it as the C3 oracle. |
+| `src/services/rationService.ts` | M1 | `planHerd(animals, homeFeeds, budget)` added to `RationService`; it reads `new Date()` and passes `currentMonth()` to the domain `planHerd` (ADR-0016). `planRation` stays, because tests use it as the C3 oracle. |
 | `src/App.tsx` | M1 | `Workspace` becomes the 3-screen state machine (see [C4 app state](#c4-app-state-and-screens)). |
 | `src/components/AnimalProfileForm.tsx` | M1 | Becomes the add/edit card body: species buttons, breed list ("Desi / don't know"), prefilled weight and fat with hint and tappable figure, today's milk. The `BreedBenchmark` moves to Details (OQ-C4-8). |
 | `src/components/FeedSelector.tsx` | M1 | Becomes the home-feed picker. Search and vertical grouping are kept. Price, cap, today-kg fields, season marks, the month selector and "Show details" are removed. A row is the feed name, "kg per day you can give (all animals)" and **Remove**. |
 | `src/components/BudgetField.tsx` | M1 | Plain herd budget field with the AC-C4-1.7 label. The "use today's cost" default is removed (AC-4.x superseded). |
 | `src/components/AuditDrawer.tsx` | M1 | Opening pushes a history entry with the same hash; `popstate` while open closes the drawer and keeps the screen (AC-C4-R5); closing by control or Escape calls `history.back()` to drop that entry. |
-| `src/components/FreeTextExtractor.tsx` | M1 | Unchanged UI; it is rendered inside the add card on screen 1. `App.tsx` routes its result (below). |
 | `src/i18n/strings.ts` | M1, M2 | Every new string id with `en` and `hi`; new Hindi listed in `HINDI_REVIEW` (OQ-C4-1). |
 | `src/i18n/format.ts` | M1 | `formatAmount(a: DisplayAmount)` and `formatInrWhole(v)`, built on the existing `Intl.NumberFormat('en-IN', latn)` helpers. |
 | `src/index.css` | M1 | Screen layouts and one shared section padding class used by "What to buy" and "Not needed today" (the AC-C4-1.17 padding fix). |
@@ -1319,7 +1323,15 @@ flowchart TD
 | `package.json` | M2 | `eval:scipy` becomes `python -m pytest -q eval/test_scipy_agreement.py eval/test_scipy_herd_agreement.py`. No other script changes. |
 | `tests/unit/oneLanguage.test.tsx`, `tests/unit/i18n.test.ts`, `tests/e2e/language.spec.ts`, `tests/e2e/ration-journey.spec.ts` | M1 | Rewritten for the C4 states and flow. Expected values come from real solver output only. |
 
-**Unchanged:** `src/services/liveAdapter.ts`, `src/services/mockAdapter.ts`, `api/llm.ts`, `src/domain/verifier.ts`, `src/domain/rationPlan.ts`, `eval/cross_check_solver.py`, `eval/test_scipy_agreement.py`, `eval/test_animals.json`. `RationResultsPanel.tsx`, `BuyLadder.tsx`, `BudgetIncreasePrompt.tsx` and `MonthSelector.tsx` are no longer rendered after C4-M1. They stay in the tree with their tests until the user approves deleting them (deleting files needs the user's yes).
+**Unchanged:**
+- **The AI files**, kept unchanged and unused by the C4 flow (see [Deferred: AI layers](#deferred-ai-layers)):
+  - `api/llm.ts`;
+  - `src/services/liveAdapter.ts` and `src/services/mockAdapter.ts` (their AI methods);
+  - `src/data/prototypeLexicon.json`;
+  - `src/domain/verifier.ts`;
+  - `src/components/FreeTextExtractor.tsx` and `src/components/ExplanationCard.tsx`;
+  - their tests and `eval/evaluate_extraction.py`.
+- **The single-animal path and its checks:** `src/domain/rationPlan.ts`, `eval/cross_check_solver.py`, `eval/test_scipy_agreement.py`, `eval/test_animals.json`. `RationResultsPanel.tsx`, `BuyLadder.tsx`, `BudgetIncreasePrompt.tsx`, `MonthSelector.tsx`, `FreeTextExtractor.tsx` and `ExplanationCard.tsx` are no longer rendered after C4-M1. They stay in the tree with their tests until the user approves deleting them (deleting files needs the user's yes).
 
 ### C4 data models
 
@@ -1329,7 +1341,7 @@ flowchart TD
 /** "Cow 2" is { species: 'cow', n: 2 }; rendered with <Bi id="label_cow_n" params={{ n }} /> so it switches language (AC-C4-E7). */
 export interface AnimalLabel { species: Species; n: number }
 
-/** Where a weight or fat value came from: typed by the user (or the description helper), the breed row, the midpoint of a cited range, or the dry-animal species default (OQ1, never shown). */
+/** Where a weight or fat value came from: typed by the user, the breed row, the midpoint of a cited range, or the dry-animal species default (OQ1, never shown). */
 export type InputSource = 'typed' | 'breed' | 'breed_midpoint' | 'species_default_dry';
 
 export type HerdAnimalProfile = Omit<AnimalProfile, 'budgetInrPerDay' | 'isConfirmed'>;
@@ -1342,7 +1354,7 @@ export interface HerdAnimal {
   profile: HerdAnimalProfile;
   weightSource: 'typed' | 'breed';
   fatSource: InputSource;
-  /** false while the values come from the description helper and the user has not tapped Add/Save (AC-2.3). */
+  /** Always true in the active flow (animals are added only by Add/Save). false is reserved for the deferred description helper (AC-2.3). */
   isConfirmed: boolean;
 }
 
@@ -1377,7 +1389,7 @@ export interface HerdAnimalSolution {
    *  tightConstraints / bindingConstraint / feedLimitIds = per-animal detection (see LP formulation);
    *  currentCostInr, savingsInr, savingsPct = null; sourceKey = 'SOLVER-HERD-LP-V1'. */
   solution: RationSolution;
-  /** computeRequirements at S_i, for Details and Explain. */
+  /** computeRequirements at S_i, for Details (and the deferred Explain). */
   requirementAtS: RequirementResult;
 }
 
@@ -1482,7 +1494,8 @@ interface HerdPlanBase {
   homeFeeds: HomeFeed[];
   budgetInrPerDay: number;
   buySet: SelectedFeedInput[];      // C, exactly as passed to solveHerd
-  month: number;                    // device month (ADR-0016)
+  month: number;                    // the month m used for C(m): currentMonth() read when Calculate ration is tapped (ADR-0016); not changeable
+  planDate: string;                 // ISO date (YYYY-MM-DD) of the device date at plan time; shown on the season line (ADR-0021)
 }
 
 export type HerdPlan =
@@ -1512,7 +1525,7 @@ export interface AnimalCardDraft {
   weight: string;
   milk: string;
   fat: string;
-  /** true once the user (or the description helper) has put a value in the field; a breed change then no longer overwrites it (AC-C4-1.5). */
+  /** true once the user has put a value in the field; a breed change then no longer overwrites it (AC-C4-1.5). */
   weightTyped: boolean;
   fatTyped: boolean;
 }
@@ -1622,7 +1635,7 @@ Objective of every fixed-milk run: minimise `P = Σ_i Σ_f∈C p_f b_i,f` (home 
 
 **`solveHerdStep`** (one prefix `k`, buy set `Bu_H[1..k]`, same home feeds, herd and budget): runs 1 (`M_H(k)` only, no alone checks), 2, 3, 4 and 6 (Stage 2 at `S` only, never Stage 3). It returns `'not_optimal'` when `M_H(k)` is infeasible or `Bd < M_H(k) − 1e-6`. That is the herd equivalent of `solveRation` returning a status other than `'optimal'`, so for one animal it matches the C3 ladder's step test.
 
-**`planHerd(animals, homeFeeds, Bd, library, breeds, month)`, in order:**
+**`planHerd(animals, homeFeeds, Bd, library, breeds, month, planDate)`, in order** (`planDate` is only recorded on the plan for the season line; it never enters the LP):
 1. `C = buildCandidates([], library, month)` (ADR-0010's library rule with no own feeds).
 2. `best = solveHerd(...)`. If the outcome is not `'optimal'`, return the shortfall plan (`X = roundUpInrWhole(M_H − Bd)`) or the infeasible plan.
 3. `Bu_H`: feeds of `best.buyTotals`, sorted with `MANDATORY_SUPPLEMENT_IDS` members first, then herd ₹/day ascending (difference `> 1e-9`), then `feedId` by code unit. This is the C3 comparator applied to herd totals.
@@ -1688,15 +1701,16 @@ const [editingKey, setEditingKey] = useState<string | null>(null);  // null = th
 const [herdBudget, setHerdBudget] = useState('');                   // text; validateBudget
 const [homeFeeds, setHomeFeeds] = useState<HomeFeedDraft[]>([]);
 const [plan, setPlan] = useState<HerdPlan | null>(null);
-// kept from C3: library, breeds, explain, prefill (PrefillState), text, extractorOpen, connection, llm, explainMode, toast
+// kept from C3: library, breeds, connection, toast
+// not used by the C4 flow (AI layers deferred): prefill, explain, text, extractorOpen, llm, explainMode
 ```
 
 **Rules:**
 - **Labels.** `nextAnimalLabel(counters, species)` returns `{ species, n: counters[species] + 1 }`, and the counter is stored. A removed animal's number is never reused (AC-C4-2.1, OQ-C4-3).
 - **Editing.** **Edit** sets `editingKey` and loads the card from the animal (the `*Typed` flags come from `weightSource`/`fatSource`). **Save** replaces the profile and keeps `key` and `label`. Species is fixed while editing (to change species, remove the animal and add a new one), so a label never names the wrong species.
 - **Card limits.** In C4-M1 the add card is hidden while one animal is listed (AC-C4-1.6). In C4-M2 it stays while fewer than 10 are listed; adding an 11th shows "You can add up to 10 animals" (AC-C4-E5). Both are controlled by one constant, `MAX_ANIMALS` (1 in M1, 10 in M2).
-- **Stale plans.** Every edit to `animals`, `herdBudget` or `homeFeeds` calls `clearPlan()` (sets `plan` to `null` and aborts Explain), the existing `clearResult` pattern. With nothing changed, `plan` survives Back and Forward (AC-C4-1.22).
-- **Calculate ration.** `planHerd` runs synchronously in a `setTimeout(0)` after a "Calculating…" state has painted. The result is stored in `plan`, then `go('result')`.
+- **Stale plans.** Every edit to `animals`, `herdBudget` or `homeFeeds` calls `clearPlan()` (sets `plan` to `null`), the existing `clearResult` pattern. With nothing changed, `plan` survives Back and Forward (AC-C4-1.22).
+- **Calculate ration.** `planHerd` runs synchronously in a `setTimeout(0)` after a "Calculating…" state has painted. The month is not UI state: `rationService.planHerd` reads `const now = new Date()` at that moment, passes `currentMonth()` (same instant) as `month` and records `planDate`. The result is stored in `plan`, then `go('result')`.
 
 **Hash navigation (`src/lib/hashRoute.ts`).**
 - `go(step)` calls `history.pushState(null, '', '#/' + step)` and sets state; `go(step, { replace: true })` uses `replaceState`.
@@ -1711,7 +1725,6 @@ const [plan, setPlan] = useState<HerdPlan | null>(null);
 
 **Screens:**
 - **`AnimalsScreen`** (`#/animals`):
-  - the collapsed "Describe your animal" helper (`FreeTextExtractor`), shown only while the card is open;
   - `AnimalList`;
   - the card (`AnimalProfileForm` with prefill hints: "typical for this breed — change if you know", plus "calculated from cited range" for a midpoint; each prefilled value is a `Fig` with `auditPrefillWeight`/`auditPrefillFat`; a typed value shows "your value");
   - `BudgetField` (herd label);
@@ -1724,26 +1737,21 @@ const [plan, setPlan] = useState<HerdPlan | null>(null);
   - `'optimal'`: `ShoppingList`, then "What to give each animal" (one `AnimalPlanCard` per animal in list order), then "Not needed today" (only when non-empty), then the budget prompt;
   - `'below_maintenance'`: only "Spend at least ₹`X` more a day";
   - `'infeasible'`: one `InfeasibilityAlert` per failing animal (an `InfeasibilityReport` built from that animal's entry), headed "`<label>`: `<limit>` limits it", with **Edit** (sets `editingKey`, then `go('animals')`), or the joint-conflict line. A suggested feed's add action adds a home row with blank kg and goes to `#/feeds`.
-  - **Copy summary** uses `buildHerdSummary`. **Explain** appears only when `animals.length === 1`, with context `{ animal: { ...profile, budgetInrPerDay: Bd, isConfirmed: true }, requirement: perAnimal[0].requirementAtS, solution: perAnimal[0].solution, feeds: library }`.
+  - **Copy summary** uses `buildHerdSummary`, which includes the season date. There is no **Explain** (deferred).
+  - **Season line** with today's date, tappable to its audit (all statuses), per [C4 visible season](#c4-visible-season-round-6-amendment).
 - **Main-view wording.** Components render main-view text only from new plain-word string ids. `RationDetails` and the drawer are the only places that use `label_stage1`, `bindingName` and similar (AC-C4-1.21).
 
-**How the description helper fills the add card** (AC-C4-1.23, AC-2.3, AC-E5.1). `onExtracted(response)` in `App.tsx`:
-1. sets `addDraft` to `{ species, breedId: response.breedId ?? '', weight: String(bodyWeightKg), milk: String(milk), fat: String(fat), weightTyped: true, fatTyped: true }`. The extracted values count as the user's own, so a later breed pick does not overwrite them;
-2. sets `herdBudget` to `String(response.budgetInrPerDay)` when it is not null;
-3. appends each `matchedFeeds` id not already listed as a home row `{ feedId, kg: '' }` (blank kg, so **Calculate ration** stays disabled until the farmer types amounts). The LLM's `maxKgAsFedPerDay` is ignored; no price exists any more;
-4. sets `prefill` (the existing `PrefillState`). The card shows the "unconfirmed" stamp; **Add** (or **Save**) confirms and stores the animal with `isConfirmed: true`; **Discard** resets the card, removes the rows the helper added and restores the budget text it replaced.
-
-The helper never supplies nutrients, prices or breed figures (AC-E5.1 is unchanged in `liveAdapter.ts`). It works on the card that is open, so in C4-M1 with one animal listed it fills the **Edit** card.
+**No description helper and no Explain** in the active flow. Their designs are kept in [Deferred: AI layers](#deferred-ai-layers). The earlier "fills the add card" helper design is withdrawn.
 
 ### C4 mock mode
 
-`VITE_USE_MOCK_ADAPTER=true` still swaps extraction and Explain to `mockAdapter`. `planHerd` always runs the real herd LP, on `getInitialFeeds()` and `getInitialBreeds()` (prototype fixtures in mock mode). There is no mock herd solver, so the prompts, steps and cards behave the same in both modes.
+`VITE_USE_MOCK_ADAPTER=true` still swaps the adapter's extraction and Explain methods to `mockAdapter`. The C4 flow does not call either method (AI layers deferred). `planHerd` always runs the real herd LP, on `getInitialFeeds()` and `getInitialBreeds()` (prototype fixtures in mock mode). There is no mock herd solver, so the prompts, steps and cards behave the same in both modes.
 
 ### C4 compatibility
 
 **Must stay unchanged:**
 - `solveRation(animal, selectedFeeds, feedLibrary?, breedLibrary?)`: function bodies, outputs, and every field value for the same inputs (AC-C4-R1);
-- `RationAppAdapter`, both adapters, `POST /api/llm`, the verifier, the template and `ExplanationRequestContext`;
+- the existing `RationAppAdapter` methods, the `extract` and `explain` request and response shapes of `POST /api/llm`, `collectAuthorizedNumbers`, `verifyExplanationNumbers`, `buildTemplateExplanation` and `ExplanationRequestContext`. With the AI layers deferred, C4 adds nothing to `api/llm.ts`, the adapters' AI methods or `verifier.ts`. The additions they would need are listed in [Deferred: AI layers](#deferred-ai-layers);
 - `data/*` figures and citations, and `src/data/*.v1.json` except the two non-descript display names;
 - `eval/out/browser_results.json` content (apart from `generatedAt`) and the 18-animal SciPy suite;
 - the `sahidana.lang` storage key;
@@ -1871,7 +1879,7 @@ tests/e2e/herd-flow.spec.ts         # NEW (M1)
   - labels Cow 1, Cow 2, Buffalo 1, then Cow 3 after a removal;
   - the 10-animal limit;
   - **Remove** on screen 3 returns to `#/animals` with no plan;
-  - Explain is hidden for 2 or more animals; Copy includes every card.
+  - Explain uses the herd payload for every herd size (Round 6 amendment); Copy includes every card.
 - `tests/unit/herdPerf.slow.test.ts`: see [C4 risks](#c4-risks).
 - **Eval (AC-C4-2.9).** `eval/test_herd_animals.json` holds at least 7 cases:
   1. cow and buffalo;
@@ -1914,9 +1922,270 @@ tests/e2e/herd-flow.spec.ts         # NEW (M1)
 - **One file:** `npx vitest run tests/unit/herdSolver.test.ts` (or `npx playwright test tests/e2e/herd-flow.spec.ts`)
 - **Also at each milestone end:** `npm run build`, `npm run compile:data`, and `npm run eval:dump && npm run eval:scipy` (from M2, `eval:scipy` also runs the herd agreement file).
 
+### C4 AI layers and visible season (Round 6 amendment)
+
+From [FEEDBACK.md](internal/FEEDBACK.md) Round 6 items 1–3 (user, 2026-10-15) and [ADR-0021](DECISIONS.md#adr-0021-herd-ai-layers-and-visible-season):
+1. Explain for the herd plan on screen 3.
+2. A screen-1 free-text helper that reads several animals, home feeds with kg/day and the herd budget.
+3. The season used is visible: screen 3 states today's date, whose month decides which feeds to buy. The month cannot be changed (user decision, 2026-10-15).
+
+This amendment implements the Round 6 SPEC changes: AC-C4-1.29, AC-C4-1.33, AC-C4-2.12 and AC-C4-E8, OQ-C4-10 (superseded), and the removal of the non-goal "whole-herd explanation". It keeps every earlier rule:
+- the AI never supplies a nutrient, price, season or breed figure;
+- every number in an explanation is traced or the template is shown;
+- the explanation body is English in both language modes.
+
+No new dependency.
+
+#### Extraction: new versioned action `extract_herd`
+
+**Choice: version the action; do not extend `extract`.**
+- **Old contract kept.** `extract` stays byte-for-byte as it is, together with its prompt, `sanitizeExtractResponse`, `ExtractionResponse`, the 30-description `eval/evaluate_extraction.py` metric and the adapter tests that depend on it.
+- **Its rules clash with breed prefill.** `extract` requires `bodyWeightKg` and fills a missing fat with a species default of 4 or 6, which is an uncited number that would override the cited breed prefill (AC-C4-1.3, AC-C4-1.4). The herd helper needs weight and fat to be **optional**, so the breed row can prefill them.
+- **No cardinality guessing.** A one-animal response and an `animals[]` response under the same action would force the server and both adapters to guess which shape they got. A separate action keeps both validators simple and lets each be tested on its own.
+- **Cost:** a second prompt and a second sanitizer, about 150 lines in `api/llm.ts`. The old `extract` is no longer called by the C4 UI; it stays for the eval and the tests.
+
+**Request** (`POST /api/llm`): `{ action: 'extract_herd', freeText, catalog, breeds }`, the same fields and limits as `extract`:
+- 1–1000 characters;
+- `catalog` and `breeds` pass through the existing `sanitizeCatalogForPrompt` and `sanitizeBreedsForPrompt`, so only ids and names reach the model.
+
+**Prompt (`buildExtractHerdMessages`).** The same term mappings and safety rules as `extract`, plus:
+- "List every cow or buffalo described, in the order mentioned, at most 10".
+- "Copy a number only if the text states it; otherwise null. Never guess body weight or fat".
+- "For feed the farmer already has, give the kg per day if stated, else null".
+- "Never output nutrient values, prices, seasons, months or breed milk figures".
+
+The JSON shape asked of the model:
+
+```json
+{"animals":[{"species":"cow|buffalo","breed":"text or null","milkLPerDay":8,"bodyWeightKg":null,"milkFatPct":null}],
+ "homeFeeds":[{"name":"text","kgPerDay":5}],
+ "budgetInrPerDay":null}
+```
+
+**Sanitized response** (`sanitizeExtractHerdResponse`, new type in `src/domain/types.ts`):
+
+```ts
+export interface HerdExtractionResponse {
+  action: 'extract_herd';
+  schemaVersion: 1;
+  modelUsed: string;
+  /** At most 10, in text order. */
+  animals: {
+    species: Species;
+    breedId: string | null;              // matched against `breeds` for that species (findCatalogBreed); unmatched → null
+    milkYieldLitersPerDay: number | null; // finite and ≥ 0, else null
+    bodyWeightKg: number | null;         // finite and > 0, else null; NO default
+    milkFatPct: number | null;           // finite and > 0, else null; NO default
+  }[];
+  /** true when the model listed more than 10 animals; the rest are dropped. */
+  animalsTruncated: boolean;
+  /** Catalog matches only (findCatalogFeed), deduplicated by feedId; kgPerDay finite and > 0, else null. */
+  homeFeeds: { feedId: string; kgPerDay: number | null }[];
+  /** Names not in the catalog, deduplicated case-insensitively. */
+  unmatchedFeeds: { name: string; kgPerDay: number | null }[];
+  budgetInrPerDay: number | null;        // finite and > 0, else null
+}
+```
+
+**Server-side stripping.** The sanitizer builds every object from a whitelist of keys. Any other key the model returns (for example `price`, `cp`, `dmPct`, `months`, `milkCap`) is never copied. An animal with an invalid species is dropped. If no animal remains, the response is `UPSTREAM_ERROR` (the next model is tried), as `extract` does today. **The 10-animal cap** is enforced on the server (`slice(0, 10)` plus `animalsTruncated`) and again on the client (`MAX_ANIMALS`). The handler accepts `action` in `{ 'extract', 'extract_herd', 'explain' }`. The rate limit (20 per minute per IP), per-model timeout, 55 s chain budget, origin check and model chain are unchanged.
+
+**Client.**
+- `RationAppAdapter` gains `extractHerd(freeText, options?): Promise<HerdExtractionResponse>`. The other methods are unchanged.
+- `liveAdapter.extractHerd` posts the request and re-checks the response with the same whitelist (defence in depth, as `extractFromText` does).
+- `mockAdapter.extractHerd` is rule-based on `src/data/prototypeLexicon.json`, which gains `animalSeparators` (for example "and", "aur", ",", and the Devanagari conjunction, kept in JSON so no Devanagari enters code) and `kgPerDayWords`. Each segment that names a species becomes one animal; feed aliases with a number before a kg word become `kgPerDay`.
+- `src/data/prototypeExamples.json` gains English, Hinglish and Hindi herd descriptions. One of them names an unmatched feed, and one names 11 animals to exercise the cap.
+
+**Prefill and confirmation (AC-2.3 pattern, AC-E5.1).** The helper section on screen 1 is titled "Describe your animals and feed". It is visible while `animals.length < MAX_ANIMALS` and is disabled offline with "Needs internet".
+
+```ts
+export interface HerdPrefillState {
+  response: HerdExtractionResponse;
+  drafts: AnimalCardDraft[];                 // one per extracted animal, capped to MAX_ANIMALS − animals.length
+  draftsDropped: number;                     // animals beyond the remaining capacity (shown in a note)
+  unmatched: { name: string; kgPerDay: number | null; resolution: UnmatchedResolution }[];
+  snapshot: { herdBudget: string; homeFeeds: HomeFeedDraft[] };  // restored by Discard
+}
+```
+
+`onHerdExtracted(response)` in `App.tsx`:
+1. **Builds one `AnimalCardDraft` per animal.**
+   - An extracted weight or fat sets the field text and its `*Typed` flag (the user's own words).
+   - A null weight or fat is filled by `breedPrefill` when the breed is known, otherwise it stays blank.
+   - The milk text is `''` when null.
+2. **Fills screen 2 and the budget.**
+   - Each matched home feed is merged into `homeFeeds`: a new row `{ feedId, kg: kgPerDay ?? '' }`; an existing row keeps its value.
+   - The stated budget fills `herdBudget`.
+   - A snapshot of both is kept so **Discard** can restore them.
+3. **Shows the review list** inside `FreeTextExtractor` (changed). It has:
+   - one row per draft, with label preview ("Cow 1"), breed, milk, weight and fat. Prefilled values carry the prefill hint; missing or invalid values show AC-E1.1's message;
+   - **Edit** on each row, which loads that draft into the add card (`editingDraftIndex`);
+   - the unmatched feeds, each with the existing **map to** / **drop** controls. A mapped feed becomes a home row with the stated kg;
+   - **Confirm all**, enabled only when every draft passes `validateAnimalCard` and every unmatched feed is resolved;
+   - **Discard**.
+4. **Confirm all** appends the drafts as `HerdAnimal`s with `isConfirmed: true`, assigning labels in order through `nextAnimalLabel`.
+5. **Discard** removes the drafts and restores the snapshot.
+6. While `herdPrefill !== null`, **Next** is disabled with the existing `notice_next_confirm` line.
+
+Every number the helper fills is the farmer's own words: the audit shows "Your input (from your description)", and nothing reaches the solver before **Confirm all**.
+
+**Milestones.**
+- **C4-M1:** the full action and sanitizer, the `extractHerd` client and mock, and the review list with `MAX_ANIMALS = 1`. The first animal becomes the draft; any more are counted in `draftsDropped` and the note "Only 1 animal can be added in this version" appears.
+- **C4-M2:** `MAX_ANIMALS = 10`, the multi-row review list, and per-row Edit. Nothing on the server changes in M2.
+
+#### Explain for the herd
+
+**C4-M1 (one animal): no change to the AI path.**
+- **Online:** Explain uses the existing single-animal context (above) through `explainRation`, `collectAuthorizedNumbers`, `verifyExplanationNumbers` and `buildTemplateExplanation` unchanged.
+- **Offline, and on any error:** the deterministic template (below).
+
+**C4-M2 (any herd size, including one animal):** `explainHerd(plan, library, breeds, month, options)` on the service.
+1. **Payload.** `rationSummary = buildHerdSummaryForLlm(plan)`. It holds only numbers derived from `F`, the plan's prompts, the user's inputs and cited breed rows, with English names:
+
+   ```ts
+   {
+     kind: 'herd',
+     month: 'October',                         // English month name of plan.month; a word, not a number
+     planDate: '15 October',                   // day number plus English month name, from plan.planDate
+     budgetInrPerDay: Bd, purchaseInrPerDay: A,
+     shareOfMilkTargetPct: 100 × t*,           // omitted when every animal is dry
+     limit: 'budget' | 'milk target' | 'Cow 1: intake limit' | 'home stock: Wheat straw',
+     buyFirst: [{ feed: 'Mineral mixture', amount: '50 g', kgPerDay, inrPerDay }],
+     thenIfYouCan: [{ feed, amount, kgPerDay, inrPerDay, milkGainL }],
+     animals: [{ label: 'Cow 1', species, breed: 'Rathi', todayMilkL: T_i, milkTargetL: g_i, supportedMilkL: S_i, dry,
+                 lines: [{ feed, source: 'home' | 'buy', amount: '5.0 kg', kgPerDay }] }],
+     notNeeded: ['Wheat straw'],
+     budgetPrompt: { addInrPerDay: X, toReachL: Y } | null,
+   }
+   ```
+
+   No nutrient vectors, prices per kg, `M_H` or step internals are sent: the explanation talks about the plan, not the LP. Payload size for 10 animals is about 6 KB, well inside the existing request limits.
+2. **Request.** It is the existing `action: 'explain'`, attempts 1 and 2. `buildExplainMessages` gains one line when `rationSummary.kind === 'herd'`: "This is a feed plan for several animals; say what to buy first, what each animal gets, and what limits milk, in 3 to 5 sentences." The rate limit, timeouts and model chain are unchanged.
+3. **The verifier's number universe for the herd.** `collectHerdAuthorizedNumbers(plan, library, breeds)` in `src/domain/verifier.ts` is new; the existing collector is unchanged. Each figure is pushed both exact and as displayed:
+   - `Bd`, `A`;
+   - `t*` (as a fraction and as a percent);
+   - `M_H`, `costAtCap_H`, prompt `X` and `Y`;
+   - each shopping line: kg exact, `roundKg1`, grams, ₹ exact and whole, and the cited price;
+   - each `ΔL_k`, exact and floored;
+   - each animal: `T_i`, `W_i`, fat, `g_i`, `Y_i`, `S_i`, the cited breed cap, and every card line's kg (exact, 1 dp, grams);
+   - home stock `q_f` and use;
+   - the number of animals, each label number (`1…n`), the month number and the day of the month from `planDate`.
+
+   `verifyExplanationNumbers` and its tolerance (`max(0.05, 1%)` or a 0–2 decimal rounding match) are unchanged; so is the language gate (no Devanagari in the LLM text). One retry with `flaggedNumbers`; after that the template is shown with the template badge.
+4. **Herd template.** `buildHerdTemplate(plan, library, breeds)` returns `BiText[]` with the same numbers and units as the main view, built by `src/domain/format.ts` and `src/i18n/format.ts`:
+   - "Budget ₹`Bd` a day; this plan spends ₹`A`.";
+   - "Every milking animal gets `p`% of its milk target." (`p = 100 t*`, rounded to whole), or "Dry animals get a maintenance ration.";
+   - "Buy first: …";
+   - one line per "Then, if you can" step;
+   - one line per animal card;
+   - "Not needed today: …";
+   - the prompt;
+   - the source line.
+
+   It is shown in the active language. A unit test runs `verifyExplanationNumbers` on both halves against the herd universe (Hindi with `allowDevanagari`), as the dump script does for single animals today.
+5. **Offline or no key.**
+   - **Offline:** Explain stays enabled and shows the template at once with no network request, with the note "Needs internet for the AI explanation" (this supersedes the "disabled offline" part of AC-C4-E8 for Explain; **Fill from description** stays disabled offline).
+   - **No key on the server:** the server returns `UPSTREAM_ERROR`, and the client shows the template with the "AI unavailable" badge (`deterministic_fallback`, `reason: 'llm_error'`), as today.
+6. **English in Hindi mode.** This is unchanged: the prompt demands English, the language gate rejects any Devanagari, and `ExplanationCard` keeps the explanation body `lang="en"` and `data-lang-exempt` in Hindi mode. The template, the badge and the notes follow the active language.
+
+#### Visible season (today's date)
+
+**Month source.**
+- There is no month in UI state, no month control and no "try another month" hint (user decision, 2026-10-15).
+- When **Calculate ration** is tapped, `rationService.planHerd` reads `new Date()` once. It passes `currentMonth()` (from `src/i18n/months.ts`) to the domain `planHerd` as `m`, and records the same instant as `HerdPlan.planDate` (`YYYY-MM-DD`, local time).
+- This is exactly [ADR-0016](DECISIONS.md#adr-0016-candidate-month-is-the-devices-current-month): the device's current month, read at plan time. The domain `planHerd` keeps `month` as an explicit argument, so tests and the eval can fix any month.
+
+**Season line.**
+- **Placement and text.** Screen 3 shows the line above "What to buy", for every plan status. It reads "Feeds to buy: in season today (15 October)"; the Hindi text is pending native review.
+  - The date is `planDate`, formatted as the day number in Latin digits plus `monthName(m, lang)`.
+  - The year is omitted.
+- **Audit.** The date is a `Fig` button (44 px target) that opens `auditSeasonSet(plan, library)` in the existing audit drawer (`originType: 'cited_source'`). The audit has these rows:
+  - "Date on this phone when you tapped Calculate: `planDate`" and "Month used: `<Month>`";
+  - the rule "library feeds with a cited price that are available in this month";
+  - the count `|C(m)|`;
+  - the priced library feeds excluded as out of season in `m`;
+  - a note that home feeds are used in any month (ADR-0019);
+  - a note that a wrong phone date gives the wrong season (ADR-0016 consequence).
+- **Buy and shopping lines.** Each "Buy" line and shopping line gains a row "Available: `monthRangeText(availableMonths)`", with the feed's `seasonNote` and `seasonCitation`, the same fields `auditSeason` shows.
+- **Copy and Explain** include the date and month: the herd payload has `month` as an English word and `planDate`.
+
+**Recompute.** A plan is computed only by **Calculate ration**. A plan left open across midnight at the end of a month keeps its recorded date and month; the next tap reads the new date.
+
+**Infeasible or below maintenance.** The existing alerts are unchanged. The season line, still shown, tells the paravet which month's feeds were considered.
+
+#### Files (Round 6 delta)
+
+| File | Milestone | Change |
+|---|---|---|
+| `api/llm.ts` | M1 | `extract_herd` action: `ExtractHerdRequestBody`, `buildExtractHerdMessages`, `sanitizeExtractHerdResponse`, handler branch. Herd prompt line in `buildExplainMessages` (M2). |
+| `src/domain/types.ts` | M1 | `HerdExtractionResponse`; `RationAppAdapter.extractHerd`. |
+| `src/services/liveAdapter.ts`, `src/services/mockAdapter.ts` | M1 | `extractHerd`; `explainHerd` (M2). |
+| `src/data/prototypeLexicon.json`, `src/data/prototypeExamples.json` | M1 | Herd separators, kg/day words, herd descriptions. |
+| `src/components/FreeTextExtractor.tsx` | M1, M2 | Review list of drafts and home feeds; **Confirm all**/**Discard**. |
+| `src/domain/verifier.ts` | M2 | `collectHerdAuthorizedNumbers`, `buildHerdTemplate` (additions only). |
+| `src/domain/summary.ts` | M2 | `buildHerdSummaryForLlm` next to `buildHerdSummary`. |
+| `src/services/rationService.ts` | M1, M2 | `extractHerd` (M1), `explainHerd` (M2). |
+| `src/components/ExplanationCard.tsx` | M1 | Offline note; template shown without a request when offline. |
+| `src/components/HerdPlan.tsx` | M1 | Season line with today's date as a tappable `Fig`. |
+| `src/domain/auditHerd.ts` | M1 | `auditSeasonSet`; season rows on buy lines. |
+| `src/domain/herdPlan.ts` | M1 | `HerdPlan.planDate` (added to `HerdPlanBase`); `planHerd` takes it as its last argument and only records it. |
+| `tests/unit/llmProxy.test.ts` (existing, extended) | M1 | `extract_herd`: whitelist stripping (injected `price`, `cp`, `months` are dropped), no weight or fat default, 11 animals cut to 10 with `animalsTruncated`, unmatched feeds, `extract` unchanged. |
+| `tests/unit/herdExplain.test.ts` | M2 | Herd universe covers every main-view number; the template verifies in both halves; an injected untraced number and Devanagari are rejected; the retry then template path; offline gives the template with no fetch. |
+| `tests/unit/herdUi.test.tsx`, `tests/e2e/herd-flow.spec.ts` | M1, M2 | Helper review, confirm and discard; the season line shows the date (clock fixed with `vi.setSystemTime` / Playwright `page.clock`) and opens its audit; no month control exists. |
+
+`eval/evaluate_extraction.py` and its 30 descriptions keep measuring `extract` unchanged. A herd extraction metric is out of scope.
+
+#### Effort, risk and cut order
+
+The estimates below are **added** hours on top of the earlier C4 design (itself roughly 18–24 h for C4-M1 and 12–16 h for C4-M2, by this estimate). They are honest working hours for one implementer plus review.
+
+| Milestone | Round 6 work | Extra hours |
+|---|---|---|
+| C4-M1 (target Fri 16 Oct 23:00 IST) | `extract_herd` server plus sanitizer plus tests (3–4); client and mock (2); one-animal review list (2–3); season line with today's date and its audits (1); offline template on Explain (1); strings and Hindi (1); E2E (1) | **11–13 h** |
+| C4-M2 (target Sat 17 Oct 23:00 IST) | Multi-animal review list with per-row Edit (3–4); herd payload, prompt line, universe and template (5–6); herd Explain tests (2); E2E (2); strings (1) | **13–15 h** |
+
+**Honest read.**
+- C4-M1 grows from about 1 day of work to about 1.4 days.
+- The Fri 23:00 target is at risk unless work runs in parallel. The API and adapters (`api/llm.ts`, the adapter files) touch no solver file, so they can be built alongside the herd LP.
+- The Sun 18 Oct 11:59 PM IST submission still leaves about 24 h after the C4-M2 target for UAT, deploy and the PPT.
+
+**Cut order if time runs short** (user decision, 2026-10-15):
+1. **The multi-animal helper (M2) is the only planned cut.**
+   - The M1 one-animal helper stays: `MAX_ANIMALS` for the helper stays 1 while the herd allows 10.
+   - Cutting it saves about 4–5 h of the M2 extra.
+
+Nothing else is cut. The herd AI explanation on screen 3 is **never cut**.
+
+- **Template fallback.** The herd template is still built in M2, because it is the fallback offline, without a key, and after a failed check.
+- **Late M2.** The C4-M1 fallback submission rule (submit the C4-M1 build if C4-M2 is not accepted by Sat 23:00) is unchanged. Under that rule the herd features, including the herd explanation, would not ship at all. To protect the herd explanation, build it before the multi-animal helper within M2.
+
+Never cut: server-side stripping and the 10-animal cap, the number verifier, the template fallback, the English-only gate, offline behaviour.
+
+**Risks:**
+- **A false pass in the verifier (accepted limitation, user decision 2026-10-15).**
+  - **The weakness.** Matching is unitless: a number in the text passes if it equals any authorized number, whatever unit or meaning it is written with. The herd universe is larger, because small integers such as 1–10 are authorized as labels and counts. So a stray "3 kg" passes when the herd has 3 animals, and a kg figure could pass as a rupee figure.
+  - **Unit-aware matching was rejected.** The user chose not to add it.
+  - **Mitigations:** the existing tolerance is unchanged, no nutrient or LP-internal numbers are sent, and a test injects untraced figures.
+- **Free models may mis-split a herd description**, for example by merging two cows. The review list and **Confirm all** keep the farmer in control; nothing is solved before confirmation.
+- **Without a key the AI layers do not work on the live site** (deployment note below).
+
+#### Deployment note (live Vercel site)
+
+The live deploy currently has no OpenRouter key. Both AI layers then fall back: **Fill from description** shows the "AI unavailable" error and the farmer types by hand; **Explain** shows the deterministic template. To turn them on, the user sets these **Vercel project environment variables** (names from `.env.example`; values are never written in docs or chat), in the **Production** environment (and **Preview** if previews are used), then **redeploys**, because Vercel applies environment changes only to new deployments:
+
+| Variable | Needed | Note |
+|---|---|---|
+| `OPENROUTER_API_KEY` | **Required** | Server only. Without it, both AI layers fall back. |
+| `OPENROUTER_MODEL` | Optional | Defaults to `openrouter/free`. |
+| `OPENROUTER_FALLBACK_MODELS` | Optional | Defaults to `openrouter/free`. |
+| `OPENROUTER_TIMEOUT_MS` | Optional | Defaults to 45000. |
+
+- **Do not set `VITE_USE_MOCK_ADAPTER` to `true` on Vercel**: it is a build-time client flag and would switch the live site to fixtures. Leave it unset or `false`.
+- `VERCEL_TOKEN` is for the local CLI only; it is not a project variable.
+- Setting it from the CLI: `npx vercel env add OPENROUTER_API_KEY production` (it prompts for the value), then `npx vercel --prod`. This is an outward-facing action the user runs or explicitly approves.
+
 ### C4 setup requirements
 
-None beyond [Setup requirements](#setup-requirements). No new tool, account, environment variable or local service.
+No new tool or local service. The only account item is the existing OpenRouter key, which must now also be set on the live Vercel project for the Round 6 AI layers (see the [deployment note](#deployment-note-live-vercel-site)). Tests never need it: they mock `/api/llm` (`vi.fn()`, `page.route()`) or use `mockAdapter`.
 
 ### C4 risks
 
@@ -1937,7 +2206,17 @@ None beyond [Setup requirements](#setup-requirements). No new tool, account, env
 4. **The last step not equal to `F`.** This can happen if Stage 1 over `C` reached `t*` only through a feed that `F` does not use. Mitigation: `lastStepMatchesBest` is asserted in tests. At runtime the shopping amounts are always `F`'s; only that line's milk gain could read slightly low.
 5. **The fair-share rule can leave budget unused (accepted known limitation, orchestrator 2026-10-15).** One animal held back by its intake, roughage or a nutrient caps `t*` for the whole herd, even when budget remains. This is the user's fairness rule and is accepted for now ([ADR-0020](DECISIONS.md#adr-0020-joint-herd-lp-with-a-fair-share-of-each-milk-target) consequences). Mitigation: Details and the `t*` audit name the limiting animal and its limit, so the paravet can see why.
 6. **Free home feed used generously (resolved by Stage 3).** At ₹0, Stage 2 alone could give more home straw than needed, within the intake and roughage limits. Stage 3 removes this for `F`: it takes the least home feed at the cheapest purchase. Prefix solves do not need it, because their amounts are never shown.
-7. **Deadline.** C4-M2 must be accepted by Sat 17 Oct 23:00 IST, or the C4-M1 build is submitted. Every M2 change sits behind `MAX_ANIMALS`, the examples and tests, so falling back is a constant and a revert of the example set.
+7. **Deadline.** C4-M2 must be accepted by Sat 17 Oct 23:00 IST, or the C4-M1 build is submitted. Every M2 change sits behind `MAX_ANIMALS`, the examples and tests, so falling back is a constant and a revert of the example set. The Round 6 amendment adds about 11–13 h to C4-M1 and 13–15 h to C4-M2. If time runs short, only the multi-animal helper is cut; the herd AI explanation is never cut ([Effort, risk and cut order](#effort-risk-and-cut-order)).
+8. **AI layers (Round 6).** Three risks:
+   - free models may mis-split a herd description;
+   - unitless matching over a larger herd number universe makes a false pass on small integers more likely (accepted limitation, user 2026-10-15);
+   - the live site has no OpenRouter key yet.
+
+   Mitigations, in the same order:
+   - nothing is solved before **Confirm all**;
+   - the tolerance is unchanged, no LP internals are sent, and tests inject untraced numbers;
+   - both layers fall back (template, manual entry) until the key is set ([deployment note](#deployment-note-live-vercel-site)).
+9. **Wrong phone date.** The season comes from the device date and cannot be overridden, so a phone with a wrong date suggests the wrong season's feeds (ADR-0016). Mitigation: the season line shows the date used, and its audit says so.
 
 ### Expensive to change (Change 4)
 
@@ -1951,3 +2230,18 @@ Plain-English list for Change 4. Each item is costly to change after C4-M2 becau
 6. **Three screens on three hash addresses (`#/animals`, `#/feeds`, `#/result`).** The Back behaviour, the guards, the examples and the end-to-end tests depend on them. Moving to a router or to different screens redoes the navigation tests.
 7. **Farmer display units.** Whole rupees (prompt amounts rounded up), kg with 1 decimal, grams for mineral mixture and salt, exact values in the audit. The UI tests and the copied summary check them everywhere.
 8. **Nothing is saved between visits.** The herd lives in memory only. Saving it later needs storage, a migration story and privacy wording, which is a new design.
+9. **The `extract_herd` request and response shape (version 1).**
+   - The server's key whitelist, the client re-check, the mock and the tests all follow it.
+   - Adding an optional field is cheap; changing a field's meaning needs `schemaVersion: 2`.
+   - The old `extract` action stays for its eval.
+10. **What the herd explanation may say, checked by unitless matching.**
+    - The herd payload and the herd number universe (`collectHerdAuthorizedNumbers`) define every number the AI may write about the herd.
+    - The check matches values, not units (accepted).
+    - Sending more figures to the model, or adding unit-aware matching, means rewriting the collector, the template checks and the false-pass tests.
+11. **The planning month is today's phone date.**
+    - It is read once when **Calculate ration** is tapped, recorded on the plan with the date, and shown on screen 3 with its audit.
+    - Adding a month choice later means new state, a recompute path, new audits and new tests.
+12. **The AI service and where it runs.**
+    - Free OpenRouter models are called only through the Vercel serverless function `/api/llm`, which has three actions: `extract`, `extract_herd` and `explain`.
+    - The key lives only on the server; the rate limit and timeouts are unchanged.
+    - Moving to another provider or host means rewriting the proxy, its tests and the deployment settings.

@@ -626,6 +626,8 @@ This section specifies Change 4 (started 2026-10-15, branch `feat/herd-flow`, ba
   - Screen 2 "Feed you already have" (`#/feeds`, optional): the feed already at home, in kg per day for all animals, with no price.
   - Screen 3 "Your plan" (`#/result`): the best plan within the budget. It shows one shopping list, "What to buy" (in buying order, with the milk each later feed adds), what to give each animal, what is not needed today, and budget prompts.
   - Nutrient detail sits in a collapsed "Details (for paravet)" inside each animal card. Every number stays one tap from its audit.
+  - No AI in the new flow. The user decided on 2026-10-15 ([FEEDBACK.md](internal/FEEDBACK.md) Round 6 item 5): "remove the AI options completely, lets just add the core app features now ill decide upon the AI features later." Screens 1–3 have no description helper and no Explain control. The AI criteria written earlier are kept, unchanged, in C4.8 so they can return later.
+  - Seasons are visible: screen 3 says that the feeds to buy come from what is in season today, with today's date. The month always comes from the device date.
 - **Change type:** Feature. **Posture:** Prototype; the solver and the number-honesty checks keep thorough tests, including a herd SciPy cross-check.
 - **Persona:** the farmer and the paravet reading the same phone screen (a basic Android phone, see [PRODUCT.md](../PRODUCT.md)). The main view uses plain words with no technical terms.
 - **Milestones:**
@@ -644,7 +646,8 @@ This section specifies Change 4 (started 2026-10-15, branch `feat/herd-flow`, ba
   - Once the user types in a field, that field holds "your value" and a later breed change does not overwrite it. A breed change re-prefills only fields the user has not typed in.
 - **Milk target (`g_i`)**: `effCap_i = max(cap_i, T_i)` when `T_i > 0`, with `cap_i` per section 3. It is `0` for a dry animal (`T_i = 0`).
 - **Home feeds (`Hm`)**: the screen-2 rows. Each row is a library feed `f` with `q_f`, the herd total in kg/day as fed, where `q_f > 0`. A feed appears at most once. Home feeds may be in or out of season and may have no cited price.
-- **Buy set (`C`)**: every library feed whose `availableMonths` includes the device's current month `m` and that has a cited default price, at that price, with no per-feed cap. This is the C3 candidate rule with no own feeds.
+- **Planning month (`m`)**: the month of today's device date (user decision 2026-10-15: "make sure the season and months are calculated according to the day"). It cannot be changed in the app. It is read again each time the plan is calculated, so a plan calculated after midnight on the 1st of a month uses the new month.
+- **Buy set (`C`, or `C(m)`)**: every library feed whose `availableMonths` includes the planning month `m` and that has a cited default price, at that price, with no per-feed cap. This is the C3 candidate rule with no own feeds. Home feeds are usable in any month, whatever their season.
 - **Herd budget (`Bd`)**: the screen-1 amount in ₹/day, spent only on buying feed for the whole herd. It must be `> 0`.
 - **Joint herd LP**: one linear program over the herd.
   - For each animal `i` and feed `f`, there is a home amount `h_{i,f} ≥ 0` (for `f ∈ Hm`) and a buy amount `b_{i,f} ≥ 0` (for `f ∈ C`). A feed in both `Hm` and `C` has both variables.
@@ -698,9 +701,11 @@ This section specifies Change 4 (started 2026-10-15, branch `feat/herd-flow`, ba
    - "What to buy", one shopping list for the best plan within the budget. It shows the "Buy first" group, then lines under "Then, if you can", each ending "→ about +`L` L milk". Every line shows its kg/day and ₹/day, and the list ends with "₹`A` of your ₹`Bd` a day";
    - "What to give each animal", with one card per animal from the same plan, each line tagged "From home" or "Buy", ending "enough for about `S` L milk";
    - "Not needed today";
-   - any budget prompt.
+   - any budget prompt;
+   - the season line "Feeds to buy are chosen from what is in season today (15 October)", with the date tappable to the season sources.
 8. The user taps any number to open its audit, and taps "Details (for paravet)" in a card to see nutrients, the breed benchmark and the verdict.
-9. The phone's Back button returns to `#/feeds`, then to `#/animals`, with every input kept.
+9. The user taps **Copy summary** to copy the plan as plain text.
+10. The phone's Back button returns to `#/feeds`, then to `#/animals`, with every input kept.
 
 #### Journey C4-B: Herd (C4-M2, extends Journey C4-A)
 
@@ -709,6 +714,8 @@ This section specifies Change 4 (started 2026-10-15, branch `feat/herd-flow`, ba
 3. Every animal is kept healthy first. The rest of the budget is shared so every milking animal reaches the same share of its milk target, and a dry animal gets a maintenance ration.
 4. "What to buy" shows herd totals in buying order. Each animal's share of the plan is on its own card.
 5. The user taps **Remove** on "Cow 2" on screen 3. The app returns to screen 1 with the remaining animals, the budget and the home feeds kept, and the plan must be calculated again.
+
+The AI steps that were in these journeys, and journey C4-C, are deferred to C4.8.
 
 ### C4.3 Acceptance Criteria
 
@@ -751,7 +758,7 @@ Quoted strings are the English-mode text. The Hindi text is given where it is pr
 - **AC-C4-1.9 (Home feed screen) [C4-M1]:**
   - **Given** screen 2,
   - **When** the user searches by an English, transliterated or Devanagari name (AC-3.1) and taps a result,
-  - **Then** the text "Skip if you have nothing at home." (Hindi "घर पर कुछ नहीं है तो छोड़ दें।") is shown; a row is added with the feed name, a field "kg per day you can give (all animals)" (Hindi "रोज़ कितने kg दे सकते हैं (सभी गाय-भैंस)") and **Remove**; tapping a feed already listed adds no second row; and no row shows a price field, a season mark or a month selector.
+  - **Then** the text "Skip if you have nothing at home." (Hindi "घर पर कुछ नहीं है तो छोड़ दें।") is shown; a row is added with the feed name, a field "kg per day you can give (all animals)" (Hindi "रोज़ कितने kg दे सकते हैं (सभी गाय-भैंस)") and **Remove**; tapping a feed already listed adds no second row; no row shows a price field, a season mark or a month selector (the month comes from the device date); and every library feed can be added as a home feed in any month.
 - **AC-C4-1.10 (Calculate gating on screen 2) [C4-M1]:**
   - **Given** screen 2,
   - **When** there are no rows, or every row has a kg/day greater than `0`,
@@ -812,18 +819,26 @@ Quoted strings are the English-mode text. The Hindi text is given where it is pr
   - **Given** inputs on screens 1 and 2 and a plan on screen 3,
   - **When** the user taps **Back** or **Edit**, or presses the phone's Back button,
   - **Then** the hash moves `#/result` → `#/feeds` → `#/animals` and every animal, the budget and every home-feed row are kept; when the user returns to screen 3 after changing any input, the old plan is not shown until **Calculate ration** is tapped again; and with no input changed, the forward button reshows the same plan.
-- **AC-C4-1.23 (Describe-your-animal shortcut) [C4-M1]:**
-  - **Given** screen 1 with the device online,
-  - **When** the user expands the collapsed "Describe your animal" helper (privacy notice per AC-2.2) and taps **Fill from description**,
-  - **Then** the extraction fills the add-animal card (species, breed if on the list, weight, milk, fat) in the unconfirmed prefilled state of AC-2.3; any stated budget fills the herd budget; matched feeds are added as screen-2 rows with a blank kg/day; and AC-E5.1 holds.
-- **AC-C4-1.24 (Copy summary and Explain) [C4-M1]:**
+- **AC-C4-1.24 (Copy summary) [C4-M1]:**
   - **Given** a feasible plan,
-  - **When** the user taps **Copy summary**, or **Explain** (shown only when the herd has exactly 1 animal),
-  - **Then** the copied plain text, in the active language, is built from `F` and contains "What to buy" with its "Buy first" group, its "Then, if you can" lines with their milk gains, and the total line, then each animal card line, "Not needed today", any budget prompt, the budget and source attribution, using the main-view units; and Explain follows AC-7.1, AC-E4.2 and AC-E6.1 for the one animal.
+  - **When** the user taps **Copy summary**,
+  - **Then** the copied plain text, in the active language, is built from `F` and contains "What to buy" with its "Buy first" group, its "Then, if you can" lines with their milk gains, and the total line, then each animal card line, "Not needed today", any budget prompt, the budget, the season line (AC-C4-1.30) and source attribution, using the main-view units.
 - **AC-C4-1.25 (Single-animal examples) [C4-M1]:**
   - **Given** the "Try an example" (Hindi "उदाहरण आज़माएँ") section on screen 1 in the C4-M1 build,
   - **When** the user taps each example and goes through to screen 3,
   - **Then** there are three one-animal examples, each filling screens 1 and 2: a lactating buffalo with a feasible plan; a cow with home feed wheat straw only, labelled "Needs feeds to buy" (Hindi "चारा ख़रीदना ज़रूरी"), whose "What to buy" list has at least one line; and a "Tight budget" example showing "Add ₹`X`/day to reach `Y` L". Outcomes are asserted by tests against real solver output.
+- **AC-C4-1.30 (Season line) [C4-M1]:**
+  - **Given** a plan or a below-maintenance result on screen 3, calculated on device date `d` in month `m`,
+  - **When** it renders,
+  - **Then** it shows "Feeds to buy are chosen from what is in season today (`<day> <month>`)", for example "… in season today (15 October)" (Hindi "ख़रीदने का चारा आज (`<day> <month>`) मौसम में मिलने वाले चारे से चुना गया है", for example "आज (15 अक्टूबर)", pending native review). The day is in Latin digits and the month name is in the active language. Tapping the date opens the audit drawer listing the feeds in `C(m)`, each with its `availableMonths` and its season source row. The line states that home feeds are used in any month (Hindi pending native review). No control on any screen changes the month. `m` is read from the device date each time **Calculate ration** is tapped, so with the device clock set to the last day of a month and then past midnight, a new calculation uses the new month and the line shows the new date.
+- **AC-C4-1.32 (No out-of-season purchase) [C4-M1]:**
+  - **Given** any plan with planning month `m`,
+  - **When** "What to buy", the "Then, if you can" lines and the "Buy" card lines are inspected,
+  - **Then** every bought feed's `availableMonths` includes `m`, and a home feed out of season in `m` can still appear as a "From home" line.
+- **AC-C4-1.34 (No AI controls in the new flow; Copy summary stays) [C4-M1]:**
+  - **Given** screens 1, 2 and 3 in any state, in either language, online or offline,
+  - **When** they render,
+  - **Then** there is no description helper (no free-text box, no **Fill from description**, no OpenRouter privacy notice), no "Explain" or "Explain in simple words" control, and no explanation card or verification badge; **Copy summary** is present on screen 3 whenever a plan is shown (AC-C4-1.24); using screens 1–3 makes no request to `/api/llm`; and every plan is the same as with the AI code present.
 
 #### C4-M2: Herd
 
@@ -871,10 +886,10 @@ Quoted strings are the English-mode text. The Hindi text is given where it is pr
   - **Given** "Try an example" in the C4-M2 build,
   - **When** the user taps each example and goes through to screen 3,
   - **Then** there are exactly three herd examples: "Cow + Buffalo" with a feasible plan for both; "Straw only" with home wheat straw and a "What to buy" list of at least one line; and "Tight budget" showing "Add ₹`X`/day to reach `Y` L". Outcomes are asserted against real solver output.
-- **AC-C4-2.12 (Copy and Explain for a herd) [C4-M2]:**
+- **AC-C4-2.14 (Copy summary for a herd) [C4-M2]:**
   - **Given** a plan for 2 or more animals,
-  - **When** screen 3 renders,
-  - **Then** **Copy summary** copies the herd plan per AC-C4-1.24 with every animal card, and **Explain** is not shown (no whole-herd explanation).
+  - **When** the user taps **Copy summary**,
+  - **Then** the herd plan is copied per AC-C4-1.24 with every animal card in screen-1 list order, and AC-C4-1.34 holds (no Explain control).
 
 #### Edge cases
 
@@ -906,20 +921,24 @@ Quoted strings are the English-mode text. The Hindi text is given where it is pr
   - **Given** inputs on screen 1, rows on screen 2, or a plan on screen 3,
   - **When** the user switches the language on that screen,
   - **Then** the hash and screen stay the same, every input is kept, the plan is not recalculated and its numbers are identical, the animal labels switch ("Cow 1" ↔ "गाय 1"), and AC-L1.2 and AC-L1.3 hold.
-- **AC-C4-E8 (Online-only helper while offline) [C4-M1]:**
+- **AC-C4-E8 (Everything works offline) [C4-M1]:**
   - **Given** the device is offline,
-  - **When** the user uses screens 1–3, the examples and the audits,
-  - **Then** all work with no network request; **Fill from description** and **Explain** are disabled with "Needs internet" (AC-E3.1).
+  - **When** the user uses screens 1–3, the examples, the audits, the language toggle and **Copy summary**,
+  - **Then** all of them work fully with no network request; there is no AI control to disable and no "Needs internet" indicator on screens 1–3 (AC-C4-1.34); and the planning month is still read from the device date.
 - **AC-C4-E9 (One animal cannot be fed healthily at any cost) [C4-M1; per-animal naming C4-M2]:**
   - **Given** `M_H` is null,
   - **When** the user taps **Calculate ration**,
-  - **Then** no plan is shown (no partial plan); the alert names each animal that fails alone at `0` L with all of `C` and the full home stock, as "`<label>`: `<limit>` limits it", with the limiting nutrient(s) or "roughage" per AC-E2.1 and AC-E2.2 and an **Edit** for that animal; feed suggestions follow AC-C3-E7; and when every animal passes alone, the alert says "These feeds cannot keep all animals healthy together" (pending native review).
+  - **Then** no plan is shown (no partial plan); the alert names each animal that fails alone at `0` L with all of `C` and the full home stock, as "`<label>`: `<limit>` limits it", with the limiting nutrient(s) or "roughage" per AC-E2.1 and AC-E2.2 and an **Edit** for that animal; feed suggestions follow AC-C3-E7; and when every animal passes alone, the alert says "These feeds cannot keep all animals healthy together" (pending native review). AC-C4-E12 adds a month hint.
+- **AC-C4-E12 (Today's month has too few in-season feeds) [C4-M1]:**
+  - **Given** a device date whose month `m` gives a `C(m)` that, with the home feeds, cannot keep every animal healthy (`M_H` null),
+  - **When** the user taps **Calculate ration**,
+  - **Then** AC-C4-E9 applies: no plan is shown, and the existing diagnosis names the limiting nutrient(s) or "roughage" per animal. The alert adds "Few feeds are in season this month" (Hindi "इस महीने मौसम में कम चारे मिलते हैं", pending native review). The season line with today's date (AC-C4-1.30) is shown, every input is kept, and no month control is offered.
 
 #### Language
 
 - **AC-C4-L1 (One language per screen for the new UI) [C4-M1]:**
   - **Given** Hindi mode,
-  - **When** any C4 element is rendered (screen titles, add card, prefill hints, labels, list, budget question, Next/Back/Calculate, gating lines, screen 2 rows, every screen 3 section including "What to buy" and "Then, if you can", tags, Details, prompts, examples, messages),
+  - **When** any C4 element is rendered (screen titles, add card, prefill hints, labels, list, budget question, Next/Back/Calculate, gating lines, screen 2 rows, every screen 3 section including "What to buy" and "Then, if you can", tags, Details, prompts, examples, messages, **Copy summary** and its confirmation, the season line with today's date, "Few feeds are in season this month"),
   - **Then** AC-L1.2 and AC-L1.3 hold; the unit `g` joins the exempt units; every new string has an English and a Hindi entry in the strings file; and Hindi text does not use "पशु" for the farmer's cows and buffaloes.
 
 ### C4.4 Superseded
@@ -928,12 +947,15 @@ These criteria no longer apply from the milestone shown. The criterion that repl
 
 - **From C4-M1:**
   - **Own-feed price and its default:** AC-3.2 (home rows have no price; buy lines use the cited price) [AC-C4-1.9, AC-C4-1.11]; AC-3.6 for home rows (price provenance stays in the audit of "Buy" lines, AC-6.1); AC-C3-2.2; AC-C3-2.4; AC-C3-E3 [AC-C4-E4].
-  - **Season marks and month selector on the picker:** AC-3.4, AC-3.5 [AC-C4-1.9]. The device month still decides `C`.
+  - **Season marks and month selector on the picker:** AC-3.4, AC-3.5 [AC-C4-1.9, AC-C4-1.30, AC-C4-1.32]. The month selector is gone, and the device date decides `C`. Screen 3 shows which day's season was used (AC-C4-1.30). AC-3.5's rule that an out-of-season feed stays usable is kept for home feeds.
   - **"Today kg" and today's cost:** AC-4.1, AC-4.2, AC-4.3 [AC-C4-1.7, AC-C4-E2]; AC-C3-R5.
   - **Savings vs today and the reference cost:** AC-5.2 [AC-C4-1.13 total line]; the "same milk for ₹`Z` less" part of AC-5.7; the `B` sentence of AC-5.11; AC-C3-R2 as worded [AC-C4-1.16].
   - **Single-page layout:** AC-C3-1.1, AC-C3-1.2, AC-C3-1.3, AC-C3-1.5, AC-C3-1.6 [AC-C4-1.1–1.6, AC-C4-1.25]; the AC-5.3 headline wording [AC-C4-1.15; `S ≤ effCap` still holds per animal]; AC-6.3 Show details and per-feed max caps [AC-C4-1.16]; AC-C3-2.1 [AC-C4-1.8, AC-C4-1.10].
   - **The English rule against the word "animal":** AC-C3-1.4 English part ("Your animals" is approved); the Hindi part continues in AC-C4-L1.
-  - **Own-feed candidate set and tags:** AC-C3-2.3, AC-C3-2.5 [shared definitions, AC-C4-1.11, AC-C4-1.12]; AC-C3-2.6 "You have" [AC-C4-1.15 "From home"]; AC-C3-2.11 [AC-C4-1.17]; AC-C3-R4 [AC-C4-1.23].
+  - **Own-feed candidate set and tags:** AC-C3-2.3, AC-C3-2.5 [shared definitions, AC-C4-1.11, AC-C4-1.12]; AC-C3-2.6 "You have" [AC-C4-1.15 "From home"]; AC-C3-2.11 [AC-C4-1.17]; AC-C3-R4 [deferred, C4.8].
+  - **AI layers (deferred, user decision 2026-10-15):** AC-2.2, AC-2.3, AC-7.1, AC-E4.1, AC-E4.2, AC-E5.1, AC-E6.1, AC-L1.5, AC-L1.6, the LLM parts of AC-E3.1 and AC-8.1's place beside Explain, the Explain part of AC-C3-R6, and AC-C3-R4.
+    - These do not apply to screens 1–3 [AC-C4-1.34, AC-C4-E8].
+    - The code behind them stays unchanged and tested (AC-C4-R7), and C4.8 holds the Change 4 versions for when AI returns.
   - **Rung labels on the main view:** AC-C3-2.7, AC-C3-2.8, AC-C3-2.9, AC-C3-2.10, AC-C3-E1, AC-C3-E2 (rung 0 is gone; the ladder now sets only the buying order and the milk gains in "What to buy") [AC-C4-1.13, AC-C4-1.14, AC-C4-1.14a, AC-C4-1.20, AC-C4-2.6].
   - **Budget messages:** AC-C3-2.12 [AC-C4-1.18]; AC-E7.1 and AC-C3-2.14 [AC-C4-E3].
   - **Other:** AC-8.1 [AC-C4-1.24]; AC-C3-2.15 [AC-C4-1.25, then AC-C4-2.11]; AC-C3-E8 [AC-C4-E8]; AC-C3-E9 [AC-C4-L1].
@@ -966,17 +988,17 @@ These existing criteria must keep passing. "Per animal" means the criterion hold
 - **AC-C4-R6 (Offline core):**
   - **Given** the app was loaded once or installed,
   - **When** it opens offline,
-  - **Then** AC-1.1 and AC-E3.1 hold for all 3 screens.
-- **AC-C4-R7 (LLM safety):**
-  - **Given** the device is online,
-  - **When** the helper or Explain is used,
-  - **Then** AC-2.2, AC-2.3 (filling the add card), AC-E4.1, AC-E4.2, AC-E5.1, AC-E6.1, AC-7.1, AC-L1.5 and AC-L1.6 hold; AC-C3-R6 holds with Explain limited per AC-C4-1.24.
+  - **Then** AC-1.1 holds for all 3 screens and the whole flow works offline (AC-C4-E8).
+- **AC-C4-R7 (AI endpoint unchanged and unused):**
+  - **Given** the C4-M1 and C4-M2 builds,
+  - **When** the code and the test suites are inspected and run,
+  - **Then** the AI endpoint (`api/llm.ts`) and its client code are unchanged and unused by the new flow (no import from screens 1–3 calls them), and their existing tests stay green.
 - **AC-C4-R8 (Feed search):**
   - **Given** screen 2,
   - **When** the user searches,
   - **Then** AC-3.1, AC-3.3 (grouping when no search text) and AC-L1.4 hold.
 - **AC-C4-R9 (One language per screen, ADR-0009):**
-  - **Given** every C4 state (screen 1 empty, prefilled, listed, 10-animal message, gating; screen 2 empty, rows, invalid row; screen 3 plan, "Nothing to buy today", Details open, both prompts, infeasible, offline, audit drawer, copy confirmation),
+  - **Given** every C4 state (screen 1 empty, prefilled, listed, 10-animal message, gating; screen 2 empty, rows, invalid row; screen 3 plan, "Nothing to buy today", Details open, both prompts, infeasible with "Few feeds are in season this month", the season line with today's date, offline, audit drawer, copy confirmation),
   - **When** it renders in each language,
   - **Then** AC-L1.1 (default English, remembered, switch without losing inputs), AC-L1.2, AC-L1.7 and AC-C4-L1 hold.
 - **AC-C4-R10 (Latin digits):**
@@ -985,7 +1007,7 @@ These existing criteria must keep passing. "Per animal" means the criterion hold
   - **Then** AC-L1.3 holds: Latin digits only, units `kg`, `g`, `L`, `₹`.
 - **AC-C4-R11 (Touch targets):**
   - **Given** any screen at 375 px wide,
-  - **When** every interactive control (species buttons, Add, Edit, Remove, Next, Back, Calculate, feed results, Details toggles, tappable numbers, example buttons, language toggle) is measured,
+  - **When** every interactive control (species buttons, Add, Edit, Remove, Next, Back, Calculate, feed results, Details toggles, tappable numbers, example buttons, language toggle, Copy summary, the tappable date in the season line) is measured,
   - **Then** each has a hit area of at least 44 × 44 CSS px.
 - **AC-C4-R12 (Suites stay green):**
   - **Given** the C4-M1 and C4-M2 builds,
@@ -998,8 +1020,10 @@ These existing criteria must keep passing. "Per animal" means the criterion hold
 - No total-kg stock over several days (home feed is kg per day only).
 - No savings against today's ration.
 - No per-animal budgets.
-- No whole-herd explanation from the LLM.
 - No saving the herd across reloads: a reload starts at `#/animals` with an empty list. Only the language choice is stored.
+- No manual month or season choice: the planning month always comes from today's device date (user decision 2026-10-15).
+- AI layers in the new flow (deferred, C4.8): no description helper and no Explain on screens 1–3 (user decision 2026-10-15).
+- No LLM-supplied nutrients, prices, breed figures or seasons.
 - No change to the single-animal solver formulation, the requirement tables, feed or breed citations, or prices.
 - No forced minimum use of home feed.
 
@@ -1024,7 +1048,103 @@ These existing criteria must keep passing. "Per animal" means the criterion hold
   - *Assumption:* the add card does not show the benchmark (it uses technical labels). It appears in "Details (for paravet)" and in the breed's audit.
 - **OQ-C4-9. Examples in C4-M1:**
   - *Assumption:* C4-M1 ships three one-animal examples (AC-C4-1.25), and C4-M2 replaces them with the three herd examples (AC-C4-2.11).
-- **OQ-C4-10. Explain in C4-M2:**
-  - *Assumption:* Explain is shown only for a one-animal herd. A per-animal Explain for herds is not added.
+- **OQ-C4-10. Explain in C4-M2 (superseded by [FEEDBACK.md](internal/FEEDBACK.md) Round 6, item 1):**
+  - *Superseded:* the default "Explain is shown only for a one-animal herd" no longer holds. Explain covers the whole herd plan `F` (AC-C4-2.12), and the non-goal "whole-herd explanation" is removed.
 - **OQ-C4-11. Supplement minimums per animal:**
   - *Assumption:* the ADR-0012 fixed minimums for `mineral_mix` and `common_salt` apply per animal, as in the single-animal solver, so a herd of `n` buys `n` times the minimum.
+- **OQ-C4-12. Several animals described in the C4-M1 build:**
+  - *Assumption:* the C4-M1 helper adds only the first animal named, as the C4-M1 list holds one animal, and shows "Only one animal can be added in this version" (pending native review). C4-M2 adds them all (AC-C4-2.13).
+- **OQ-C4-13. Months offered by "Change month" (removed, user decision 2026-10-15):**
+  - *Resolution:* there is no month control. The planning month is the month of today's device date, read again at each calculation (shared definitions, AC-C4-1.30).
+- **OQ-C4-14. Herd explanation length (resolved, user decision 2026-10-15):**
+  - *Resolution:* the herd explanation is never cut. Every animal is covered, and the full text is shown with no truncation (AC-C4-2.12). The prompt may still ask the model to be brief, but no animal is dropped or grouped away, and the template lists every animal.
+- **OQ-C4-15. Feed amounts with no stated kg in the description:**
+  - *Assumption:* the feed is added as a home row with a blank kg/day, so the row is invalid (AC-C4-E4) and the user must type an amount before **Calculate ration**. No amount is guessed.
+- **OQ-C4-16. Number matching in the explanation verifier (resolved, user decision 2026-10-15):**
+  - *Resolution:* matching is unitless, as it is now. A number counts as verified when its value matches an authorized value within the OQ11 tolerance, whatever unit word follows it (AC-C4-1.29).
+- **Note on OQ-C4-10, OQ-C4-12, OQ-C4-14, OQ-C4-15 and OQ-C4-16:** these concern the AI layers. They are on hold with C4.8 (user decision 2026-10-15) and apply only if those layers return.
+
+### C4.8 Deferred: AI layers (user decision 2026-10-15)
+
+The user decided on 2026-10-15 ([FEEDBACK.md](internal/FEEDBACK.md) Round 6 item 5): "remove the AI options completely, lets just add the core app features now ill decide upon the AI features later." The criteria below are **not active**. They are kept word for word, IDs included, so they can return later. While deferred:
+
+- AC-C4-1.34 and AC-C4-E8 hold: no AI control appears on screens 1–3.
+- AC-C4-R7 holds: the AI endpoint and its code are unchanged and unused.
+- The non-goal "no unit-aware number matching" (user decision 2026-10-15) applies to the explanation verifier if these return.
+
+Some deferred criteria cite each other, or cite active criteria whose AI parts have been removed (AC-C4-1.24, AC-C4-E8, AC-C4-R6, AC-C4-R7). Those references are to the versions kept here.
+
+#### Deferred journeys
+
+- **[Deferred] Journey C4-A, step 9:** "Online, the user taps "Explain in simple words" and reads a short English explanation with a verification badge. Offline, a deterministic template explanation is shown instead."
+- **[Deferred] Journey C4-B, step 6:** "Online, "Explain in simple words" explains the herd plan: what to buy first and why, what each animal gets, and what limits milk."
+- **[Deferred] Journey C4-C: Start with a description (C4-M1 for one animal, C4-M2 for several; alternative to steps 2–6 of C4-A)**
+  1. Online, on screen 1, the user expands the collapsed "Describe your animals and feed" helper, reads the privacy notice, and types, for example, *"2 Murrah bhains 8 aur 6 litre, ek gir gaay sukhi, 20 kilo bhusa ghar pe hai, 300 rupaye roz"*.
+  2. The user taps **Fill from description**. The animals appear in the list with a "check" mark. The home feeds and the budget are filled in, and weight and fat come from the breed prefill unless they were stated.
+  3. **Next** and **Calculate ration** stay blocked until the user taps **Values are right**. **Discard** clears everything the helper filled in.
+  4. Unmatched feed names must be mapped to a library feed or dropped. The flow then continues as in C4-A.
+
+#### Deferred acceptance criteria
+
+- **[Deferred] AC-C4-1.23 ("Describe your animals and feed" helper: placement) [C4-M1]:**
+  - **Given** screen 1,
+  - **When** it renders,
+  - **Then** a helper titled "Describe your animals and feed" (Hindi "अपनी गाय-भैंस और चारे के बारे में लिखें", pending native review) is collapsed by default; when expanded it shows the privacy notice of AC-2.2, a free-text box that accepts Hindi, Hinglish or English, and **Fill from description**; and the manual add-animal card stays fully usable whether or not the helper is used.
+- **[Deferred] AC-C4-1.26 (Helper extracts one animal, home feeds and budget) [C4-M1]:**
+  - **Given** the device is online and the helper is expanded,
+  - **When** the user enters a description naming one cow or buffalo, home feeds with amounts, and a daily spend (in Hindi, Hinglish or English) and taps **Fill from description**,
+  - **Then** one animal is listed with a "check" mark (Hindi "जाँचें", pending native review), holding its species, its breed only if it matches the breed list for that species (otherwise the breed is blank and required), its today's milk, and its weight or fat only if stated (otherwise the breed prefill of AC-C4-1.3 and AC-C4-1.4 applies); each matched home feed becomes a screen-2 row with its stated kg/day (blank and invalid per AC-C4-E4 when no amount was stated); the stated budget fills the herd budget; and the same description in Hindi, Hinglish and English gives the same prefill (AC-L1.5).
+- **[Deferred] AC-C4-1.27 (Prefill must be confirmed) [C4-M1]:**
+  - **Given** an unconfirmed prefill from the helper,
+  - **When** the user looks at screens 1 and 2,
+  - **Then** **Next** and **Calculate ration** are disabled with the line "Check the filled values, then tap Values are right" (Hindi "भरे गए मान जाँचें, फिर 'मान सही हैं' दबाएँ", pending native review); the user can edit any prefilled value; tapping **Values are right** (Hindi "मान सही हैं") removes the "check" marks and unblocks **Next** and **Calculate ration** (subject to AC-C4-1.8 and AC-C4-1.10); tapping **Discard** (Hindi "रद्द करें") removes every animal, home-feed row and budget value the helper filled in and keeps values the user entered before the extraction; and the solver never runs on unconfirmed values.
+- **[Deferred] AC-C4-1.28 (Unmatched feeds and LLM numbers) [C4-M1]:**
+  - **Given** an extraction naming a feed not in the library,
+  - **When** the prefill is shown,
+  - **Then** the feed appears under "Unmatched feeds" and must be mapped to a library feed or dropped before **Values are right** is enabled (AC-E5.1); and nothing from the LLM except species, breed name, today's milk, stated weight, stated fat, feed names, feed kg/day and the budget is used (AC-C4-E11).
+- **[Deferred] AC-C4-1.29 ("Explain in simple words") [C4-M1]:**
+  - **Given** a feasible plan for one animal and the device online,
+  - **When** the user taps "Explain in simple words" (Hindi "आसान शब्दों में समझाएँ", pending native review),
+  - **Then** the app requests a short plain-English explanation of `F` covering what to buy first and why, what the animal gets, and what limits milk; the explanation body is English in both language modes and the badge is in the active language (AC-L1.6); every number in the body is checked against `F`, the shopping list (kg, ₹, `ΔL`), the per-animal solution (`S_i`, ration lines, `t*`, the limit named per AC-5.5 or AC-C4-2.10), the inputs and the cited rows. Matching is unitless (user decision 2026-10-15): a number in the text is verified when its value matches an authorized value within the OQ11 tolerance, whatever unit word follows it, and there is no unit-aware matching. When all numbers trace, the badge reads "All N numbers verified" (AC-7.1).
+- **[Deferred] AC-C4-1.33 (Explain fallback) [C4-M1]:**
+  - **Given** a feasible plan,
+  - **When** the user taps "Explain in simple words" and the device is offline, the server has no LLM key, or the request fails or times out or is rate limited,
+  - **Then** the app shows the deterministic template explanation in the active language (AC-E4.2), built only from `F`, the shopping list, the per-animal solution and cited rows, covering the same three topics, with the template badge; offline it makes no network request; and when the LLM text has an untraced number, AC-E6.1 applies (at most one regeneration, then the template).
+- **[Deferred] AC-C4-2.12 (Copy and Explain for a herd) [C4-M2]:** (its Copy summary part is active as AC-C4-2.14)
+  - **Given** a plan for 2 or more animals,
+  - **When** the user taps **Copy summary** or "Explain in simple words",
+  - **Then** **Copy summary** copies the herd plan per AC-C4-1.24 with every animal card; the explanation covers the herd plan `F`: what to buy first and why (herd totals), what each animal gets (by label), and what limits milk (AC-C4-2.10); every number traces per AC-C4-1.29 to `F`, the shopping list, the per-animal solutions (each animal's `S_i`, ration lines and `t*`), the inputs or cited rows; AC-C4-1.33 applies with a deterministic herd template that names every animal by label; and the explanation is never cut (user decision 2026-10-15). The verified LLM text or the template is shown in full for any herd of up to 10 animals, with no truncation, "show more" cut-off or dropped animal, and the screen scrolls to fit it.
+- **[Deferred] AC-C4-2.13 (Helper extracts several animals) [C4-M2]:**
+  - **Given** the device is online,
+  - **When** the description names several animals (for example "2 Murrah buffaloes giving 8 and 6 litres, one dry Gir cow"),
+  - **Then** each animal is listed separately with a "check" mark and its own label per species ("Buffalo 1", "Buffalo 2", "Cow 1"), with the AC-C4-1.26 rules applied to each; "2 Murrah buffaloes" with one milk figure gives two animals with that milk; a dry animal gets milk `0`; and AC-C4-1.27 and AC-C4-1.28 hold for the whole prefill.
+- **[Deferred] AC-C4-E8, AI version (Online-only helper while offline) [C4-M1]:** (active AC-C4-E8 replaces it)
+  - **Given** the device is offline,
+  - **When** the user uses screens 1–3, the examples and the audits,
+  - **Then** all work with no network request; the helper can still be expanded, but its **Fill from description** is disabled with "Needs internet" (AC-E3.1) and manual entry works fully; "Explain in simple words" stays enabled and shows the deterministic template per AC-C4-1.33 (this replaces AC-E3.1's disabled Explain for Change 4); and the planning month is still read from the device date offline.
+- **[Deferred] AC-C4-E10 (LLM returns more than 10 animals) [C4-M2]:**
+  - **Given** the device is online and the extraction returns more than 10 animals, or more than fit beside the animals already listed,
+  - **When** the prefill is shown,
+  - **Then** only the first animals in the order returned are added, up to 10 in the list in total; the message "Only 10 animals can be added; the rest were left out" (Hindi "सिर्फ़ 10 गाय-भैंस जोड़ी जा सकती हैं; बाकी छोड़ दी गईं", pending native review) is shown; and AC-C4-1.27 applies to those added.
+- **[Deferred] AC-C4-E11 (LLM returns a nutrient or a price) [C4-M1]:**
+  - **Given** an extraction response that contains nutrient values (for example `CP`, `ME`, `TDN`), feed prices, breed caps, season months or any field outside the allowed list of AC-C4-1.28,
+  - **When** the prefill is built,
+  - **Then** those fields are ignored: no value from them reaches the library, the breed table, the buy set `C`, a prefill field or the solver; the feed library's nutrients and cited prices are unchanged; and the plan equals the plan from the same confirmed inputs entered by hand.
+- **[Deferred] AC-C4-R6, AI version (Offline core):** (active AC-C4-R6 replaces it)
+  - **Given** the app was loaded once or installed,
+  - **When** it opens offline,
+  - **Then** AC-1.1 holds for all 3 screens, and AC-E3.1 holds as amended by AC-C4-E8.
+- **[Deferred] AC-C4-R7, AI version (LLM safety):** (active AC-C4-R7 replaces it)
+  - **Given** the device is online,
+  - **When** the helper or Explain is used,
+  - **Then** these hold with the extraction schema extended to an animals array, home feeds with kg/day, and the budget:
+    - AC-2.2 (privacy notice);
+    - the confirm-before-use rule of AC-2.3 (AC-C4-1.27);
+    - AC-E4.1 (extraction failure keeps manual entry usable);
+    - AC-E4.2, AC-E5.1, AC-E6.1, AC-7.1, AC-L1.5 and AC-L1.6;
+    - AC-C3-R6, with Explain per AC-C4-1.29, AC-C4-1.33 and AC-C4-2.12.
+
+    The LLM never supplies a nutrient value, a price, a breed figure or a season (AC-C4-E11).
+- **[Deferred] Language-list items** (removed from active AC-C4-L1 and AC-C4-R9):
+  - From AC-C4-L1: "the helper with its "check" marks, **Values are right** and **Discard**, the Explain action, badge and template".
+  - From AC-C4-R9: "screen 1 helper with an unconfirmed prefill, unmatched feeds and the 10-animal cut message" and "the verified explanation and the template explanation".
