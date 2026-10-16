@@ -390,7 +390,7 @@
             "src/services/rationService.ts"
           ],
           "acceptance_criteria": "SPEC AC-C4-1.10, AC-C4-1.13, AC-C4-1.14, AC-C4-1.15, AC-C4-1.16, AC-C4-1.17, AC-C4-1.18, AC-C4-1.19, AC-C4-1.20: npx vitest run tests/unit/herdPlan.test.ts passes, confirming buying order, positive step milk increments, prompt conditions, and Oracle alignment with C3 single-animal plan.",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "C4-M1-T3",

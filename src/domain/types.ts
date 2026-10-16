@@ -611,6 +611,8 @@ interface HerdPlanBase {
   buySet: SelectedFeedInput[];
   /** Device month (ADR-0016). */
   month: number;
+  /** ISO date (YYYY-MM-DD) of the device date at plan time; shown on the season line (ADR-0021). */
+  planDate: string;
 }
 
 export type HerdPlan =
