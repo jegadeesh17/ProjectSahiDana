@@ -449,7 +449,7 @@
             "tests/unit/herdSolver.test.ts"
           ],
           "acceptance_criteria": "SPEC AC-C4-2.3, AC-C4-2.4, AC-C4-2.5, AC-C4-2.10: vitest run tests/unit/herdSolver.test.ts passes all herd cases.",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "C4-M2-T2",

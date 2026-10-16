@@ -206,6 +206,14 @@
     "exit_code": 0,
     "summary": "22 unit test files passed (405 tests, including dry herd shopping list milk omission per AC-C4-1.14/AC-C4-1.24 in tests/unit/herdUi.test.tsx and tests/unit/domainFormat.test.ts, and audit drawer history cleanup on non-popstate close per AC-C4-1.22/AC-C4-R5/ARCHITECTURE line 1317 in tests/unit/hashRoute.test.ts) and 8 Playwright E2E tests passed in tests/e2e/herd-flow.spec.ts (including single page.goBack() navigation to #/feeds after closing audit drawer with Close button)",
     "failure_output": ""
+  },
+  {
+    "task_id": "C4-M2-T1",
+    "attempt": 1,
+    "command": "npm test",
+    "exit_code": 0,
+    "summary": "22 unit test files passed, 423 tests passed (including 56 tests in tests/unit/herdSolver.test.ts verifying multi-animal herd solver up to 10 animals, fair-share t*, home stock conservation, Stage 3 tie-break, single-animal equivalence on all 18 benchmark animals, double-precision verification via verifyHerdSolution, and isolated limit diagnosis across all limit kinds)",
+    "failure_output": ""
   }
 ]
 

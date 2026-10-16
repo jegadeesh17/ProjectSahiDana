@@ -1,14 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import testAnimals from '../../eval/test_animals.json';
 import { solveHerd, solveHerdStep, verifyHerdSolution } from '../../src/domain/herdSolver';
-import { solveRation, SolverError, TOL } from '../../src/domain/solver';
+import { DEFAULT_FEED_LIBRARY, solveRation, SolverError, TOL } from '../../src/domain/solver';
 import type {
   BenchmarkAnimalEntry,
+  FeedItem,
   HerdAnimal,
+  HerdInfeasible,
+  HerdShortfall,
   HerdSolution,
   HomeFeed,
   SelectedFeedInput,
 } from '../../src/domain/types';
+import { roundSupportedMilkDown } from '../../src/domain/verdict';
 
 const benchmarkEntries = testAnimals as unknown as BenchmarkAnimalEntry[];
 
@@ -376,6 +380,42 @@ describe('herdSolver invalid and edge inputs', () => {
     expect(sol.homeUse.length).toBe(0);
     expect(sol.animals[0].solution.feeds.some((f) => f.feedId === 'cottonseed_cake')).toBe(false);
   });
+
+  it('deduplicates multiple home feed rows for the same feedId and uses the first entry', () => {
+    const animal = toHerdAnimal(baseEntry);
+    const dupHomeFeeds: HomeFeed[] = [
+      { feedId: 'wheat_straw', kgPerDay: 5 },
+      { feedId: 'wheat_straw', kgPerDay: 20 },
+    ];
+    const outcome = solveHerd([animal], baseEntry.selectedFeeds, dupHomeFeeds, baseEntry.animal.budgetInrPerDay);
+    expect(outcome.status).toBe('optimal');
+    const sol = outcome as HerdSolution;
+    const straw = sol.homeUse.find((h) => h.feedId === 'wheat_straw');
+    expect(straw).toBeDefined();
+    expect(straw!.stockKgPerDay).toBe(5);
+  });
+
+  it('handles unknown breedId by falling back to species breed and non-finite milk yield as dry animal', () => {
+    const fallbackAnimal: HerdAnimal = {
+      key: 'a1',
+      label: { species: 'buffalo', n: 1 },
+      profile: {
+        species: 'buffalo',
+        breedId: 'non_existent_breed',
+        bodyWeightKg: 450,
+        milkYieldLitersPerDay: -10, // negative milk treated as dry animal
+        milkFatPct: null,
+      },
+      weightSource: 'typed',
+      fatSource: 'typed',
+      isConfirmed: true,
+    };
+    const outcome = solveHerd([fallbackAnimal], baseEntry.selectedFeeds, [], baseEntry.animal.budgetInrPerDay);
+    expect(outcome.status).toBe('optimal');
+    const sol = outcome as HerdSolution;
+    expect(sol.animals[0].milkTargetLPerDay).toBe(0);
+    expect(sol.animals[0].solution.verdict.kind).toBe('dry_animal');
+  });
 });
 
 describe('solveHerdStep prefix solves', () => {
@@ -496,4 +536,634 @@ describe('herdSolver multi-animal joint LP (AC-C4-2.1 to 2.5)', () => {
     ).not.toThrow();
   });
 });
+
+describe('isolated herd limit diagnosis for all limit kinds (AC-C4-2.10, ARCHITECTURE line 1409)', () => {
+  const tpl = DEFAULT_FEED_LIBRARY[0];
+  const makeFeed = (
+    id: string,
+    vertical: FeedItem['vertical'],
+    cpPctDm: number,
+    meMcalPerKgDm: number,
+    caGramsPerKgDm: number,
+    pGramsPerKgDm: number,
+    price = 10,
+  ): FeedItem => ({
+    ...tpl,
+    id,
+    englishName: id,
+    vertical,
+    dmPct: 100,
+    cpPctDm,
+    meMcalPerKgDm,
+    caGramsPerKgDm,
+    pGramsPerKgDm,
+    defaultPriceInrPerKgAsFed: price,
+  });
+
+  const syntheticLib: FeedItem[] = [
+    makeFeed('forage_balanced', 'indigenous_forage', 18, 2.8, 6, 4, 10),
+    makeFeed('forage_super_dense', 'indigenous_forage', 25, 3.5, 15, 12, 10),
+    makeFeed('forage_low_me', 'indigenous_forage', 22, 1.65, 8, 5, 8),
+    makeFeed('forage_zero', 'crop_residue', 0, 0, 0, 0, 5),
+    makeFeed('forage_no_cp', 'indigenous_forage', 0, 3.0, 8, 5, 8),
+    makeFeed('forage_no_me', 'indigenous_forage', 22, 0, 8, 5, 8),
+    makeFeed('forage_no_ca', 'indigenous_forage', 22, 3.0, 0, 5, 8),
+    makeFeed('forage_no_p', 'indigenous_forage', 22, 3.0, 8, 0, 8),
+    makeFeed('conc_cp', 'agro_byproduct', 60, 0, 0, 0, 20),
+    makeFeed('conc_me', 'agro_byproduct', 0, 5.0, 0, 0, 20),
+    makeFeed('min_ca', 'mineral', 0, 0, 250, 0, 20),
+    makeFeed('min_p', 'mineral', 0, 0, 0, 250, 20),
+  ];
+
+  const sel = (feedId: string, maxKgAsFedPerDay: number | null = null, price = 10): SelectedFeedInput => ({
+    feedId,
+    priceInrPerKgAsFed: price,
+    maxKgAsFedPerDay,
+    currentKgAsFedPerDay: null,
+  });
+
+  const testCow: HerdAnimal = {
+    key: 'a1',
+    label: { species: 'cow', n: 1 },
+    profile: {
+      species: 'cow',
+      breedId: 'gir',
+      bodyWeightKg: 400,
+      milkYieldLitersPerDay: 4,
+      milkFatPct: 4.0,
+    },
+    weightSource: 'typed',
+    fatSource: 'typed',
+    isConfirmed: true,
+  };
+
+  it('1. budget is the sole tight limit when budget limits Y* below breed_cap and DM ceiling', () => {
+    const out = solveHerd([testCow], [sel('forage_balanced', null, 10)], [], 65, syntheticLib);
+    expect(out.status).toBe('optimal');
+    if (out.status !== 'optimal') return;
+    expect(out.budgetTight).toBe(true);
+    expect(out.limits).toEqual([{ kind: 'budget' }]);
+  });
+
+  it('2. milk_target is the sole tight limit when t* = 1 with slack on budget and feeds', () => {
+    const out = solveHerd([testCow], [sel('forage_balanced', null, 10)], [], 500, syntheticLib);
+    expect(out.status).toBe('optimal');
+    if (out.status !== 'optimal') return;
+    expect(out.shareT).toBeCloseTo(1, 5);
+    expect(out.budgetTight).toBe(false);
+    expect(out.limits).toEqual([{ kind: 'milk_target' }]);
+  });
+
+  it('3. home_stock is named first when shared home stock bounds t*', () => {
+    const cow1: HerdAnimal = {
+      ...testCow,
+      key: 'a1',
+      label: { species: 'cow', n: 1 },
+      profile: { ...testCow.profile, milkYieldLitersPerDay: 5 },
+    };
+    const cow2: HerdAnimal = {
+      ...testCow,
+      key: 'a2',
+      label: { species: 'cow', n: 2 },
+      profile: { ...testCow.profile, milkYieldLitersPerDay: 5 },
+    };
+    const homeFeeds: HomeFeed[] = [{ feedId: 'forage_super_dense', kgPerDay: 10 }];
+    const out = solveHerd([cow1, cow2], [], homeFeeds, 500, syntheticLib);
+    expect(out.status).toBe('optimal');
+    if (out.status !== 'optimal') return;
+    expect(out.shareT).toBeLessThan(1 - 1e-6);
+    expect(out.budgetTight).toBe(false);
+    expect(out.limits[0]).toEqual({ kind: 'home_stock', feedId: 'forage_super_dense' });
+    expect(out.limits.some((l) => l.kind === 'home_stock')).toBe(true);
+  });
+
+  it('4. intake is the sole tight limit when NRC 2001 DM ceiling stops Y*', () => {
+    const out = solveHerd([testCow], [sel('forage_low_me', null, 8)], [], 500, syntheticLib);
+    expect(out.status).toBe('optimal');
+    if (out.status !== 'optimal') return;
+    expect(out.limits).toEqual([{ kind: 'animal', key: 'a1', constraint: 'intake' }]);
+  });
+
+  it('5. roughage is the sole tight limit when capped roughage forces roughage share == 40%', () => {
+    const out = solveHerd(
+      [testCow],
+      [
+        sel('forage_zero', 3.0, 5),
+        sel('conc_cp', null, 20),
+        sel('conc_me', null, 20),
+        sel('min_ca', null, 20),
+        sel('min_p', null, 20),
+      ],
+      [],
+      500,
+      syntheticLib,
+    );
+    expect(out.status).toBe('optimal');
+    if (out.status !== 'optimal') return;
+    expect(out.limits).toEqual([{ kind: 'animal', key: 'a1', constraint: 'roughage' }]);
+  });
+
+  it('6. CP is the sole tight limit when CP supplier is capped', () => {
+    const out = solveHerd(
+      [testCow],
+      [
+        sel('forage_no_cp', null, 8),
+        sel('conc_cp', 1.38, 20),
+      ],
+      [],
+      500,
+      syntheticLib,
+    );
+    expect(out.status).toBe('optimal');
+    if (out.status !== 'optimal') return;
+    expect(out.limits).toEqual([{ kind: 'animal', key: 'a1', constraint: 'CP' }]);
+  });
+
+  it('7. ME is the sole tight limit when ME supplier is capped', () => {
+    const out = solveHerd(
+      [testCow],
+      [
+        sel('forage_no_me', null, 8),
+        sel('conc_me', 3.4, 20),
+      ],
+      [],
+      500,
+      syntheticLib,
+    );
+    expect(out.status).toBe('optimal');
+    if (out.status !== 'optimal') return;
+    expect(out.limits).toEqual([{ kind: 'animal', key: 'a1', constraint: 'ME' }]);
+  });
+
+  it('8. Ca is the sole tight limit when Ca supplier is capped', () => {
+    const out = solveHerd(
+      [testCow],
+      [
+        sel('forage_no_ca', null, 8),
+        sel('min_ca', 0.135, 20),
+      ],
+      [],
+      500,
+      syntheticLib,
+    );
+    expect(out.status).toBe('optimal');
+    if (out.status !== 'optimal') return;
+    expect(out.limits).toEqual([{ kind: 'animal', key: 'a1', constraint: 'Ca' }]);
+  });
+
+  it('9. P is the sole tight limit when P supplier is capped', () => {
+    const out = solveHerd(
+      [testCow],
+      [
+        sel('forage_no_p', null, 8),
+        sel('min_p', 0.114, 20),
+      ],
+      [],
+      500,
+      syntheticLib,
+    );
+    expect(out.status).toBe('optimal');
+    if (out.status !== 'optimal') return;
+    expect(out.limits).toEqual([{ kind: 'animal', key: 'a1', constraint: 'P' }]);
+  });
+
+  it('10. multiple tight limits follow priority order: budget, milk_target, home_stock, animal intake/roughage/nutrients (line 1409)', () => {
+    const cow1: HerdAnimal = {
+      ...testCow,
+      key: 'a1',
+      label: { species: 'cow', n: 1 },
+      profile: { ...testCow.profile, milkYieldLitersPerDay: 6 },
+    };
+    const cow2: HerdAnimal = {
+      ...testCow,
+      key: 'a2',
+      label: { species: 'cow', n: 2 },
+      profile: { ...testCow.profile, milkYieldLitersPerDay: 6 },
+    };
+    const homeFeeds: HomeFeed[] = [{ feedId: 'forage_zero', kgPerDay: 2 }];
+    const out = solveHerd(
+      [cow1, cow2],
+      [sel('forage_balanced', null, 10)],
+      homeFeeds,
+      100,
+      syntheticLib,
+    );
+    expect(out.status).toBe('optimal');
+    if (out.status !== 'optimal') return;
+    expect(out.limits[0].kind).toBe('budget');
+    const homeIdx = out.limits.findIndex((l) => l.kind === 'home_stock');
+    const animalIdx = out.limits.findIndex((l) => l.kind === 'animal');
+    if (homeIdx !== -1 && animalIdx !== -1) {
+      expect(homeIdx).toBeLessThan(animalIdx);
+    }
+  });
+});
+
+describe('herdSolver multi-animal herd up to 10 animals (AC-C4-2.3, AC-C4-2.4, AC-C4-2.5)', () => {
+  it('solves 3-animal multi-species herd with fair share t*, home stock, and shopping conservation', () => {
+    const a1: HerdAnimal = {
+      key: 'a1',
+      label: { species: 'cow', n: 1 },
+      profile: {
+        species: 'cow',
+        breedId: 'gir',
+        bodyWeightKg: 400,
+        milkYieldLitersPerDay: 6,
+        milkFatPct: 4.5,
+      },
+      weightSource: 'typed',
+      fatSource: 'typed',
+      isConfirmed: true,
+    };
+    const a2: HerdAnimal = {
+      key: 'a2',
+      label: { species: 'buffalo', n: 1 },
+      profile: {
+        species: 'buffalo',
+        breedId: 'murrah',
+        bodyWeightKg: 500,
+        milkYieldLitersPerDay: 8,
+        milkFatPct: 7.0,
+      },
+      weightSource: 'typed',
+      fatSource: 'typed',
+      isConfirmed: true,
+    };
+    const a3: HerdAnimal = {
+      key: 'a3',
+      label: { species: 'cow', n: 2 },
+      profile: {
+        species: 'cow',
+        breedId: 'sahiwal',
+        bodyWeightKg: 420,
+        milkYieldLitersPerDay: 10,
+        milkFatPct: 4.8,
+      },
+      weightSource: 'typed',
+      fatSource: 'typed',
+      isConfirmed: true,
+    };
+
+    const homeFeeds: HomeFeed[] = [
+      { feedId: 'wheat_straw', kgPerDay: 12 },
+      { feedId: 'berseem', kgPerDay: 30 },
+    ];
+    const buySet: SelectedFeedInput[] = [
+      { feedId: 'mustard_cake', priceInrPerKgAsFed: 33, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null },
+      { feedId: 'wheat_bran', priceInrPerKgAsFed: 20, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null },
+      { feedId: 'mineral_mix', priceInrPerKgAsFed: 70, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null },
+      { feedId: 'common_salt', priceInrPerKgAsFed: 5, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null },
+    ];
+    const budget = 450;
+
+    const outcome = solveHerd([a1, a2, a3], buySet, homeFeeds, budget);
+    expect(outcome.status).toBe('optimal');
+    const sol = outcome as HerdSolution;
+
+    // AC-C4-2.4: Every milking animal achieves the exact same share t*
+    expect(sol.shareT).toBeGreaterThan(0);
+    expect(sol.shareT).toBeLessThanOrEqual(1);
+    for (const aSol of sol.animals) {
+      expect(aSol.milkTargetLPerDay).toBeGreaterThan(0);
+      expect(aSol.milkExactLPerDay).toBeCloseTo(sol.shareT * aSol.milkTargetLPerDay, 5);
+      expect(aSol.milkLPerDay).toBe(roundSupportedMilkDown(aSol.milkExactLPerDay));
+    }
+
+    // AC-C4-2.3: Every animal meets its maintenance and requirements
+    expect(sol.purchaseCostInrPerDay).toBeLessThanOrEqual(budget + TOL);
+    for (const aSol of sol.animals) {
+      expect(aSol.solution.supplied.dmKgPerDay).toBeLessThanOrEqual(
+        aSol.solution.requirementsAtS.dmKgPerDay + TOL,
+      );
+      expect(aSol.solution.supplied.cpGramsPerDay).toBeGreaterThanOrEqual(
+        aSol.solution.requirementsAtS.cpGramsPerDay - TOL,
+      );
+      expect(aSol.solution.supplied.meMcalPerDay).toBeGreaterThanOrEqual(
+        aSol.solution.requirementsAtS.meMcalPerDay - TOL,
+      );
+    }
+
+    // AC-C4-2.5: Shopping line conservation (sum of card buy lines equals buyTotals)
+    for (const bTotal of sol.buyTotals) {
+      const sumAnimalKg = bTotal.perAnimalKg.reduce((s, p) => s + p.kg, 0);
+      expect(sumAnimalKg).toBeCloseTo(bTotal.kgPerDay, 5);
+
+      let cardBuySum = 0;
+      for (const aSol of sol.animals) {
+        for (const line of aSol.solution.feeds) {
+          if (line.feedId === bTotal.feedId && line.source === 'buy') {
+            cardBuySum += line.kgAsFed;
+          }
+        }
+      }
+      expect(cardBuySum).toBeCloseTo(bTotal.kgPerDay, 5);
+    }
+
+    // AC-C4-2.5: Home stock limits respected
+    for (const h of homeFeeds) {
+      const used = sol.homeUse.find((u) => u.feedId === h.feedId);
+      expect(used).toBeDefined();
+      expect(used!.usedKgPerDay).toBeLessThanOrEqual(h.kgPerDay + TOL);
+    }
+
+    // Verify numerical guard passes
+    expect(() => verifyHerdSolution(sol, [a1, a2, a3], buySet, homeFeeds)).not.toThrow();
+  });
+
+  it('solves a full 10-animal herd with mixed species, milking and dry animals', () => {
+    const animals: HerdAnimal[] = [
+      {
+        key: 'a1',
+        label: { species: 'buffalo', n: 1 },
+        profile: { species: 'buffalo', breedId: 'murrah', bodyWeightKg: 500, milkYieldLitersPerDay: 8, milkFatPct: 7.0 },
+        weightSource: 'typed',
+        fatSource: 'typed',
+        isConfirmed: true,
+      },
+      {
+        key: 'a2',
+        label: { species: 'buffalo', n: 2 },
+        profile: { species: 'buffalo', breedId: 'murrah', bodyWeightKg: 460, milkYieldLitersPerDay: 6, milkFatPct: 6.8 },
+        weightSource: 'typed',
+        fatSource: 'typed',
+        isConfirmed: true,
+      },
+      {
+        key: 'a3',
+        label: { species: 'cow', n: 1 },
+        profile: { species: 'cow', breedId: 'gir', bodyWeightKg: 400, milkYieldLitersPerDay: 7, milkFatPct: 4.5 },
+        weightSource: 'typed',
+        fatSource: 'typed',
+        isConfirmed: true,
+      },
+      {
+        key: 'a4',
+        label: { species: 'cow', n: 2 },
+        profile: { species: 'cow', breedId: 'gir', bodyWeightKg: 380, milkYieldLitersPerDay: 5, milkFatPct: 4.2 },
+        weightSource: 'typed',
+        fatSource: 'typed',
+        isConfirmed: true,
+      },
+      {
+        key: 'a5',
+        label: { species: 'cow', n: 3 },
+        profile: { species: 'cow', breedId: 'sahiwal', bodyWeightKg: 430, milkYieldLitersPerDay: 9, milkFatPct: 4.8 },
+        weightSource: 'typed',
+        fatSource: 'typed',
+        isConfirmed: true,
+      },
+      {
+        key: 'a6',
+        label: { species: 'cow', n: 4 },
+        profile: { species: 'cow', breedId: 'rathi', bodyWeightKg: 320, milkYieldLitersPerDay: 6, milkFatPct: 4.0 },
+        weightSource: 'typed',
+        fatSource: 'typed',
+        isConfirmed: true,
+      },
+      {
+        key: 'a7',
+        label: { species: 'buffalo', n: 3 },
+        profile: { species: 'buffalo', breedId: 'surti', bodyWeightKg: 420, milkYieldLitersPerDay: 5, milkFatPct: 6.5 },
+        weightSource: 'typed',
+        fatSource: 'typed',
+        isConfirmed: true,
+      },
+      {
+        key: 'a8',
+        label: { species: 'buffalo', n: 4 },
+        profile: { species: 'buffalo', breedId: 'nili_ravi', bodyWeightKg: 480, milkYieldLitersPerDay: 7, milkFatPct: 6.5 },
+        weightSource: 'typed',
+        fatSource: 'typed',
+        isConfirmed: true,
+      },
+      {
+        key: 'a9',
+        label: { species: 'buffalo', n: 5 },
+        profile: { species: 'buffalo', breedId: 'surti', bodyWeightKg: 400, milkYieldLitersPerDay: 0, milkFatPct: 0 },
+        weightSource: 'typed',
+        fatSource: 'typed',
+        isConfirmed: true,
+      },
+      {
+        key: 'a10',
+        label: { species: 'cow', n: 5 },
+        profile: { species: 'cow', breedId: 'nondescript_cow', bodyWeightKg: 350, milkYieldLitersPerDay: 0, milkFatPct: 0 },
+        weightSource: 'typed',
+        fatSource: 'typed',
+        isConfirmed: true,
+      },
+    ];
+
+    expect(animals.length).toBe(10);
+
+    const homeFeeds: HomeFeed[] = [
+      { feedId: 'wheat_straw', kgPerDay: 40 },
+      { feedId: 'berseem', kgPerDay: 80 },
+    ];
+    const buySet: SelectedFeedInput[] = [
+      { feedId: 'mustard_cake', priceInrPerKgAsFed: 33, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null },
+      { feedId: 'wheat_bran', priceInrPerKgAsFed: 20, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null },
+      { feedId: 'bajra_grain', priceInrPerKgAsFed: 24, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null },
+      { feedId: 'mineral_mix', priceInrPerKgAsFed: 70, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null },
+      { feedId: 'common_salt', priceInrPerKgAsFed: 5, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null },
+    ];
+    const budget = 1800;
+
+    const outcome = solveHerd(animals, buySet, homeFeeds, budget);
+    expect(outcome.status).toBe('optimal');
+    const sol = outcome as HerdSolution;
+
+    expect(sol.animals.length).toBe(10);
+    expect(sol.purchaseCostInrPerDay).toBeLessThanOrEqual(budget + TOL);
+
+    // Milking animals all get exactly the same fair share t* (AC-C4-2.4)
+    expect(sol.shareT).toBeGreaterThan(0);
+    expect(sol.shareT).toBeLessThanOrEqual(1);
+
+    const milkingSolutions = sol.animals.slice(0, 8);
+    for (const aSol of milkingSolutions) {
+      expect(aSol.milkTargetLPerDay).toBeGreaterThan(0);
+      expect(aSol.milkExactLPerDay).toBeCloseTo(sol.shareT * aSol.milkTargetLPerDay, 5);
+      expect(aSol.milkLPerDay).toBe(roundSupportedMilkDown(aSol.milkExactLPerDay));
+      expect(aSol.solution.verdict.kind).not.toBe('dry_animal');
+    }
+
+    // Dry animals (a9, a10) get maintenance rations with 0 milk (AC-C4-2.7)
+    const drySolutions = sol.animals.slice(8);
+    for (const dSol of drySolutions) {
+      expect(dSol.milkTargetLPerDay).toBe(0);
+      expect(dSol.milkExactLPerDay).toBe(0);
+      expect(dSol.milkLPerDay).toBe(0);
+      expect(dSol.solution.verdict.kind).toBe('dry_animal');
+    }
+
+    // Conservation of bought feeds (AC-C4-2.5)
+    for (const bTotal of sol.buyTotals) {
+      const sumAnimalKg = bTotal.perAnimalKg.reduce((s, p) => s + p.kg, 0);
+      expect(sumAnimalKg).toBeCloseTo(bTotal.kgPerDay, 5);
+    }
+
+    // verifyHerdSolution accepts the full 10-animal solve
+    expect(() => verifyHerdSolution(sol, animals, buySet, homeFeeds)).not.toThrow();
+
+    // solveHerdStep works for the 10-animal herd
+    const step = solveHerdStep(animals, buySet, homeFeeds, budget);
+    expect(step.status).toBe('optimal');
+    if (step.status === 'optimal') {
+      expect(step.shareT).toBeCloseTo(sol.shareT, 4);
+      expect(step.totalMilkL).toBeGreaterThan(0);
+      let sumStepMilk = 0;
+      for (const a of animals) {
+        sumStepMilk += step.milkLPerDay[a.key] ?? 0;
+      }
+      expect(step.totalMilkL).toBeCloseTo(sumStepMilk, 5);
+      expect(step.milkLPerDay['a9']).toBe(0);
+      expect(step.milkLPerDay['a10']).toBe(0);
+    }
+  });
+});
+
+describe('herdSolver edge cases: below maintenance, all dry, and infeasible (AC-C4-E3, AC-C4-E9, AC-C4-2.7)', () => {
+  const baseEntry = benchmarkEntries.find((e) => e.id === 'A01_murrah_gain_budget_binding')!;
+  const dryEntry = benchmarkEntries.find((e) => e.id === 'A08_surti_dry_buffalo_maintenance')!;
+
+  it('detects budget below herd maintenance (AC-C4-E3)', () => {
+    const a1 = toHerdAnimal(baseEntry, 'a1');
+    const a2 = toHerdAnimal(dryEntry, 'a2');
+    const buySet = baseEntry.selectedFeeds;
+    const homeFeeds: HomeFeed[] = [{ feedId: 'wheat_straw', kgPerDay: 5 }];
+
+    const outcome = solveHerd([a1, a2], buySet, homeFeeds, 20);
+    expect(outcome.status).toBe('below_maintenance');
+    const shortfall = outcome as HerdShortfall;
+    expect(shortfall.budgetInrPerDay).toBe(20);
+    expect(shortfall.maintenanceCostInrPerDay).toBeGreaterThan(20);
+  });
+
+  it('solves all-dry herd at maintenance with t* = 0 and costAtTarget = null (AC-C4-2.7)', () => {
+    const d1: HerdAnimal = {
+      key: 'a1',
+      label: { species: 'buffalo', n: 1 },
+      profile: { species: 'buffalo', breedId: 'surti', bodyWeightKg: 400, milkYieldLitersPerDay: 0, milkFatPct: 0 },
+      weightSource: 'typed',
+      fatSource: 'typed',
+      isConfirmed: true,
+    };
+    const d2: HerdAnimal = {
+      key: 'a2',
+      label: { species: 'cow', n: 1 },
+      profile: { species: 'cow', breedId: 'nondescript_cow', bodyWeightKg: 350, milkYieldLitersPerDay: 0, milkFatPct: 0 },
+      weightSource: 'typed',
+      fatSource: 'typed',
+      isConfirmed: true,
+    };
+    const d3: HerdAnimal = {
+      key: 'a3',
+      label: { species: 'buffalo', n: 2 },
+      profile: { species: 'buffalo', breedId: 'murrah', bodyWeightKg: 450, milkYieldLitersPerDay: 0, milkFatPct: 0 },
+      weightSource: 'typed',
+      fatSource: 'typed',
+      isConfirmed: true,
+    };
+
+    const homeFeeds: HomeFeed[] = [{ feedId: 'wheat_straw', kgPerDay: 15 }];
+    const buySet: SelectedFeedInput[] = [
+      { feedId: 'mustard_cake', priceInrPerKgAsFed: 33, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null },
+      { feedId: 'mineral_mix', priceInrPerKgAsFed: 70, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null },
+      { feedId: 'common_salt', priceInrPerKgAsFed: 5, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null },
+    ];
+    const budget = 300;
+
+    const outcome = solveHerd([d1, d2, d3], buySet, homeFeeds, budget);
+    expect(outcome.status).toBe('optimal');
+    const sol = outcome as HerdSolution;
+
+    expect(sol.shareT).toBe(0);
+    expect(sol.costAtTargetInrPerDay).toBeNull();
+    expect(sol.budgetTight).toBe(false);
+    expect(sol.animals.length).toBe(3);
+
+    for (const aSol of sol.animals) {
+      expect(aSol.milkTargetLPerDay).toBe(0);
+      expect(aSol.milkExactLPerDay).toBe(0);
+      expect(aSol.milkLPerDay).toBe(0);
+      expect(aSol.solution.verdict.kind).toBe('dry_animal');
+      expect(aSol.solution.bindingConstraint).toBe('breed_cap');
+    }
+
+    expect(() => verifyHerdSolution(sol, [d1, d2, d3], buySet, homeFeeds)).not.toThrow();
+  });
+
+  it('diagnoses single-animal infeasibility with limiting nutrients (AC-C4-E9)', () => {
+    const a1 = toHerdAnimal(baseEntry, 'a1');
+    const a2: HerdAnimal = {
+      key: 'a2',
+      label: { species: 'cow', n: 1 },
+      profile: { species: 'cow', breedId: 'gir', bodyWeightKg: 400, milkYieldLitersPerDay: 5, milkFatPct: 4.0 },
+      weightSource: 'typed',
+      fatSource: 'typed',
+      isConfirmed: true,
+    };
+
+    const noRoughageBuySet: SelectedFeedInput[] = [
+      { feedId: 'mustard_cake', priceInrPerKgAsFed: 33, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null },
+      { feedId: 'wheat_bran', priceInrPerKgAsFed: 20, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null },
+      { feedId: 'mineral_mix', priceInrPerKgAsFed: 70, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null },
+      { feedId: 'common_salt', priceInrPerKgAsFed: 5, maxKgAsFedPerDay: null, currentKgAsFedPerDay: null },
+    ];
+
+    const outcome = solveHerd([a1, a2], noRoughageBuySet, [], 500);
+    expect(outcome.status).toBe('infeasible');
+    const inf = outcome as HerdInfeasible;
+    expect(inf.jointConflict).toBe(false);
+    expect(inf.animals.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('diagnoses joint conflict when animals pass alone but cannot share limited stock together (AC-C4-E9)', () => {
+    const tpl = DEFAULT_FEED_LIBRARY[0];
+    const forageBalanced: FeedItem = {
+      ...tpl,
+      id: 'forage_balanced',
+      englishName: 'forage_balanced',
+      vertical: 'indigenous_forage',
+      dmPct: 100,
+      cpPctDm: 18,
+      meMcalPerKgDm: 2.8,
+      caGramsPerKgDm: 6,
+      pGramsPerKgDm: 4,
+      defaultPriceInrPerKgAsFed: 10,
+    };
+    const lib = [forageBalanced];
+
+    const cow1: HerdAnimal = {
+      key: 'a1',
+      label: { species: 'cow', n: 1 },
+      profile: { species: 'cow', breedId: 'rathi', bodyWeightKg: 280, milkYieldLitersPerDay: 0, milkFatPct: 0 },
+      weightSource: 'typed',
+      fatSource: 'typed',
+      isConfirmed: true,
+    };
+    const cow2: HerdAnimal = {
+      key: 'a2',
+      label: { species: 'cow', n: 2 },
+      profile: { species: 'cow', breedId: 'rathi', bodyWeightKg: 280, milkYieldLitersPerDay: 0, milkFatPct: 0 },
+      weightSource: 'typed',
+      fatSource: 'typed',
+      isConfirmed: true,
+    };
+
+    // 5 kg of forage_balanced is enough for one cow alone (~3.5 kg DM maintenance needed)
+    // but not enough for two cows together (~7 kg DM maintenance needed).
+    const homeFeeds: HomeFeed[] = [
+      { feedId: 'forage_balanced', kgPerDay: 5 },
+    ];
+
+    const outcome = solveHerd([cow1, cow2], [], homeFeeds, 500, lib);
+    expect(outcome.status).toBe('infeasible');
+    const inf = outcome as HerdInfeasible;
+    expect(inf.jointConflict).toBe(true);
+    expect(inf.animals.length).toBe(0);
+  });
+});
+
 

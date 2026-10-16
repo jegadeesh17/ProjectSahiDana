@@ -1168,8 +1168,8 @@ export function solveHerd(
       budgetTight: false,
       maintCost,
       costAtTarget: null,
-      stage2AtY: maintSol,
-      stage2AtS: maintSol,
+      stage2AtY: bestSol,
+      stage2AtS: bestSol,
       stage2Path: 'direct',
       F: bestSol,
       stage3Applied,
@@ -1415,6 +1415,14 @@ function buildOptimalOutcome(params: {
     }
   }
 
+  const slicesAtY = new Map<string, FixedMilkSolveResult>();
+  for (const ctx of animalContexts) {
+    slicesAtY.set(
+      ctx.animal.key,
+      sliceAnimalResult(ctx, activeBuyFeeds, activeHomeFeeds, stage2AtY.values),
+    );
+  }
+
   for (const ctx of animalContexts) {
     const Y_i = YMap[ctx.animal.key] ?? 0;
     const S_i = SMap[ctx.animal.key] ?? 0;
@@ -1449,11 +1457,11 @@ function buildOptimalOutcome(params: {
       animalBindingConstraint = 'breed_cap';
       animalTightConstraints = [];
     } else {
-      const sliceAtY = sliceAnimalResult(ctx, activeBuyFeeds, activeHomeFeeds, stage2AtY.values);
+      const sliceAtY = slicesAtY.get(ctx.animal.key)!;
       let residualBudget = budget;
       for (const other of animalContexts) {
         if (other.animal.key !== ctx.animal.key) {
-          const otherSlice = sliceAnimalResult(other, activeBuyFeeds, activeHomeFeeds, stage2AtY.values);
+          const otherSlice = slicesAtY.get(other.animal.key)!;
           residualBudget -= otherSlice.totalCost;
         }
       }
