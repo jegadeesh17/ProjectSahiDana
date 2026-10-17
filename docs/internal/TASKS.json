@@ -476,12 +476,13 @@
           "files_to_modify": [
             "src/components/AnimalsScreen.tsx",
             "src/components/AnimalList.tsx",
+            "src/components/HerdFlow.tsx",
             "src/components/HerdPlan.tsx",
             "tests/unit/herdUi.test.tsx",
             "tests/e2e/herd-flow.spec.ts"
           ],
           "acceptance_criteria": "SPEC AC-C4-2.2, AC-C4-2.14, AC-C4-E5, AC-C4-E6: UI tests and E2E tests pass for multi-animal herd flows.",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "C4-M2-T4",

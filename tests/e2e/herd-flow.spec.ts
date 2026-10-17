@@ -37,8 +37,8 @@ test.describe('Herd Flow (Change 4 Milestone 1: 3-screen flow for 1 animal)', ()
     await expect(animalList).toContainText('Cow 1');
     await expect(animalList).toContainText('Hariana');
 
-    // Card hidden because MAX_ANIMALS is 1 for M1
-    await expect(page.locator('[data-c4="animal-card"]')).toHaveCount(0);
+    // In M2 (MAX_ANIMALS = 10), card remains open until 10 animals are listed
+    await expect(page.locator('[data-c4="animal-card"]')).toBeVisible();
 
     // Still disabled without budget
     await expect(nextBtn).toBeDisabled();
@@ -114,8 +114,9 @@ test.describe('Herd Flow (Change 4 Milestone 1: 3-screen flow for 1 animal)', ()
     await page.goto('/');
     // Load example 1
     await page.locator('[data-example="cow_buffalo"]').click();
-    await expect(page.locator('.c4-list-row')).toContainText('Buffalo 1');
-    await expect(page.locator('.c4-budget input.num')).toHaveValue('220');
+    await expect(page.locator('[data-c4="animal-list"]')).toContainText('Cow 1');
+    await expect(page.locator('[data-c4="animal-list"]')).toContainText('Buffalo 1');
+    await expect(page.locator('.c4-budget input.num')).toHaveValue('400');
 
     // Next to #/feeds
     await page.getByRole('button', { name: 'Next' }).click();
@@ -133,8 +134,9 @@ test.describe('Herd Flow (Change 4 Milestone 1: 3-screen flow for 1 animal)', ()
     // Go Back -> #/animals
     await page.goBack();
     await expect(page).toHaveURL(/#\/animals/);
-    await expect(page.locator('.c4-list-row')).toContainText('Buffalo 1');
-    await expect(page.locator('.c4-budget input.num')).toHaveValue('220');
+    await expect(page.locator('[data-c4="animal-list"]')).toContainText('Cow 1');
+    await expect(page.locator('[data-c4="animal-list"]')).toContainText('Buffalo 1');
+    await expect(page.locator('.c4-budget input.num')).toHaveValue('400');
 
     // Go Forward -> #/feeds
     await page.goForward();
@@ -218,26 +220,33 @@ test.describe('Herd Flow (Change 4 Milestone 1: 3-screen flow for 1 animal)', ()
   test('All three deterministic examples load and solve correctly (AC-C4-1.25)', async ({ page }) => {
     await page.goto('/');
 
-    // 1. cow_buffalo (Buffalo 1 Murrah 8L, 220 budget) -> Solves
+    // 1. cow_buffalo (Cow 1 + Buffalo 1, 400 budget) -> Solves
     await page.locator('[data-example="cow_buffalo"]').click();
-    await expect(page.locator('.c4-list-row')).toContainText('Buffalo 1');
+    await expect(page.locator('[data-c4="animal-list"]')).toContainText('Cow 1');
+    await expect(page.locator('[data-c4="animal-list"]')).toContainText('Buffalo 1');
     await page.getByRole('button', { name: 'Next' }).click();
     await page.getByRole('button', { name: 'Calculate ration' }).click();
     await expect(page.locator('[data-c4="shopping"]')).toBeVisible();
+    await expect(page.locator('[data-c4="cards"]')).toContainText('Cow 1');
     await expect(page.locator('[data-c4="cards"]')).toContainText('Buffalo 1');
 
-    // 2. Back and try straw_only (Hariana cow, 5kg home straw, 150 budget)
+    // 2. Back and try straw_only (Cow 1 + Cow 2, 12kg home straw, 250 budget)
     await page.goto('/#/animals');
     await page.locator('[data-example="straw_only"]').click();
-    await expect(page.locator('.c4-list-row')).toContainText('Cow 1');
+    await expect(page.locator('[data-c4="animal-list"]')).toContainText('Cow 1');
+    await expect(page.locator('[data-c4="animal-list"]')).toContainText('Cow 2');
     await page.getByRole('button', { name: 'Next' }).click();
     await expect(page.locator('.c4-home-row')).toContainText('Wheat straw');
     await page.getByRole('button', { name: 'Calculate ration' }).click();
     await expect(page.locator('[data-c4="cards"]')).toContainText('From home');
+    await expect(page.locator('[data-c4="cards"]')).toContainText('Cow 1');
+    await expect(page.locator('[data-c4="cards"]')).toContainText('Cow 2');
 
-    // 3. Back and try tight_budget (Sahiwal cow 10L, 80 budget) -> Budget prompt
+    // 3. Back and try tight_budget (Cow 1 + Buffalo 1, 200 budget) -> Budget prompt
     await page.goto('/#/animals');
     await page.locator('[data-example="tight_budget"]').click();
+    await expect(page.locator('[data-c4="animal-list"]')).toContainText('Cow 1');
+    await expect(page.locator('[data-c4="animal-list"]')).toContainText('Buffalo 1');
     await page.getByRole('button', { name: 'Next' }).click();
     await page.getByRole('button', { name: 'Calculate ration' }).click();
     await expect(page.locator('[data-c4="budget-prompt"]')).toBeVisible();
@@ -356,5 +365,74 @@ test.describe('Herd Flow (Change 4 Milestone 1: 3-screen flow for 1 animal)', ()
       expect(box!.height, `${sel} height >= 44px`).toBeGreaterThanOrEqual(44);
       expect(box!.width, `${sel} width >= 44px`).toBeGreaterThanOrEqual(44);
     }
+  });
+
+  test('Screen 3 animal removal returns to screen 1 and drops plan (AC-C4-2.2)', async ({ page }) => {
+    await page.goto('/');
+    await page.locator('[data-example="cow_buffalo"]').click();
+    await expect(page.locator('[data-c4="animal-list"]')).toContainText('Cow 1');
+    await expect(page.locator('[data-c4="animal-list"]')).toContainText('Buffalo 1');
+
+    await page.getByRole('button', { name: 'Next' }).click();
+    await expect(page).toHaveURL(/#\/feeds/);
+
+    await page.getByRole('button', { name: 'Calculate ration' }).click();
+    await expect(page).toHaveURL(/#\/result/);
+
+    // Verify 2 animal cards are displayed
+    const cards = page.locator('.c4-acard');
+    await expect(cards).toHaveCount(2);
+
+    // Remove Cow 1
+    const removeCow1 = page.locator('.c4-acard[data-animal="a1"]').getByRole('button', { name: /^Remove/i });
+    await expect(removeCow1).toBeVisible();
+    await removeCow1.click();
+
+    // App navigates to #/animals
+    await expect(page).toHaveURL(/#\/animals/);
+    await expect(page.locator('h1#c4-title')).toHaveText('Your animals');
+
+    // Cow 1 is gone, Buffalo 1 remains
+    await expect(page.locator('[data-c4="animal-list"]')).toContainText('Buffalo 1');
+    await expect(page.locator('[data-c4="animal-list"]')).not.toContainText('Cow 1');
+
+    // Budget 400 is retained
+    await expect(page.locator('.c4-budget input.num')).toHaveValue('400');
+
+    // Go to #/feeds -> home feed is retained
+    await page.getByRole('button', { name: 'Next' }).click();
+    await expect(page).toHaveURL(/#\/feeds/);
+    await expect(page.locator('input[id*="kg-wheat_straw"]')).toHaveValue('10');
+
+    // Recalculating produces plan with 1 animal (Buffalo 1)
+    await page.getByRole('button', { name: 'Calculate ration' }).click();
+    await expect(page).toHaveURL(/#\/result/);
+    await expect(page.locator('.c4-acard')).toHaveCount(1);
+    await expect(page.locator('.c4-acard')).toContainText('Buffalo 1');
+  });
+
+  test('Adding up to 10 animals shows limit message and hides add-card (AC-C4-2.1, AC-C4-E5)', async ({ page }) => {
+    await page.goto('/');
+
+    for (let i = 1; i <= 9; i++) {
+      const isCow = i % 2 === 1;
+      await page.getByRole('button', { name: isCow ? 'Cow' : 'Buffalo', exact: true }).click();
+      await page.locator('select').selectOption(isCow ? 'rathi' : 'murrah');
+      await page.locator('input[id$="-milk"]').fill('5');
+      await page.getByRole('button', { name: 'Add', exact: true }).click();
+      await expect(page.locator('[data-c4="animal-card"]')).toBeVisible();
+      await expect(page.locator('.c4-limit')).toHaveCount(0);
+    }
+
+    // Add 10th animal
+    await page.getByRole('button', { name: 'Cow', exact: true }).click();
+    await page.locator('select').selectOption('hariana');
+    await page.locator('input[id$="-milk"]').fill('6');
+    await page.getByRole('button', { name: 'Add', exact: true }).click();
+
+    // 10 animals listed, card hidden, limit message shown
+    await expect(page.locator('.c4-list-row')).toHaveCount(10);
+    await expect(page.locator('[data-c4="animal-card"]')).toHaveCount(0);
+    await expect(page.locator('.c4-limit')).toContainText('You can add up to 10 animals');
   });
 });

@@ -14,7 +14,8 @@ import { useLang } from '../i18n/LanguageProvider';
 import { bi } from '../i18n/strings';
 import { useHashStep } from '../lib/hashRoute';
 import type { Step } from '../lib/hashRoute';
-import type { HerdExampleId } from '../services/planHerdPrototypeMock';
+import { HERD_EXAMPLES } from '../domain/presets';
+import type { HerdExampleId } from '../domain/presets';
 import { getInitialBreeds, getInitialFeeds, rationService } from '../services/rationService';
 import { AnimalsScreen } from './AnimalsScreen';
 import { ConnectivityBanner } from './ConnectivityBanner';
@@ -25,63 +26,6 @@ import { StepBar, StepIndicator } from './StepNav';
 import { Badge } from './ui/badge';
 
 const TITLE = { animals: 'c4_screen_animals', feeds: 'c4_screen_feeds', result: 'c4_screen_result' } as const;
-
-const M1_EXAMPLES: Record<HerdExampleId, { animal: HerdAnimal; budget: number; homeFeeds: HomeFeed[] }> = {
-  cow_buffalo: {
-    animal: {
-      key: 'a1',
-      label: { species: 'buffalo', n: 1 },
-      profile: {
-        species: 'buffalo',
-        breedId: 'murrah',
-        bodyWeightKg: 500,
-        milkYieldLitersPerDay: 8,
-        milkFatPct: 7.0,
-      },
-      weightSource: 'typed',
-      fatSource: 'typed',
-      isConfirmed: true,
-    },
-    budget: 220,
-    homeFeeds: [],
-  },
-  straw_only: {
-    animal: {
-      key: 'a1',
-      label: { species: 'cow', n: 1 },
-      profile: {
-        species: 'cow',
-        breedId: 'hariana',
-        bodyWeightKg: 325,
-        milkYieldLitersPerDay: 5,
-        milkFatPct: 4.5,
-      },
-      weightSource: 'typed',
-      fatSource: 'typed',
-      isConfirmed: true,
-    },
-    budget: 150,
-    homeFeeds: [{ feedId: 'wheat_straw', kgPerDay: 5 }],
-  },
-  tight_budget: {
-    animal: {
-      key: 'a1',
-      label: { species: 'cow', n: 1 },
-      profile: {
-        species: 'cow',
-        breedId: 'sahiwal',
-        bodyWeightKg: 298,
-        milkYieldLitersPerDay: 10,
-        milkFatPct: 4.93,
-      },
-      weightSource: 'typed',
-      fatSource: 'typed',
-      isConfirmed: true,
-    },
-    budget: 80,
-    homeFeeds: [],
-  },
-};
 
 function useOnline(): boolean {
   const [online, setOnline] = useState(() => (typeof navigator === 'undefined' ? true : navigator.onLine));
@@ -210,14 +154,17 @@ export function HerdFlow() {
   };
 
   const loadExample = (id: HerdExampleId) => {
-    const ex = M1_EXAMPLES[id];
+    const ex = HERD_EXAMPLES[id];
     if (!ex) return;
-    const a = ex.animal;
     const c: LabelCounters = { cow: 0, buffalo: 0 };
-    c[a.label.species] = a.label.n;
-    setAnimals([{ ...a }]);
+    for (const a of ex.animals) {
+      if (a.label.species in c) {
+        c[a.label.species] = Math.max(c[a.label.species], a.label.n);
+      }
+    }
+    setAnimals(ex.animals.map((a) => ({ ...a })));
     setCounters(c);
-    setNextKey(2);
+    setNextKey(ex.animals.length + 1);
     setHerdBudget(String(ex.budget));
     setHomeFeeds(ex.homeFeeds.map((h) => ({ feedId: h.feedId, kg: String(h.kgPerDay) })));
     setEditingKey(null);

@@ -1,5 +1,5 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../../src/App';
 import { AuditProvider } from '../../src/components/AuditDrawer';
 import { HerdPlanView } from '../../src/components/HerdPlan';
@@ -81,8 +81,29 @@ describe('herdUi (Change 4 Milestone 1 UI and 3-screen flow)', () => {
     });
   });
 
-  // ---- 2. Add-animal card and list, hidden at 1 animal for M1 (AC-C4-1.2, AC-C4-1.6) ----------
-  describe('Add-animal card, list, and single-animal limit (M1)', () => {
+  function addAnimalForm(
+    container: HTMLElement,
+    species: 'cow' | 'buffalo',
+    breedId: string,
+    milk: string,
+  ) {
+    const speciesBtn = screen.getByRole('button', {
+      name: species === 'cow' ? strings.label_cow.en : strings.label_buffalo.en,
+    });
+    fireEvent.click(speciesBtn);
+
+    const breedSelect = container.querySelector('select') as HTMLSelectElement;
+    fireEvent.change(breedSelect, { target: { value: breedId } });
+
+    const milkInput = container.querySelector('input[id$="-milk"]') as HTMLInputElement;
+    fireEvent.change(milkInput, { target: { value: milk } });
+
+    const addBtn = screen.getByRole('button', { name: t('c4_action_add_animal').en });
+    fireEvent.click(addBtn);
+  }
+
+  // ---- 2. Add-animal card, list, and multi-animal limits (M2, AC-C4-2.1, AC-C4-E5) -------------
+  describe('Add-animal card, list, and multi-animal limits (M2)', () => {
     it('prefills weight and fat with typical hint and midpoints (AC-C4-1.3, AC-C4-1.4)', () => {
       const { container } = render(<App />);
       // Select Cow, then pick Rathi
@@ -99,50 +120,77 @@ describe('herdUi (Change 4 Milestone 1 UI and 3-screen flow)', () => {
       expect(container.textContent).toContain('calculated from cited range');
     });
 
-    it('hides the add-animal card once 1 animal is listed in M1 (AC-C4-1.6)', () => {
+    it('card remains open when animals.length < 10, hidden when animals.length >= 10 with c4_max_animals message (AC-C4-2.1, AC-C4-E5)', () => {
       const { container } = render(<App />);
       expect(container.querySelector('[data-c4="animal-card"]')).toBeTruthy();
 
-      // Load example 1
-      fireEvent.click(container.querySelector('[data-example="cow_buffalo"]') as HTMLButtonElement);
+      // Add 9 animals: card must stay open and no limit message
+      for (let i = 1; i <= 9; i++) {
+        const species = i % 2 === 1 ? 'cow' : 'buffalo';
+        const breed = i % 2 === 1 ? 'rathi' : 'murrah';
+        addAnimalForm(container, species, breed, '5');
+        expect(container.querySelector('[data-c4="animal-card"]')).toBeTruthy();
+        expect(container.textContent).not.toContain('You can add up to 10 animals');
+      }
 
-      // Card must be hidden because 1 animal is listed and MAX_ANIMALS is 1
+      expect(container.querySelectorAll('.c4-list-row').length).toBe(9);
+
+      // Add 10th animal: card hidden, limit message shown
+      addAnimalForm(container, 'cow', 'hariana', '6');
+      expect(container.querySelectorAll('.c4-list-row').length).toBe(10);
       expect(container.querySelector('[data-c4="animal-card"]')).toBeNull();
-      expect(container.querySelector('.c4-list-row')).toBeTruthy();
-      expect(container.textContent).toContain('Buffalo 1');
-    });
+      expect(container.textContent).toContain('You can add up to 10 animals');
 
-    it('reopens the card on Edit and preserves key/label upon save', () => {
-      const { container } = render(<App />);
-      fireEvent.click(container.querySelector('[data-example="cow_buffalo"]') as HTMLButtonElement);
-
-      const editBtn = screen.getByRole('button', { name: /^Edit/i });
-      fireEvent.click(editBtn);
-
-      // Card is reopened with editing values
+      // Edit an animal reopens the card
+      const firstEditBtn = screen.getAllByRole('button', { name: /^Edit/i })[0];
+      fireEvent.click(firstEditBtn);
       expect(container.querySelector('[data-c4="animal-card"]')).toBeTruthy();
-      const milkInput = container.querySelector('input[id$="-milk"]') as HTMLInputElement;
-      expect(milkInput.value).toBe('8');
 
-      fireEvent.change(milkInput, { target: { value: '9' } });
+      // Saving edit re-hides card
       fireEvent.click(screen.getByRole('button', { name: t('c4_action_save').en }));
-
-      // Card is hidden again, milk updated to 9 L/day, label still Buffalo 1
       expect(container.querySelector('[data-c4="animal-card"]')).toBeNull();
-      expect(container.textContent).toContain('Buffalo 1');
-      expect(container.textContent).toMatch(/9\s*L/);
+      expect(container.textContent).toContain('You can add up to 10 animals');
+
+      // Remove one animal -> count drops to 9, card reopens, limit message disappears
+      const firstRemoveBtn = screen.getAllByRole('button', { name: /^Remove/i })[0];
+      fireEvent.click(firstRemoveBtn);
+      expect(container.querySelectorAll('.c4-list-row').length).toBe(9);
+      expect(container.querySelector('[data-c4="animal-card"]')).toBeTruthy();
+      expect(container.textContent).not.toContain('You can add up to 10 animals');
     });
 
-    it('reopens the add card when the animal is removed', () => {
+    it('monotonic animal labeling per species (AC-C4-2.1)', () => {
       const { container } = render(<App />);
-      fireEvent.click(container.querySelector('[data-example="cow_buffalo"]') as HTMLButtonElement);
-      expect(container.querySelector('[data-c4="animal-card"]')).toBeNull();
+      // Add Cow 1
+      addAnimalForm(container, 'cow', 'rathi', '6');
+      expect(container.textContent).toContain('Cow 1');
 
-      const removeBtn = screen.getByRole('button', { name: /^Remove/i });
-      fireEvent.click(removeBtn);
+      // Add Cow 2
+      addAnimalForm(container, 'cow', 'hariana', '5');
+      expect(container.textContent).toContain('Cow 2');
 
-      expect(container.querySelector('[data-c4="animal-card"]')).toBeTruthy();
-      expect(container.querySelector('.c4-list-row')).toBeNull();
+      // Add Buffalo 1
+      addAnimalForm(container, 'buffalo', 'murrah', '8');
+      expect(container.textContent).toContain('Buffalo 1');
+
+      // List has 3 animals: Cow 1, Cow 2, Buffalo 1
+      const rows = container.querySelectorAll('.c4-list-row');
+      expect(rows.length).toBe(3);
+
+      // Remove Cow 1
+      const removeCow1Btn = screen.getByRole('button', { name: /Remove.*Cow 1/i });
+      fireEvent.click(removeCow1Btn);
+
+      const rowsAfter = container.querySelectorAll('.c4-list-row');
+      expect(rowsAfter.length).toBe(2);
+      expect(container.textContent).not.toContain('Cow 1');
+      expect(container.textContent).toContain('Cow 2');
+      expect(container.textContent).toContain('Buffalo 1');
+
+      // Add another Cow -> must be Cow 3 (not reusing Cow 1)
+      addAnimalForm(container, 'cow', 'tharparkar', '4');
+      expect(container.textContent).toContain('Cow 3');
+      expect(container.textContent).not.toContain('Cow 1');
     });
   });
 
@@ -478,6 +526,178 @@ describe('herdUi (Change 4 Milestone 1 UI and 3-screen flow)', () => {
       expect(container.textContent).not.toContain('Fill from description');
       expect(container.textContent).not.toContain('Explain');
       expect(container.textContent).not.toContain('Explain in simple words');
+    });
+  });
+
+  async function navigateToScreen3(container: HTMLElement) {
+    const nextBtn = screen.getByRole('button', { name: t('c4_action_next').en });
+    fireEvent.click(nextBtn);
+
+    const calcBtn = screen.getByRole('button', { name: strings.action_balance_ration.en });
+    fireEvent.click(calcBtn);
+
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 20));
+    });
+  }
+
+  // ---- 5. Screen 3 multi-animal removal (AC-C4-2.2) --------------------------------------------
+  describe('Screen 3 multi-animal removal (AC-C4-2.2)', () => {
+    it('removal on screen 3 returns to screen 1 (#/animals), drops plan, retains remaining animals, budget, and home feeds (AC-C4-2.2)', async () => {
+      const { container } = render(<App />);
+      // Load example cow_buffalo (Cow 1, Buffalo 1, 10kg wheat straw, 400 budget)
+      fireEvent.click(container.querySelector('[data-example="cow_buffalo"]') as HTMLButtonElement);
+
+      await navigateToScreen3(container);
+
+      // Verify on screen 3 with 2 animal cards
+      expect(container.querySelector('h1#c4-title')?.textContent).toContain('Your plan');
+      const cards = container.querySelectorAll('.c4-acard');
+      expect(cards.length).toBe(2);
+      expect(container.textContent).toContain('Cow 1');
+      expect(container.textContent).toContain('Buffalo 1');
+
+      // Click remove on Cow 1
+      const cow1Card = container.querySelector('.c4-acard[data-animal="a1"]') as HTMLElement;
+      expect(cow1Card).toBeTruthy();
+      const removeBtn = cow1Card.querySelector('button.btn-quiet') as HTMLButtonElement;
+      expect(removeBtn).toBeTruthy();
+      fireEvent.click(removeBtn);
+
+      // Returns to screen 1 (#/animals)
+      expect(container.querySelector('h1#c4-title')?.textContent).toContain('Your animals');
+      expect(window.location.hash).toBe('#/animals');
+
+      // Remaining animal (Buffalo 1) is kept, Cow 1 is removed
+      const rows = container.querySelectorAll('.c4-list-row');
+      expect(rows.length).toBe(1);
+      expect(container.textContent).toContain('Buffalo 1');
+      expect(container.textContent).not.toContain('Cow 1');
+
+      // Budget is kept (400)
+      const budgetInput = container.querySelector('.c4-budget input.num') as HTMLInputElement;
+      expect(budgetInput.value).toBe('400');
+
+      // Go to screen 2: home feeds are kept
+      fireEvent.click(screen.getByRole('button', { name: t('c4_action_next').en }));
+      expect(container.querySelector('h1#c4-title')?.textContent).toContain('Feed you already have');
+      const strawInput = container.querySelector('input[id*="kg-wheat_straw"]') as HTMLInputElement;
+      expect(strawInput).toBeTruthy();
+      expect(strawInput.value).toBe('10');
+
+      // Navigating directly to #/result is guarded back to #/feeds because plan was dropped
+      act(() => {
+        window.location.hash = '#/result';
+        window.dispatchEvent(new HashChangeEvent('hashchange'));
+      });
+      expect(container.querySelector('h1#c4-title')?.textContent).toContain('Feed you already have');
+
+      // Recalculating computes plan for remaining animal
+      const calcBtn = screen.getByRole('button', { name: strings.action_balance_ration.en });
+      fireEvent.click(calcBtn);
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 20));
+      });
+      expect(container.querySelector('h1#c4-title')?.textContent).toContain('Your plan');
+      const newCards = container.querySelectorAll('.c4-acard');
+      expect(newCards.length).toBe(1);
+      expect(container.textContent).toContain('Buffalo 1');
+    });
+  });
+
+  // ---- 6. All 3 herd presets load and solve (AC-C4-2.11) ---------------------------------------
+  describe('All 3 herd presets load and solve (AC-C4-2.11)', () => {
+    it('cow_buffalo loads Cow 1 and Buffalo 1 and solves with both cards (AC-C4-2.11)', async () => {
+      const { container } = render(<App />);
+      fireEvent.click(container.querySelector('[data-example="cow_buffalo"]') as HTMLButtonElement);
+
+      const rows = container.querySelectorAll('.c4-list-row');
+      expect(rows.length).toBe(2);
+      expect(container.textContent).toContain('Cow 1');
+      expect(container.textContent).toContain('Buffalo 1');
+      const budgetInput = container.querySelector('.c4-budget input.num') as HTMLInputElement;
+      expect(budgetInput.value).toBe('400');
+
+      await navigateToScreen3(container);
+
+      expect(container.querySelector('[data-c4="shopping"]')).toBeTruthy();
+      const cards = container.querySelectorAll('.c4-acard');
+      expect(cards.length).toBe(2);
+      expect(container.textContent).toContain('Cow 1');
+      expect(container.textContent).toContain('Buffalo 1');
+    });
+
+    it('straw_only loads multi-animal herd and solves with shopping list (AC-C4-2.11)', async () => {
+      const { container } = render(<App />);
+      fireEvent.click(container.querySelector('[data-example="straw_only"]') as HTMLButtonElement);
+
+      const rows = container.querySelectorAll('.c4-list-row');
+      expect(rows.length).toBe(2);
+      expect(container.textContent).toContain('Cow 1');
+      expect(container.textContent).toContain('Cow 2');
+
+      await navigateToScreen3(container);
+
+      const shopping = container.querySelector('[data-c4="shopping"]');
+      expect(shopping).toBeTruthy();
+      expect(shopping?.querySelectorAll('.c4-shop-row').length).toBeGreaterThanOrEqual(1);
+      const cards = container.querySelectorAll('.c4-acard');
+      expect(cards.length).toBe(2);
+      expect(container.textContent).toContain('Cow 1');
+      expect(container.textContent).toContain('Cow 2');
+    });
+
+    it('tight_budget loads multi-animal herd and shows budget prompt (AC-C4-2.11)', async () => {
+      const { container } = render(<App />);
+      fireEvent.click(container.querySelector('[data-example="tight_budget"]') as HTMLButtonElement);
+
+      const rows = container.querySelectorAll('.c4-list-row');
+      expect(rows.length).toBe(2);
+      expect(container.textContent).toContain('Cow 1');
+      expect(container.textContent).toContain('Buffalo 1');
+
+      await navigateToScreen3(container);
+
+      expect(container.querySelector('[data-c4="budget-prompt"]')).toBeTruthy();
+      expect(container.textContent).toContain('Add ₹');
+    });
+  });
+
+  // ---- 7. Copy summary for multi-animal herd (AC-C4-2.14) -------------------------------------
+  describe('Copy summary for multi-animal herd (AC-C4-2.14)', () => {
+    it('includes all animal cards in screen-1 list order', async () => {
+      let copiedText = '';
+      const writeTextMock = vi.fn().mockImplementation((text: string) => {
+        copiedText = text;
+        return Promise.resolve();
+      });
+      Object.defineProperty(navigator, 'clipboard', {
+        value: { writeText: writeTextMock },
+        writable: true,
+        configurable: true,
+      });
+
+      const { container } = render(<App />);
+      fireEvent.click(container.querySelector('[data-example="cow_buffalo"]') as HTMLButtonElement);
+
+      await navigateToScreen3(container);
+
+      const copyBtn = screen.getByRole('button', { name: strings.action_copy_summary.en });
+      fireEvent.click(copyBtn);
+
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 10));
+      });
+
+      expect(writeTextMock).toHaveBeenCalled();
+      expect(copiedText).toContain('Cow 1');
+      expect(copiedText).toContain('Buffalo 1');
+      const cow1Idx = copiedText.indexOf('Cow 1');
+      const buffalo1Idx = copiedText.indexOf('Buffalo 1');
+      expect(cow1Idx).toBeGreaterThan(-1);
+      expect(buffalo1Idx).toBeGreaterThan(cow1Idx);
+      expect(copiedText).toContain('What to buy');
+      expect(copiedText).toContain('What to give each animal');
     });
   });
 });
