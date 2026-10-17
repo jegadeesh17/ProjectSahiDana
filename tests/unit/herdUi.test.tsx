@@ -762,11 +762,13 @@ describe('herdUi (Change 4 Milestone 1 UI and 3-screen flow)', () => {
       expect(firstRow?.textContent).toContain(`+`);
       expect(firstRow?.textContent).toContain('milk');
 
+      const topFeed = (DEFAULT_FEED_LIBRARY as FeedItem[]).find((f) => f.id === topItem.feedId)!;
+
       // Interactive button
       const addBtn = firstRow?.querySelector('[data-testid="btn-add-budget"]') as HTMLButtonElement;
       expect(addBtn).toBeTruthy();
       expect(addBtn.textContent).toContain('+ Add to budget');
-      expect(addBtn.getAttribute('aria-label')).toBe(`Add ₹${topItem.deltaCostInrPerDay}/day to budget for +${topItem.deltaMilkL} L milk`);
+      expect(addBtn.getAttribute('aria-label')).toBe(`Add ${topFeed.englishName} for ₹${topItem.deltaCostInrPerDay}/day to budget for +${topItem.deltaMilkL} L milk`);
 
       // Touch target >= 44x44 px (btn class has min-height 48px, min-width 44px)
       expect(addBtn.classList.contains('c4-btn-add-budget')).toBe(true);
@@ -775,6 +777,34 @@ describe('herdUi (Change 4 Milestone 1 UI and 3-screen flow)', () => {
       // Tapping button triggers onAddBudget
       fireEvent.click(addBtn);
       expect(onAddBudget).toHaveBeenCalledWith(topItem.deltaCostInrPerDay);
+
+      // Tapping expansion amount, cost, or milk opens the audit drawer with solver output (AC-C4-3.3)
+      const expFigs = firstRow?.querySelectorAll('button.fig') as NodeListOf<HTMLButtonElement>;
+      expect(expFigs.length).toBeGreaterThanOrEqual(3);
+
+      // 1. Amount fig (expansion-kg)
+      act(() => {
+        fireEvent.click(expFigs[0]);
+      });
+      const kgDrawer = document.querySelector(`[data-audit-id="expansion-kg-${topItem.feedId}"]`);
+      expect(kgDrawer).toBeTruthy();
+      expect(kgDrawer?.textContent).toContain('Solver output');
+
+      // 2. Cost fig (expansion-cost)
+      act(() => {
+        fireEvent.click(expFigs[1]);
+      });
+      const costDrawer = document.querySelector(`[data-audit-id="expansion-cost-${topItem.feedId}"]`);
+      expect(costDrawer).toBeTruthy();
+      expect(costDrawer?.textContent).toContain('Solver output');
+
+      // 3. Milk gain fig (expansion-gain)
+      act(() => {
+        fireEvent.click(expFigs[2]);
+      });
+      const gainDrawer = document.querySelector(`[data-audit-id="expansion-gain-${topItem.feedId}"]`);
+      expect(gainDrawer).toBeTruthy();
+      expect(gainDrawer?.textContent).toContain('Solver output');
     });
 
     it('omits "Then, if you can" when expansion items list is empty (AC-C4-3.6)', () => {

@@ -85,8 +85,8 @@ export const stringsC4 = {
   c4_shop_none: { hi: 'आज कुछ ख़रीदना नहीं', en: 'Nothing to buy today' },
   c4_add_to_budget: { hi: '+ बजट में जोड़ें', en: '+ Add to budget' },
   c4_add_to_budget_aria: {
-    hi: '+{milk} L दूध के लिए बजट में ₹{cost}/दिन जोड़ें',
-    en: 'Add ₹{cost}/day to budget for +{milk} L milk',
+    hi: '+{milk} L दूध के लिए बजट में ₹{cost}/दिन में {feed} जोड़ें',
+    en: 'Add {feed} for ₹{cost}/day to budget for +{milk} L milk',
   },
   c4_cards_title: { hi: 'हर गाय-भैंस को क्या दें', en: 'What to give each animal' },
   c4_tag_home: { hi: 'घर का', en: 'From home' },

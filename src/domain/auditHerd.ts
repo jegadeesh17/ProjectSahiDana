@@ -17,6 +17,7 @@ import type {
   HerdAnimal,
   HerdAnimalSolution,
   HerdBudgetPrompt,
+  HerdExpansionItem,
   HerdPlan,
   HerdShortfallPrompt,
   HerdSolution,
@@ -150,6 +151,74 @@ export function auditStepGain(
     t('c4_audit_constraint_step_gain'),
     `${formatNumber(later.step.totalMilkL, 3)} − ${formatNumber(later.previous.totalMilkL, 3)} = ${formatNumber(later.deltaMilkExactL, 3)} L (rounded down to ${formatNumber(later.deltaMilkL, 1)} L)`,
     extra,
+  );
+}
+
+/** An expansion item's added kg in "Then, if you can" (SPEC AC-C4-3.3). */
+export function auditExpansionKg(item: HerdExpansionItem, feed: FeedItem): AuditMeta {
+  const grams = GRAM_FEED_IDS.includes(item.feedId);
+  const extraRows: NonNullable<AuditMeta['extraRows']> = [...feedSeasonRows(feed)];
+
+  return solverOutput(
+    `expansion-kg-${item.feedId}`,
+    t('c4_audit_label_shop_kg', { feed: feedNameBi(feed) }),
+    grams ? `+${formatNumber(item.deltaKgPerDay * 1000, 0)} g` : `+${exactKg(item.deltaKgPerDay)}`,
+    item.deltaKgPerDay,
+    t('c4_audit_role_stage2'),
+    t('c4_audit_constraint_shop_kg'),
+    `+${exactKg(item.deltaKgPerDay)}${grams ? ` × 1000 = +${formatNumber(item.deltaKgPerDay * 1000, 0)} g` : ''}`,
+    extraRows,
+  );
+}
+
+/** An expansion item's added cost in "Then, if you can" (SPEC AC-C4-3.3). */
+export function auditExpansionCost(item: HerdExpansionItem, feed: FeedItem): AuditMeta {
+  const extra: NonNullable<AuditMeta['extraRows']> = [
+    { label: t('audit_label_price', { feed: feedNameBi(feed) }), value: formatInrPerKg(item.priceInrPerKg) },
+  ];
+  if (feed.priceReliability !== null) {
+    extra.push({ label: t('audit_price_reliability'), value: t(RELIABILITY_STRING[feed.priceReliability]) });
+  }
+  if (feed.priceDate !== null) {
+    extra.push({ label: t('label_price_date'), value: feed.priceDate });
+  }
+  extra.push(...feedSeasonRows(feed));
+
+  return solverOutput(
+    `expansion-cost-${item.feedId}`,
+    t('c4_audit_label_shop_cost', { feed: feedNameBi(feed) }),
+    `+${formatInr(item.deltaCostInrPerDay, 0)}`,
+    item.deltaCostInrPerDay,
+    t('c4_audit_role_stage2'),
+    t('c4_audit_constraint_shop_cost'),
+    `${exactKg(item.deltaKgPerDay)} × ${formatInrPerKg(item.priceInrPerKg)} = +${formatInr(item.deltaCostInrPerDay, 0)}`,
+    extra,
+  );
+}
+
+/** An expansion item's milk gain in "Then, if you can" (SPEC AC-C4-3.3). */
+export function auditExpansionGain(item: HerdExpansionItem, feed: FeedItem): AuditMeta {
+  const extra: NonNullable<AuditMeta['extraRows']> = [];
+  if (item.auditProbe) {
+    extra.push(
+      { label: t('c4_audit_row_prev_milk'), value: `${formatNumber(item.auditProbe.baseTotalMilkL, 1)} L` },
+      { label: t('c4_audit_row_step_milk'), value: `${formatNumber(item.auditProbe.newTotalMilkL, 1)} L` },
+    );
+  }
+
+  const breakdown = item.auditProbe
+    ? `${formatNumber(item.auditProbe.newTotalMilkL, 3)} − ${formatNumber(item.auditProbe.baseTotalMilkL, 3)} = ${formatNumber(item.deltaMilkExactL, 3)} L (rounded down to ${formatNumber(item.deltaMilkL, 1)} L)`
+    : `+${formatNumber(item.deltaMilkExactL, 3)} L (rounded down to ${formatNumber(item.deltaMilkL, 1)} L)`;
+
+  return solverOutput(
+    `expansion-gain-${item.feedId}`,
+    t('c4_audit_label_gain', { feed: feedNameBi(feed) }),
+    item.deltaMilkL > 0 ? `+${formatLitres(item.deltaMilkL, 1)}` : bi('c4_shop_same'),
+    item.deltaMilkExactL,
+    t('c4_audit_role_stage1'),
+    t('c4_audit_constraint_step_gain'),
+    breakdown,
+    extra.length > 0 ? extra : undefined,
   );
 }
 

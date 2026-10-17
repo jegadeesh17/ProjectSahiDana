@@ -1,10 +1,19 @@
 import { auditUserInput } from '../domain/audit';
-import { auditShoppingCost, auditShoppingKg, auditShoppingTotal } from '../domain/auditHerd';
+import {
+  auditExpansionCost,
+  auditExpansionGain,
+  auditExpansionKg,
+  auditShoppingCost,
+  auditShoppingKg,
+  auditShoppingTotal,
+} from '../domain/auditHerd';
 import { displayAmount, isShownAmount, roundInrWhole } from '../domain/format';
 import type { AnimalLabel, FeedItem, HerdExpansionItem, ShoppingLine, ShoppingList as ShoppingListData } from '../domain/types';
 import { formatAmount, formatInr, formatInrWhole, formatNumber } from '../i18n/format';
 import { Bi, BiRich } from '../i18n/Bi';
+import { feedLabel } from '../i18n/feedLabel';
 import { bi, t } from '../i18n/strings';
+import { useLang } from '../i18n/LanguageProvider';
 import { FeedChip, FeedName } from './FeedName';
 import { Fig } from './Fig';
 
@@ -52,11 +61,14 @@ interface ExpansionRowProps {
 }
 
 function ExpansionRow({ item, byId, onAddBudget }: ExpansionRowProps) {
+  const { lang } = useLang();
   const feed = byId.get(item.feedId);
   if (!feed || !isShownAmount(item.deltaKgPerDay)) return null;
   const amount = `+${formatAmount(displayAmount(item.feedId, item.deltaKgPerDay))}`;
   const cost = `(+₹${item.deltaCostInrPerDay})`;
+  const localizedFeed = feedLabel(feed, lang);
   const ariaLabel = bi('c4_add_to_budget_aria', {
+    feed: localizedFeed,
     cost: item.deltaCostInrPerDay,
     milk: formatNumber(item.deltaMilkL, 1),
   });
@@ -67,10 +79,23 @@ function ExpansionRow({ item, byId, onAddBudget }: ExpansionRowProps) {
         <FeedChip feed={feed} />
         <FeedName feed={feed} />
       </span>
-      <span className="c4-shop-fig">{amount}</span>
-      <span className="c4-shop-fig">{cost}</span>
+      <Fig audit={auditExpansionKg(item, feed)} className="c4-shop-fig">
+        +{amount}
+      </Fig>
+      <Fig audit={auditExpansionCost(item, feed)} className="c4-shop-fig">
+        ({cost})
+      </Fig>
       <span className="c4-shop-gain">
-        <Bi id="c4_shop_gain" params={{ l: formatNumber(item.deltaMilkL, 1) }} />
+        <BiRich
+          id="c4_shop_gain"
+          nodes={{
+            l: (
+              <Fig inline audit={auditExpansionGain(item, feed)}>
+                {formatNumber(item.deltaMilkL, 1)}
+              </Fig>
+            ),
+          }}
+        />
       </span>
       <button
         type="button"
