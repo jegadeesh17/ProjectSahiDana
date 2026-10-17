@@ -17,9 +17,9 @@ Repository: `https://github.com/jegadeesh17/ProjectSahiDana`
 - **Frontend / PWA:** TypeScript 5, React 18, Vite 5, Tailwind CSS 3, `vite-plugin-pwa`, `javascript-lp-solver`, `vaul`, `@radix-ui/react-dialog`, `@radix-ui/react-accordion`, `@radix-ui/react-slot`, `class-variance-authority`, `lucide-react`. 100% offline-capable core.
 - **Backend / Serverless:** Vercel serverless function (`api/llm.ts`) proxying OpenRouter with IP rate limiting (20 req/min/IP) and model fallback chain (`meta-llama/llama-3.3-70b-instruct:free`, `google/gemma-3-27b-it:free`, `qwen/qwen-2.5-72b-instruct:free`).
 - **Verification Suites:**
-  - TypeScript unit tests: `npm test` (276 tests passing).
-  - Benchmark animals & SciPy HiGHS agreement: 18 benchmark animals in `eval/test_animals.json` evaluated across 23 SciPy agreement test cases in `eval/test_scipy_agreement.py` (`npm run eval:dump && npm run eval:scipy`, 100% agreement).
-  - Playwright E2E tests: `npx playwright test` (30 tests passing).
+  - TypeScript unit tests: `npm test` (432 tests passing across 22 test files).
+  - Herd flow E2E tests: `npx playwright test tests/e2e/herd-flow.spec.ts` (10 tests passing).
+  - Benchmark animals, herds & SciPy HiGHS agreement: 18 single animals + 7 herds in `eval/test_animals.json` and `eval/test_herd_animals.json` evaluated across 32 SciPy HiGHS agreement test cases (`npm run eval:dump && npm run eval:scipy`, 100% mathematical agreement).
   - Data compilation pipeline: `npm run compile:data` (strict citation & schema verification).
 
 ## Key Constraints & Guardrails

@@ -73,6 +73,13 @@ SahiDana is an offline-first, auditable Progressive Web Application (PWA) design
 - **"You have" vs "Buy" Tags:** Clear badges on every feed row in the ration table indicating whether the feed is already owned on the farm or needs to be purchased from a local dealer.
 - **Actionable Budget Increase Guidance:** Identifies when adding ₹X/day to the daily feed budget unlocks significant extra milk (+Y L/day) up to the breed potential cap, backed by full tap-to-audit dual calculations.
 
+### D.05: Multi-Animal Herd Flow & Fair-Share Joint Optimizer
+- **3-Screen Dedicated Flow (`#/animals` $\rightarrow$ `#/feeds` $\rightarrow$ `#/result`):** Clean progression separating animal profiles, available on-farm feeds, and herd ration results with full browser Back/Forward navigation support.
+- **Up to 10 Animals with Monotonic Labeling:** Add up to 10 cows and buffaloes with persistent monotonic per-species labeling (`Cow 1`, `Cow 2`, `Buffalo 1`) that never renumbers when individual animals are dropped.
+- **Fair-Share Joint LP Optimization:** Solves a multi-animal joint LP maximizing a shared scale factor $t^* \in [0, 1]$ across milking animals ($Y_i = t^* g_i$) while holding dry animals at maintenance ($y_i = 0$), distributing shared on-farm feeds at ₹0 across the herd according to nutritional demand.
+- **Marginal Milk Buying Steps:** Computes a consolidated shopping list with real joint prefix solves guaranteeing non-decreasing milk production ($\Delta L_k \ge 0$) at each purchasing step.
+- **Independent SciPy HiGHS Cross-Check:** 100% mathematical agreement with Python's SciPy HiGHS optimizer within $10^{-4}$ across 18 single animals and 7 multi-animal benchmark herds.
+
 
 ---
 
@@ -173,7 +180,17 @@ SahiDana is an offline-first, auditable Progressive Web Application (PWA) design
    - **Categorical Verdict:** Clear economic guidance (*Gain*, *At breed level*, *Below cost*, *Room*, *Same as today*).
 8. **Audit Citations:** Tap any figure to inspect its primary ICAR/NDDB source, table, page number, formula, or active LP dual constraint.
 
-### 2. Data Compilation & Verification Pipeline
+### 2. Multi-Animal Herd Balancing Workflow (3-Screen Flow)
+1. **Screen 1 (`#/animals`):** Add up to 10 cows and buffaloes with species, breed, body weight, current milk, and fat. Each animal receives a monotonic label (`Cow 1`, `Cow 2`, `Buffalo 1`).
+2. **Screen 2 (`#/feeds`):** Add on-farm feeds at ₹0 with available daily kilograms. Set total herd daily budget (₹/day).
+3. **Screen 3 (`#/result`):**
+   - **Joint Fair-Share Optimization:** Maximizes common milk scale factor $t^*$ across milking animals while keeping dry animals at maintenance.
+   - **Per-Animal Ration Cards:** Shows balanced feed breakdown (kg/day as fed) with "Details (for paravet)" expanding nutrient coverage bars (DM, CP, ME, Ca, P).
+   - **Shopping List ("What to buy"):** Prioritized purchase ladder guaranteeing non-decreasing milk ($\Delta L_k \ge 0$) at each purchasing step.
+   - **Limit Diagnosis:** Identifies binding constraint limiting production (`budget`, `milk_target`, `home_stock`, `intake`, `roughage`, or nutrients).
+   - **Screen 3 Removal:** Tapping "Remove" on an animal card returns to Screen 1 and recalculates cleanly.
+
+### 3. Data Compilation & Verification Pipeline
 To compile raw CSV sources into validated production JSON artifacts:
 ```bash
 npm run compile:data
@@ -191,15 +208,14 @@ The compilation script (`scripts/compile_data.mjs`):
 
 | Suite | Command | Scope |
 |---|---|---|
-| **Fast Unit Tests** | `npm test` | Vitest unit test suite (276 tests, ~10s): solver, requirements, breeds, season, adapter, i18n, rate limiting, UI, buy ladder, rationPlan. |
-| **All Unit Tests** | `npx vitest run` | Complete Vitest test suite including data compilation and verification gates. |
-| **Playwright E2E** | `npx playwright test` | End-to-end user journeys and bilingual tests in headless Chromium (30 tests passing). |
+| **Fast Unit Tests** | `npm test` | Complete Vitest unit suite (432 tests passing across 22 test files): solvers, herd LP, requirements, breeds, format, i18n, rate limiting, UI, buy ladder, rationPlan. |
+| **Herd Flow E2E** | `npx playwright test tests/e2e/herd-flow.spec.ts` | 10 multi-animal user journeys, 375px mobile reflow, touch targets, offline execution, and Screen 3 removal. |
+| **All E2E Tests** | `npx playwright test` | Complete Playwright test suite in headless Chromium. |
 | **Language Isolation E2E** | `npx playwright test tests/e2e/language.spec.ts` | Strict AC-L1.1–L1.7 verification: zero Devanagari leakage, zero Latin in Hindi, Latin digits, font readiness. |
-| **Solver Cross-Check Dump** | `npm run eval:dump` | Headless execution of browser solver across 18 benchmark animals (`eval/out/browser_results.json`). |
-| **SciPy Solver Cross-Check** | `python -m pytest -q eval/test_scipy_agreement.py` | Pytest verification: browser solver agrees 100% with SciPy HiGHS simplex optimizer across 23 tests. |
+| **Solver Cross-Check Dump** | `npm run eval:dump` | Headless dump of 18 single animals (`browser_results.json`) and 7 herds (`browser_herd_results.json`). |
+| **SciPy Solver Cross-Check** | `npm run eval:scipy` | 32 pytest checks: 100% agreement between browser LP and SciPy HiGHS simplex optimizer ($10^{-4}$ tolerance). |
 | **Multilingual Extraction Eval** | `python -m pytest -q eval/test_extraction_eval.py` | Benchmark across 30 hand-labelled descriptions (EN, HI, Hinglish) and safety gates. |
-| **Full Python Suite** | `python -m pytest -q eval/` | Full evaluation test suite (68 tests passing). |
-| **Full Build & Test** | `npm run test:full` | Vitest unit tests + Playwright E2E suite. |
+| **Full Build Verification** | `npm run build` | TypeScript type-check (`tsc --noEmit`) and production bundling (`vite build`). |
 
 ---
 
