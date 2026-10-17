@@ -254,6 +254,14 @@
     "exit_code": 0,
     "summary": "1 unit test file passed, 27 tests passed in tests/unit/herdUi.test.tsx (verifying What to buy displays all within-budget feeds per AC-C4-3.1, 'Then, if you can' renders expansion items with accessible [+ Add to budget] button per AC-C4-3.3/3.4, omission when expansionItems is empty per AC-C4-3.6, and tapping [+ Add to budget] updates budget and re-solves herd plan immediately per AC-C4-3.5/AC-C4-E14)",
     "failure_output": ""
+  },
+  {
+    "task_id": "C4-M3-T3",
+    "attempt": 1,
+    "command": "cmd.exe /c \"npx playwright test tests/e2e/herd-flow.spec.ts\"",
+    "exit_code": 0,
+    "summary": "1 test file passed, 13 tests passed in tests/e2e/herd-flow.spec.ts (verifying What to buy consolidation, beyond-budget expansion delta feeds in 'Then, if you can', [+ Add to budget] auto-resolve and re-solve with budget retention across Screen 2 and 1 per AC-C4-3.1..3.5 and AC-C4-E14, and omission of expansion at peak yield per AC-C4-3.6 and for dry herds per AC-C4-E12)",
+    "failure_output": ""
   }
 ]
 

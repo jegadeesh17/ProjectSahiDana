@@ -435,4 +435,151 @@ test.describe('Herd Flow (Change 4 Milestone 1: 3-screen flow for 1 animal)', ()
     await expect(page.locator('[data-c4="animal-card"]')).toHaveCount(0);
     await expect(page.locator('.c4-limit')).toContainText('You can add up to 10 animals');
   });
+
+  test('Beyond-budget expansion journey with "+ Add to budget" auto-resolve and state retention (AC-C4-3.1, AC-C4-3.3, AC-C4-3.4, AC-C4-3.5, AC-C4-E14)', async ({
+    page,
+  }) => {
+    await page.goto('/');
+
+    // 1. Load tight_budget example (Cow 1 + Buffalo 1, 8kg wheat straw, budget 200)
+    await page.locator('[data-example="tight_budget"]').click();
+    await expect(page.locator('[data-c4="animal-list"]')).toContainText('Cow 1');
+    await expect(page.locator('[data-c4="animal-list"]')).toContainText('Buffalo 1');
+    await expect(page.locator('.c4-budget input.num')).toHaveValue('200');
+
+    // 2. Next to #/feeds -> Verify home feed
+    await page.getByRole('button', { name: 'Next' }).click();
+    await expect(page).toHaveURL(/#\/feeds/);
+    await expect(page.locator('input[id*="kg-wheat_straw"]')).toHaveValue('8');
+
+    // 3. Calculate ration -> Screen 3: #/result
+    await page.getByRole('button', { name: 'Calculate ration' }).click();
+    await expect(page).toHaveURL(/#\/result/);
+
+    // 4. Verify "What to buy" contains within-budget feeds and data-group="later" renders expansion items
+    const shopping = page.locator('[data-c4="shopping"]');
+    await expect(shopping).toBeVisible();
+
+    const withinBudgetGroup = shopping.locator('[data-group="first"]');
+    await expect(withinBudgetGroup).toBeVisible();
+    await expect(withinBudgetGroup.locator('.c4-shop-row')).not.toHaveCount(0);
+
+    const laterGroup = shopping.locator('[data-group="later"]');
+    await expect(laterGroup).toBeVisible();
+    await expect(laterGroup).toContainText('Then, if you can');
+    const expansionRows = laterGroup.locator('.c4-shop-row');
+    await expect(expansionRows).not.toHaveCount(0);
+
+    // Verify first expansion item has "+ Add to budget" button
+    const firstAddBtn = laterGroup.locator('[data-testid="btn-add-budget"]').first();
+    await expect(firstAddBtn).toBeVisible();
+    await expect(firstAddBtn).toContainText('+ Add to budget');
+
+    // Verify touch target >= 44x44 px (AC-C4-3.4)
+    const btnBox = await firstAddBtn.boundingBox();
+    expect(btnBox).not.toBeNull();
+    expect(btnBox!.height).toBeGreaterThanOrEqual(44);
+    expect(btnBox!.width).toBeGreaterThanOrEqual(44);
+
+    // Verify accessible aria-label (AC-C4-3.4)
+    const ariaLabel = await firstAddBtn.getAttribute('aria-label');
+    expect(ariaLabel).toMatch(/Add ₹\d+\/day to budget for \+\d+(\.\d+)? L milk/);
+
+    // Initial shop total reflects initial budget of 200
+    const shopTotal = page.getByTestId('shop-total');
+    await expect(shopTotal).toContainText('of your ₹200 a day');
+
+    // Extract delta cost from aria-label
+    const costMatch = ariaLabel!.match(/Add ₹(\d+)\/day/);
+    expect(costMatch).not.toBeNull();
+    const deltaCost = Number(costMatch![1]);
+    expect(deltaCost).toBeGreaterThan(0);
+    const expectedNewBudget = 200 + deltaCost;
+
+    // 5. Tap "+ Add to budget"
+    await firstAddBtn.click();
+
+    // 6. Verify total budget increases, herd plan re-solves, shop total updates to the new budget (AC-C4-3.5)
+    await expect(shopTotal).toContainText(`of your ₹${expectedNewBudget} a day`);
+    await expect(shopTotal).not.toContainText('of your ₹200 a day');
+
+    // 7. Navigating back to Screen 2 retains the updated budget, and navigating to Screen 1 shows updated budget (AC-C4-E14)
+    await page.getByRole('button', { name: 'Back' }).click();
+    await expect(page).toHaveURL(/#\/feeds/);
+    await expect(page.locator('input[id*="kg-wheat_straw"]')).toHaveValue('8');
+
+    await page.getByRole('button', { name: 'Back' }).click();
+    await expect(page).toHaveURL(/#\/animals/);
+    await expect(page.locator('.c4-budget input.num')).toHaveValue(String(expectedNewBudget));
+    await expect(page.locator('[data-c4="animal-list"]')).toContainText('Cow 1');
+    await expect(page.locator('[data-c4="animal-list"]')).toContainText('Buffalo 1');
+
+    // 8. Re-solve from Screen 1 -> Screen 2 -> Screen 3 retains new budget solve
+    await page.getByRole('button', { name: 'Next' }).click();
+    await expect(page).toHaveURL(/#\/feeds/);
+    await page.getByRole('button', { name: 'Calculate ration' }).click();
+    await expect(page).toHaveURL(/#\/result/);
+    await expect(page.getByTestId('shop-total')).toContainText(`of your ₹${expectedNewBudget} a day`);
+  });
+
+  test('Omission of "Then, if you can" at peak yield / breed cap when t* = 1.0 (AC-C4-3.6)', async ({
+    page,
+  }) => {
+    await page.goto('/');
+
+    // Load cow_buffalo example and set generous budget (e.g. 500) where t* = 1.0
+    await page.locator('[data-example="cow_buffalo"]').click();
+    await expect(page.locator('[data-c4="animal-list"]')).toContainText('Cow 1');
+    await expect(page.locator('[data-c4="animal-list"]')).toContainText('Buffalo 1');
+
+    const budgetInput = page.locator('.c4-budget input.num');
+    await budgetInput.fill('500');
+
+    await page.getByRole('button', { name: 'Next' }).click();
+    await expect(page).toHaveURL(/#\/feeds/);
+
+    await page.getByRole('button', { name: 'Calculate ration' }).click();
+    await expect(page).toHaveURL(/#\/result/);
+
+    // Verify "What to buy" is displayed
+    const shopping = page.locator('[data-c4="shopping"]');
+    await expect(shopping).toBeVisible();
+    await expect(shopping.locator('[data-group="first"]')).toBeVisible();
+
+    // Verify data-group="later" is completely absent at peak genetic potential
+    await expect(shopping.locator('[data-group="later"]')).toHaveCount(0);
+  });
+
+  test('Omission of "Then, if you can" for dry herds (AC-C4-E12)', async ({
+    page,
+  }) => {
+    await page.goto('/');
+
+    // Add dry animal: Cow, Hariana, milk = 0
+    await page.getByRole('button', { name: 'Cow', exact: true }).click();
+    await page.locator('select').selectOption('hariana');
+    await page.locator('input[id$="-milk"]').fill('0');
+    await page.getByRole('button', { name: 'Add', exact: true }).click();
+
+    await expect(page.locator('[data-c4="animal-list"]')).toContainText('Cow 1');
+
+    // Enter budget: 150
+    const budgetInput = page.locator('.c4-budget input.num');
+    await budgetInput.fill('150');
+
+    await page.getByRole('button', { name: 'Next' }).click();
+    await expect(page).toHaveURL(/#\/feeds/);
+
+    await page.getByRole('button', { name: 'Calculate ration' }).click();
+    await expect(page).toHaveURL(/#\/result/);
+
+    // Verify "What to buy" is displayed
+    const shopping = page.locator('[data-c4="shopping"]');
+    await expect(shopping).toBeVisible();
+    await expect(shopping.locator('[data-group="first"]')).toBeVisible();
+
+    // Verify "Then, if you can" is completely omitted for dry herds (AC-C4-E12)
+    await expect(shopping.locator('[data-group="later"]')).toHaveCount(0);
+  });
 });
+
