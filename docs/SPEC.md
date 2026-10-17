@@ -891,6 +891,33 @@ Quoted strings are the English-mode text. The Hindi text is given where it is pr
   - **When** the user taps **Copy summary**,
   - **Then** the herd plan is copied per AC-C4-1.24 with every animal card in screen-1 list order, and AC-C4-1.34 holds (no Explain control).
 
+### C4.3c Milestone C4-M3: Beyond-budget expansion steps & interactive feed upgrade ("Then, if you can")
+
+- **AC-C4-3.1 (All within-budget feeds in "What to buy") [C4-M3]:**
+  - **Given** a feasible herd plan calculated for an entered daily budget `Bd`,
+  - **When** "What to buy" (Hindi "क्या ख़रीदें") renders on screen 3,
+  - **Then** it contains all bought feeds required for the optimal solution `F` within `Bd` (all feeds in `Bu_H`), each with its herd quantity (kg/day or g/day) and purchase cost (₹/day); no feeds required for the within-budget solve are labeled or partitioned into "Then, if you can" (Hindi "फिर, हो सके तो"); and the total cost of all items in "What to buy" equals `P(F) ≤ Bd + 1e-6`.
+- **AC-C4-3.2 ("Then, if you can" shown only when budget limits yield) [C4-M3]:**
+  - **Given** a feasible herd plan with entered daily budget `Bd`,
+  - **When** screen 3 renders,
+  - **Then** the "Then, if you can" (Hindi "फिर, हो सके तो") section appears if and only if the budget is the limiting factor on milk yield (`t* < 1.0 − 1e-6`, the herd is not dry, and milk yield is not capped by physical intake or non-budget constraints); if the budget does not limit yield, the section is omitted entirely.
+- **AC-C4-3.3 (Beyond-budget expansion items and return ordering) [C4-M3]:**
+  - **Given** a herd plan where "Then, if you can" is displayed,
+  - **When** the expansion list renders,
+  - **Then** each expansion item shows the specific feed addition (`+<amount> kg/day` or `g/day`), incremental cost (`+₹<X>/day`), and incremental milk yield gain (`+<Y> L milk`, Hindi "लगभग +<Y> L दूध"); all expansion items are sorted in strictly decreasing order of return efficiency `ΔL / ΔCost` (incremental milk gain per rupee spent); and tapping any quantity, cost, or milk gain opens its audit drawer displaying the solver output and incremental calculation.
+- **AC-C4-3.4 (Accessible "[+ Add to budget]" button) [C4-M3]:**
+  - **Given** an expansion item displayed under "Then, if you can",
+  - **When** the item renders,
+  - **Then** it includes an interactive button labelled "[+ Add to budget]" (Hindi "[+ बजट में जोड़ें]"); the button has an accessible label (`aria-label`) identifying the feed name and incremental cost; and it satisfies touch target accessibility standards (minimum 44 × 44 px).
+- **AC-C4-3.5 (Interactive budget update and immediate re-solve) [C4-M3]:**
+  - **Given** screen 3 displaying an expansion item with incremental cost `ΔCost`,
+  - **When** the user taps "[+ Add to budget]" (or "[+ बजट में जोड़ें]") on that item,
+  - **Then** the herd daily budget is immediately updated to `newBudget = oldBudget + ΔCost`; the herd plan is automatically re-solved with `newBudget`; Screen 3 updates immediately to display the re-solved plan, updated "What to buy" list, updated animal cards, and recomputed expansion items; and the shopping total line reflects the new expenditure.
+- **AC-C4-3.6 (Omission at peak genetic yield) [C4-M3]:**
+  - **Given** a herd plan where the herd achieves peak genetic yield (`t* = 1.0` within `1e-6`, meaning every milking animal achieves 100% of its target milk `g_i`),
+  - **When** screen 3 renders,
+  - **Then** the "Then, if you can" section is omitted completely.
+
 #### Edge cases
 
 - **AC-C4-E1 (No animals) [C4-M1]:**
@@ -928,11 +955,23 @@ Quoted strings are the English-mode text. The Hindi text is given where it is pr
 - **AC-C4-E9 (One animal cannot be fed healthily at any cost) [C4-M1; per-animal naming C4-M2]:**
   - **Given** `M_H` is null,
   - **When** the user taps **Calculate ration**,
-  - **Then** no plan is shown (no partial plan); the alert names each animal that fails alone at `0` L with all of `C` and the full home stock, as "`<label>`: `<limit>` limits it", with the limiting nutrient(s) or "roughage" per AC-E2.1 and AC-E2.2 and an **Edit** for that animal; feed suggestions follow AC-C3-E7; and when every animal passes alone, the alert says "These feeds cannot keep all animals healthy together" (pending native review). AC-C4-E12 adds a month hint.
-- **AC-C4-E12 (Today's month has too few in-season feeds) [C4-M1]:**
+  - **Then** no plan is shown (no partial plan); the alert names each animal that fails alone at `0` L with all of `C` and the full home stock, as "`<label>`: `<limit>` limits it", with the limiting nutrient(s) or "roughage" per AC-E2.1 and AC-E2.2 and an **Edit** for that animal; feed suggestions follow AC-C3-E7; and when every animal passes alone, the alert says "These feeds cannot keep all animals healthy together" (pending native review). AC-C4-E10 adds a month hint.
+- **AC-C4-E10 (Today's month has too few in-season feeds) [C4-M1]:**
   - **Given** a device date whose month `m` gives a `C(m)` that, with the home feeds, cannot keep every animal healthy (`M_H` null),
   - **When** the user taps **Calculate ration**,
   - **Then** AC-C4-E9 applies: no plan is shown, and the existing diagnosis names the limiting nutrient(s) or "roughage" per animal. The alert adds "Few feeds are in season this month" (Hindi "इस महीने मौसम में कम चारे मिलते हैं", pending native review). The season line with today's date (AC-C4-1.30) is shown, every input is kept, and no month control is offered.
+- **AC-C4-E12 (Dry herd omits "Then, if you can") [C4-M3]:**
+  - **Given** a herd where all animals are dry (target milk = 0 L/day for every animal),
+  - **When** the plan is calculated and screen 3 renders,
+  - **Then** the "Then, if you can" section is omitted completely (no expansion items or beyond-budget prompts are shown).
+- **AC-C4-E13 (Intake-capped herd omits "Then, if you can") [C4-M3]:**
+  - **Given** a herd plan where physical intake (dry matter ceiling) or a non-budget constraint (such as roughage minimum or calcium ceiling) is tight at the current budget and prevents further milk increase,
+  - **When** screen 3 renders,
+  - **Then** the "Then, if you can" section is omitted completely even if `t* < 1.0 − 1e-6`, because increasing budget alone cannot yield more milk without violating physical intake constraints.
+- **AC-C4-E14 (Screen 2 retains updated budget after adding expansion) [C4-M3]:**
+  - **Given** the user added an expansion item on Screen 3 (updating budget from `Bd` to `Bd + ΔCost`),
+  - **When** the user navigates back to Screen 2 (`#/feeds`) and Screen 1 (`#/animals`),
+  - **Then** the budget input field on Screen 1 displays the updated budget (`Bd + ΔCost`), all previously entered animal and home feed inputs are preserved, and tapping **Calculate ration** re-solves using the updated budget.
 
 #### Language
 
@@ -945,6 +984,8 @@ Quoted strings are the English-mode text. The Hindi text is given where it is pr
 
 These criteria no longer apply from the milestone shown. The criterion that replaces each one is in brackets.
 
+- **From C4-M3:**
+  - **Within-budget splitting of feeds between "Buy first" and "Then, if you can":** AC-C4-1.13 and AC-C4-1.14 as written for within-budget feeds [AC-C4-3.1, AC-C4-3.2]. All feeds required for the optimal solve within the farmer's entered budget are grouped together under "What to buy"; the "Then, if you can" section is repurposed strictly for beyond-budget expansion steps when budget limits yield.
 - **From C4-M1:**
   - **Own-feed price and its default:** AC-3.2 (home rows have no price; buy lines use the cited price) [AC-C4-1.9, AC-C4-1.11]; AC-3.6 for home rows (price provenance stays in the audit of "Buy" lines, AC-6.1); AC-C3-2.2; AC-C3-2.4; AC-C3-E3 [AC-C4-E4].
   - **Season marks and month selector on the picker:** AC-3.4, AC-3.5 [AC-C4-1.9, AC-C4-1.30, AC-C4-1.32]. The month selector is gone, and the device date decides `C`. Screen 3 shows which day's season was used (AC-C4-1.30). AC-3.5's rule that an out-of-season feed stays usable is kept for home feeds.

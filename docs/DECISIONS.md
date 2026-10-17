@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-Key technical, hosting, solver, AI integration, data and language decisions for SahiDana, referenced by [ARCHITECTURE.md](ARCHITECTURE.md) and [SPEC.md](SPEC.md). Last updated: 2026-10-15 (ADR-0021 added for the Change 4 Round 6 amendment and amended at the Change 4 freeze: the month comes from today's date, the herd explanation is never cut, and unitless number matching is accepted; ADR-0016 unchanged; ADR-0019 and ADR-0020 added for Change 4, herd and 3-step flow, with the status of ADR-0010, ADR-0011, ADR-0012 and ADR-0014 updated; ADR-0010 to ADR-0018 added for Change 3 and its UI primitives; ADR-0001 to ADR-0009 unchanged since the freeze on 2026-10-12).
+Key technical, hosting, solver, AI integration, data and language decisions for SahiDana, referenced by [ARCHITECTURE.md](ARCHITECTURE.md) and [SPEC.md](SPEC.md). Last updated: 2026-10-17 (ADR-0022 added for Change 4 Milestone C4-M3: beyond-budget expansion steps and interactive feed upgrade "Then, if you can", superseding within-budget ladder partitioning from ADR-0012 and ADR-0020; ADR-0021 added for the Change 4 Round 6 amendment and amended at the Change 4 freeze: the month comes from today's date, the herd explanation is never cut, and unitless number matching is accepted; ADR-0016 unchanged; ADR-0019 and ADR-0020 added for Change 4, herd and 3-step flow, with the status of ADR-0010, ADR-0011, ADR-0012 and ADR-0014 updated; ADR-0010 to ADR-0018 added for Change 3 and its UI primitives; ADR-0001 to ADR-0009 unchanged since the freeze on 2026-10-12).
 
 | ID | Title | Status | Date |
 |---|---|---|---|
@@ -15,7 +15,7 @@ Key technical, hosting, solver, AI integration, data and language decisions for 
 | [ADR-0009](#adr-0009-language-toggle-one-language-per-screen) | Language Toggle, One Language per Screen | Accepted | 2026-10-12 |
 | [ADR-0010](#adr-0010-farmer-first-candidate-set-own-feeds-plus-in-season-priced-library-feeds) | Farmer-First Candidate Set: Own Feeds Plus In-Season Priced Library Feeds | Accepted (the own-feed part of decision 1, and decision 2, superseded by [ADR-0019](#adr-0019-home-feed-at-0-capped-by-the-herds-daily-amount-with-a-separate-buy-option)) | 2026-10-15 |
 | [ADR-0011](#adr-0011-own-feeds-used-first-at-the-farmers-price-and-cap-never-forced) | Own Feeds Used First at the Farmer's Price and Cap, Never Forced | Superseded by [ADR-0019](#adr-0019-home-feed-at-0-capped-by-the-herds-daily-amount-with-a-separate-buy-option) | 2026-10-15 |
-| [ADR-0012](#adr-0012-cheapest-first-upgrade-ladder-from-nested-prefix-solves) | Cheapest-First Upgrade Ladder from Nested Prefix Solves | Accepted (decision 4, rung 0 and the per-rung display, superseded by [ADR-0020](#adr-0020-joint-herd-lp-with-a-fair-share-of-each-milk-target)) | 2026-10-15 |
+| [ADR-0012](#adr-0012-cheapest-first-upgrade-ladder-from-nested-prefix-solves) | Cheapest-First Upgrade Ladder from Nested Prefix Solves | Accepted (decision 4, rung 0 and the per-rung display, superseded by [ADR-0020](#adr-0020-joint-herd-lp-with-a-fair-share-of-each-milk-target); within-budget splitting into "Then, if you can" superseded by [ADR-0022](#adr-0022-beyond-budget-expansion-steps--interactive-feed-upgrade-then-if-you-can)) | 2026-10-15 |
 | [ADR-0013](#adr-0013-cost-at-cap-solver-field) | Cost-at-Cap Solver Field | Accepted | 2026-10-15 |
 | [ADR-0014](#adr-0014-budget-increase-prompt-with-rupee-amounts-rounded-up) | Budget-Increase Prompt with Rupee Amounts Rounded Up | Accepted (rounding to the paisa in decisions 2 and 4 superseded by [ADR-0020](#adr-0020-joint-herd-lp-with-a-fair-share-of-each-milk-target)) | 2026-10-15 |
 | [ADR-0015](#adr-0015-no-invented-per-feed-inclusion-caps-for-library-feeds) | No Invented Per-Feed Inclusion Caps for Library Feeds | Accepted | 2026-10-15 |
@@ -23,8 +23,9 @@ Key technical, hosting, solver, AI integration, data and language decisions for 
 | [ADR-0017](#adr-0017-two-milestone-delivery-layout-first-then-farmer-first-solve) | Two-Milestone Delivery: Layout First, Then Farmer-First Solve | Accepted | 2026-10-15 |
 | [ADR-0018](#adr-0018-ui-primitives-vaul-radix-shadcn-style-components-lucide) | UI Primitives: vaul, Radix, shadcn-Style Components, lucide | Accepted | 2026-10-15 |
 | [ADR-0019](#adr-0019-home-feed-at-0-capped-by-the-herds-daily-amount-with-a-separate-buy-option) | Home Feed at ₹0, Capped by the Herd's Daily Amount, with a Separate Buy Option | Accepted | 2026-10-15 |
-| [ADR-0020](#adr-0020-joint-herd-lp-with-a-fair-share-of-each-milk-target) | Joint Herd LP with a Fair Share of Each Milk Target | Accepted | 2026-10-15 |
+| [ADR-0020](#adr-0020-joint-herd-lp-with-a-fair-share-of-each-milk-target) | Joint Herd LP with a Fair Share of Each Milk Target | Accepted (decision 7's within-budget "Then, if you can" partitioning superseded by [ADR-0022](#adr-0022-beyond-budget-expansion-steps--interactive-feed-upgrade-then-if-you-can)) | 2026-10-15 |
 | [ADR-0021](#adr-0021-herd-ai-layers-and-visible-season) | Herd AI Layers and Visible Season | Accepted | 2026-10-15 |
+| [ADR-0022](#adr-0022-beyond-budget-expansion-steps--interactive-feed-upgrade-then-if-you-can) | Beyond-Budget Expansion Steps & Interactive Feed Upgrade ("Then, if you can") | Accepted | 2026-10-17 |
 
 ---
 
@@ -827,4 +828,69 @@ The founding rule still holds: the solver and cited tables own every number, and
     - the tolerance is unchanged;
     - tests inject untraced numbers and check they are caught;
     - every figure on the screen itself still comes from the solver or a cited row.
+
+---
+
+## ADR-0022: Beyond-Budget Expansion Steps & Interactive Feed Upgrade ("Then, if you can")
+
+Date: 2026-10-17
+Status: Accepted
+
+### Context
+
+In Change 3 ([ADR-0012](#adr-0012-cheapest-first-upgrade-ladder-from-nested-prefix-solves)) and Change 4 Milestones C4-M1/M2 ([ADR-0020](#adr-0020-joint-herd-lp-with-a-fair-share-of-each-milk-target) decision 7), feeds purchased within the entered budget $B_d$ were artificially partitioned across two distinct visual buckets: "Buy first" (supplements and the minimal maintenance prefix $P_1$) and "Then, if you can" (the remaining feeds bought within the budget, each showing incremental milk $\Delta L_k$).
+
+Paravet user tests and feedback revealed that this within-budget split caused significant confusion:
+1. All feeds in both groups were already completely affordable within the farmer's entered budget and were essential components of the optimal least-cost ration $F$. Labeling affordable feeds as "Then, if you can" (Hindi "फिर, हो सके तो") mistakenly implied they were optional luxuries or required additional money beyond the entered budget.
+2. When the farmer's entered budget limits milk yield ($t^* < 1.0$), farmers naturally asked: "If I do have ₹20 to ₹50 more to spend each day, what specific feed should I buy next, what will it cost, and how much extra milk will my animals give?"
+3. The static budget prompt ("Add ₹X/day to reach Y L") only provided the all-or-nothing leap to peak genetic potential, which often requires an unrealistic expenditure jump (e.g. ₹80 to ₹150+/day) for resource-constrained smallholders, with no actionable intermediate steps or direct upgrade path.
+
+For Milestone C4-M3 ([SPEC.md](SPEC.md) lines 894–920, AC-C4-3.1–3.6, AC-C4-E12–E14), the app must clarify the distinction between affordable feeds and beyond-budget expansion options, ranking expansion steps by economic efficiency and enabling one-tap interactive budget upgrades.
+
+### Decision
+
+1. **All within-budget feeds belong in "What to buy" (supersedes within-budget "Then, if you can").**
+   - All feeds chosen by the solver in the optimal herd plan $F$ within the entered daily budget $B_d$ are displayed together in the primary shopping list ("What to buy" / Hindi "क्या ख़रीदें").
+   - No feed required for the within-budget solve is labeled or partitioned into "Then, if you can".
+   - The total cost of all items in "What to buy" satisfies $P(F) \le B_d + 1e-6$.
+   - This supersedes the within-budget ladder partitioning of decision 4 in ADR-0012 and decision 7 in ADR-0020.
+2. **"Then, if you can" is repurposed strictly for beyond-budget expansion steps.**
+   - The section "Then, if you can" (Hindi "फिर, हो सके तो") appears if and only if the entered budget is the limiting constraint on herd milk yield ($t^* < 1.0 - 1e-6$, `budgetTight === true`, the herd is not dry, and milk yield is not capped by physical intake or non-budget constraints).
+   - If the budget does not limit yield (e.g., peak breed potential $t^* = 1.0$, a completely dry herd, or when physical intake/roughage constraints prevent higher yield), the section is omitted completely.
+3. **Expansion items specify feed additions, incremental costs, and incremental milk yield.**
+   - Each expansion item defines:
+     - The specific feed addition (`+<amount> kg/day` or `g/day`, e.g. `+1.0 kg/day Cottonseed cake`).
+     - The incremental daily purchase cost: `+₹<X>/day` (`ΔCost`), rounded up to a whole rupee (`roundUpInrWhole`).
+     - The incremental herd milk yield gain: `+<Y> L milk` (Hindi `लगभग +<Y> L दूध`), floored to 0.1 L (`floorMilk1`).
+     - Auditable metadata linking to the solver calculations.
+4. **Sorted strictly by return efficiency.**
+   - All expansion items are sorted in strictly decreasing order of return efficiency:
+     $$\text{Return Efficiency} = \frac{\Delta L}{\Delta\text{Cost}} \quad (\text{litres of milk gained per rupee spent})$$
+   - Ties within $1e-9$ are broken deterministically by `feedId` code units.
+   - This ensures the farmer is always presented with the highest return on investment feed addition first.
+5. **Interactive budget upgrade: `[+ Add to budget]` / `[+ बजट में जोड़ें]`.**
+   - Each expansion item features an accessible button with a minimum $44 \times 44$ px touch target and an `aria-label` identifying the feed and incremental cost.
+   - When tapped, the herd daily budget is immediately updated:
+     $$\text{newBudget} = \text{oldBudget} + \Delta\text{Cost}$$
+   - The herd plan is automatically re-solved with `newBudget`, instantly updating the "What to buy" list, per-animal rations, shopping total, and recomputed expansion items on Screen 3.
+   - The updated budget is preserved in state so that navigating back to Screen 2 (`#/feeds`) and Screen 1 (`#/animals`) reflects the updated budget in the input field (AC-C4-E14).
+
+### Alternatives considered
+
+- **Keep within-budget ladder steps (Rejected):** Partitioning within-budget feeds misleads farmers into believing essential parts of their affordable ration are optional extras.
+- **Only show the jump to 100% breed target (Rejected):** Jumping straight to peak genetic potential requires too much cash at once. Farmers need realistic, stepwise incremental upgrades.
+- **Greedy heuristic feed recommendations without joint LP solving (Rejected):** Adding feed outside the LP can violate physical dry matter intake limits, roughage minimums, or mineral safety bands. All expansion recommendations must come from genuine herd LP solutions.
+- **Manual budget typing only (no [+ Add to budget] button) (Rejected):** Forcing the farmer to memorize the number, go back two screens, edit the input, and re-calculate introduces friction and defeats the simplicity of the 3-step workflow.
+
+### Consequences
+
+- **Positive:**
+  - Clear, unambiguous mental model: "What to buy" shows everything affordable today; "Then, if you can" shows what to buy if extra money is available.
+  - Farmers receive prioritized, high-ROI feed expansion steps.
+  - Interactive one-tap budget upgrades allow seamless exploration of higher yields.
+  - Accessible touch targets and state persistence across screen navigation.
+- **Negative:**
+  - `planHerd` performs additional LP probe solves when the budget is tight, slightly increasing solve time on complex herds.
+  - Edge cases where intake ceilings are reached before budget exhaustion must be detected and suppressed cleanly (AC-C4-E13).
+
 

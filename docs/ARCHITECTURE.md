@@ -1475,6 +1475,21 @@ export interface ShoppingList {
   firstStep: HerdStep | null;       // P1; null when Bu_H is empty
 }
 
+export interface HerdExpansionItem {
+  feedId: string;
+  deltaKgPerDay: number;
+  deltaCostInrPerDay: number;       // roundUpInrWhole(deltaKgPerDay * priceInrPerKg)
+  priceInrPerKg: number;
+  deltaMilkExactL: number;          // Σ_i S_i(probe) - Σ_i S_i(base)
+  deltaMilkL: number;               // floor(10 * deltaMilkExactL + 1e-7) / 10
+  returnPerRupee: number;           // deltaMilkExactL / deltaCostInrPerDay
+  auditProbe?: {
+    probeBudgetInrPerDay: number;
+    newTotalMilkL: number;
+    baseTotalMilkL: number;
+  };
+}
+
 export interface HerdBudgetPrompt {
   extraInrPerDay: number;           // X = roundUpInrWhole(costAtCap_H − Bd)
   targetMilkL: number;              // Y = Σ_i floor(10 × g_i) / 10 over milking animals
@@ -1505,6 +1520,7 @@ export type HerdPlan =
       perAnimal: HerdAnimalSolution[];        // = best.animals
       buyOrder: string[];                     // Bu_H
       shopping: ShoppingList;
+      expansionItems: HerdExpansionItem[];    // C4-M3 beyond-budget expansion steps ("Then, if you can")
       notNeeded: string[];                    // home feedIds with Σ_i h_{i,f} ≤ 1e-6 in F, in row order
       budgetPrompt: HerdBudgetPrompt | null;
       shortfall: null;
@@ -1512,8 +1528,8 @@ export type HerdPlan =
       /** The real solve of the last prefix equals F (Σ S_i and P within 1e-6 relative). Tests assert true. */
       lastStepMatchesBest: boolean;
     })
-  | (HerdPlanBase & { status: 'below_maintenance'; best: null; perAnimal: []; buyOrder: []; shopping: null; notNeeded: []; budgetPrompt: null; shortfall: HerdShortfallPrompt; infeasible: null })
-  | (HerdPlanBase & { status: 'infeasible'; best: null; perAnimal: []; buyOrder: []; shopping: null; notNeeded: []; budgetPrompt: null; shortfall: null; infeasible: HerdInfeasible });
+  | (HerdPlanBase & { status: 'below_maintenance'; best: null; perAnimal: []; buyOrder: []; shopping: null; expansionItems: []; notNeeded: []; budgetPrompt: null; shortfall: HerdShortfallPrompt; infeasible: null })
+  | (HerdPlanBase & { status: 'infeasible'; best: null; perAnimal: []; buyOrder: []; shopping: null; expansionItems: []; notNeeded: []; budgetPrompt: null; shortfall: null; infeasible: HerdInfeasible });
 ```
 
 **Input drafts** (`src/domain/validation.ts`):
@@ -2182,6 +2198,88 @@ The live deploy currently has no OpenRouter key. Both AI layers then fall back: 
 - **Do not set `VITE_USE_MOCK_ADAPTER` to `true` on Vercel**: it is a build-time client flag and would switch the live site to fixtures. Leave it unset or `false`.
 - `VERCEL_TOKEN` is for the local CLI only; it is not a project variable.
 - Setting it from the CLI: `npx vercel env add OPENROUTER_API_KEY production` (it prompts for the value), then `npx vercel --prod`. This is an outward-facing action the user runs or explicitly approves.
+
+### C4-M3: Beyond-budget expansion steps & interactive feed upgrade ("Then, if you can")
+
+Milestone C4-M3 ([SPEC.md](SPEC.md) lines 894–920, AC-C4-3.1–AC-C4-3.6, AC-C4-E12–E14, [ADR-0022](DECISIONS.md#adr-0022-beyond-budget-expansion-steps--interactive-feed-upgrade-then-if-you-can)) eliminates within-budget feed partitioning and introduces beyond-budget expansion steps with interactive budget upgrades.
+
+#### 1. Domain model updates (`src/domain/types.ts`)
+
+```ts
+export interface HerdExpansionItem {
+  /** Feed to add from candidate buy set C */
+  feedId: string;
+  /** Incremental feed quantity for the herd in kg/day (as-fed) */
+  deltaKgPerDay: number;
+  /** Incremental daily purchase cost in whole ₹/day: roundUpInrWhole(deltaKgPerDay * priceInrPerKg) */
+  deltaCostInrPerDay: number;
+  /** Unit price cited in library (₹/kg) */
+  priceInrPerKg: number;
+  /** Exact incremental herd milk yield gain: Σ_i S_i(probe) - Σ_i S_i(base) */
+  deltaMilkExactL: number;
+  /** Formatted milk gain floored to 0.1 L: floorMilk1(deltaMilkExactL) */
+  deltaMilkL: number;
+  /** Return efficiency metric: deltaMilkExactL / deltaCostInrPerDay (L / ₹) */
+  returnPerRupee: number;
+  /** Solver details for tap-to-audit verification */
+  auditProbe?: {
+    probeBudgetInrPerDay: number;
+    newTotalMilkL: number;
+    baseTotalMilkL: number;
+  };
+}
+```
+
+- **`HerdPlan.expansionItems`**: `HerdExpansionItem[]` on optimal plans. Empty array (`[]`) on `below_maintenance`, `infeasible`, dry herds, peak genetic potential ($t^* = 1.0$), or intake-capped herds.
+
+#### 2. Expansion calculation algorithm (`src/domain/herdPlan.ts`)
+
+Expansion calculation executes after Stage 2 of `solveHerd`:
+
+1. **Gating conditions**:
+   - `best.status === 'optimal'`.
+   - `best.shareT < 1.0 - 1e-6` (AC-C4-3.6: peak genetic yield omits expansion).
+   - Milking animals exist: `best.animals.some(a => a.milkTargetLPerDay > 0)` (AC-C4-E12: dry herd omits expansion).
+   - Budget is the limiting factor: `best.budgetTight === true`.
+2. **Probing extra budget**:
+   - Compute total expenditure gap to breed milk cap: $G = \text{costAtCap}_H - B_d$. If $G \le 0$, return `[]`.
+   - Determine probing increment: $\Delta B_{\text{probe}} = \max(15, \min(50, \text{roundUpInrWhole}(G / 3)))$.
+   - Run probe solve: `probeOutcome = solveHerd(animals, C, homeFeeds, Bd + ΔB_probe, feedLibrary, breedLibrary)`.
+   - **Physical intake ceiling guard (AC-C4-E13)**: If `probeOutcome.status !== 'optimal'` or $\sum S_i(\text{probe}) \le \sum S_i(\text{base}) + 1e-6$, physical intake (dry matter ceiling) or a non-budget constraint (such as roughage minimum) is tight and prevents further milk increase. The expansion list is set to `[]`.
+3. **Isolating feed additions**:
+   - Compare `probeOutcome.buyTotals` against `best.buyTotals`.
+   - For each feed $f \in C$ where $q_f(\text{probe}) > q_f(\text{base}) + 1e-6$:
+     - Added quantity: $\Delta q_f = q_f(\text{probe}) - q_f(\text{base})$.
+     - Incremental cost: $\Delta\text{Cost}_f = \text{roundUpInrWhole}(\Delta q_f \times \text{price}_f)$.
+     - Incremental milk gain: $\Delta L_{\text{exact}} = \max(0, \sum S_i(\text{probe}) - \sum S_i(\text{base}))$, floored to 0.1 L: $\Delta L = \text{floorMilk1}(\Delta L_{\text{exact}})$.
+4. **Sorting by return efficiency**:
+   - Compute $\text{Return Efficiency} = \Delta L_{\text{exact}} / \Delta\text{Cost}_f$ (incremental milk gain per rupee spent).
+   - Sort all expansion items in strictly decreasing order of return efficiency.
+   - Break ties deterministically by `feedId` code units.
+
+#### 3. UI contracts
+
+- **`ShoppingList.tsx`**:
+  - **"What to buy" (Hindi "क्या ख़रीदें")**: Renders all bought feeds required for the within-budget solve ($Bu_H$, `best.buyTotals`), each with feed chip, name, quantity ($kg/day$ or $g/day$), and cost. Shopping total displays $P(F) \le B_d$. No within-budget feeds are labeled or partitioned into "Then, if you can".
+  - **"Then, if you can" (Hindi "फिर, हो सके तो")**: Rendered only when `expansionItems.length > 0`. Each item displays:
+    - Feed chip and name
+    - Quantity delta: `+<amount> kg/day` or `g/day` (tappable for audit)
+    - Cost delta: `+₹<X>/day` (tappable for audit)
+    - Milk gain: `+<Y> L milk` / Hindi `लगभग +<Y> L दूध` (tappable for audit)
+    - **`[+ Add to budget]` / `[+ बजट में जोड़ें]` button**:
+      - Minimum touch target: $44 \times 44$ px.
+      - Accessible label: `aria-label="Add <FeedName> for ₹<X> to daily budget"`.
+      - On click: triggers `onAddExpansion(item)`.
+- **`HerdFlow.tsx`**:
+  - `onAddExpansion(item)` updates `herdBudget`: $\text{newBudget} = B_d + \text{item.deltaCostInrPerDay}$.
+  - Automatically re-computes `planHerd` with `newBudget` and updates Screen 3 view immediately.
+  - Preserves `newBudget` when the user navigates back to Screen 2 (`#/feeds`) and Screen 1 (`#/animals`) (AC-C4-E14).
+
+#### 4. Test commands
+
+- **Full test suite:** `npm run test:full` (runs Vitest unit/integration tests and Playwright E2E suite).
+- **Fast test suite:** `npm test` (runs `vitest run --exclude "tests/e2e/**" --exclude "**/*.slow.test.ts"`, finishes in $< 15$ seconds).
+- **Single test file:** `npx vitest run tests/unit/<module>.test.ts` (e.g. `npx vitest run tests/unit/herdPlan.test.ts`).
 
 ### C4 setup requirements
 
