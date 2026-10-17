@@ -498,7 +498,7 @@
             "scripts/dump_solver_results.ts"
           ],
           "acceptance_criteria": "SPEC AC-C4-2.9: python -m pytest -q eval/test_scipy_herd_agreement.py passes with 100% agreement across all benchmark cases.",
-          "status": "pending"
+          "status": "completed"
         }
       ]
     }

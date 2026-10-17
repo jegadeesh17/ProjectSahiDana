@@ -230,6 +230,14 @@
     "exit_code": 0,
     "summary": "1 unit test file passed (23 tests in tests/unit/herdUi.test.tsx covering screen 1 gating, add-animal card/list, MAX_ANIMALS=10 limit message, monotonic per-species labeling, screen 2 home feeds, screen 3 sections/units/audits/dry herds, screen 3 removal returning to screen 1, 3 herd presets, and multi-animal copy summary) and 1 Playwright E2E spec passed (10 tests in tests/e2e/herd-flow.spec.ts covering 1-animal journey, back/forward history navigation, audit drawer back/close handling, offline operation, 3 herd examples, 375px padding parity, 44x44px touch targets, screen 3 removal, and 10-animal card hiding with limit message)",
     "failure_output": ""
+  },
+  {
+    "task_id": "C4-M2-T4",
+    "attempt": 1,
+    "command": "cmd.exe /c \"npx vite-node scripts/dump_solver_results.ts && python -m pytest -q eval/test_scipy_herd_agreement.py\"",
+    "exit_code": 0,
+    "summary": "dump_solver_results.ts succeeded (7 benchmark herds: 5 optimal, 1 below_maintenance, 1 infeasible) and 9 pytest tests passed in eval/test_scipy_herd_agreement.py (100% agreement between browser javascript-lp-solver and SciPy HiGHS on t*, P(F), M_H, costAtCap_H, Stage 3 home kg, and S_i rounding across all scenarios)",
+    "failure_output": ""
   }
 ]
 
