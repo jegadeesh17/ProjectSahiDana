@@ -34,5 +34,6 @@
 - [x] C4 Phase 2: SPEC amendment, ADRs and Change 4 architecture section, prototype accepted, tasks in docs/internal/TASKS.json
 - [x] C4-M1: 3 screens, breed prefill, home feed at ₹0, plain result; verified, reviewed (code and UI), UAT accepted
 - [x] C4-M2: herd (fair-share joint LP, buying steps with per-animal split); verified, reviewed (code and UI), UAT accepted
-- [x] C4 close-out: README/CLAUDE.md/CHANGELOG updated, branch ready for PR to main
+- [ ] C4-M3: beyond-budget expansion steps & interactive feed upgrade ("Then, if you can"); verified, reviewed (code and UI), UAT accepted
+- [ ] C4 close-out: README/CLAUDE.md/CHANGELOG updated, branch ready for PR to main
 

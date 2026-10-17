@@ -129,7 +129,14 @@ Prototype, meaning the thinnest working path per milestone. Exception: the solve
 - **Branch:** `feat/herd-flow`, merged to `main` per milestone only after tests, review, UAT and the user's yes; deployed with the Vercel CLI after each merge (the project is not git-connected).
 - **Base commit:** `2134ab6`.
 - **Deadline:** Sun 18 Oct 2026, 11:59 PM IST. Targets: C4-M1 Fri 16 Oct 11 PM; C4-M2 Sat 17 Oct 11 PM. Fallback: if C4-M2 is not accepted by Sat 11 PM, submit the C4-M1 build.
-- **Milestones:** C4-M1 3 screens, breed prefill, home feed at ₹0, plain result (one animal); C4-M2 herd (several animals, fair-share joint LP, herd buying steps with per-animal split, herd demos).
+- **Milestones:**
+  - C4-M1: 3 screens, breed prefill, home feed at ₹0, plain result (one animal) — *Accepted 2026-10-16*.
+  - C4-M2: herd (several animals, fair-share joint LP, herd buying steps with per-animal split, herd demos) — *Accepted 2026-10-17*.
+  - C4-M3: Beyond-budget expansion steps & interactive feed upgrade ("Then, if you can") — *Approved 2026-10-17*.
+    - "What to buy" contains all feeds required for the optimal solve within the farmer's entered budget.
+    - "Then, if you can" only appears when budget limits yield ($t^* < 1.0$), suggesting incremental feed additions with extra cost and milk gain, sorted in decreasing order of return ($\Delta L / \Delta\text{Cost}$).
+    - Each item has an interactive `[+ Add to budget]` / `[+ बजट में जोड़ें]` button that increases the daily budget and automatically re-solves the herd plan.
+    - Omitted if herd is already at maximum breed yield ($t^* = 1.0$), dry, or physically intake-capped.
 - **Out of scope:** market value of home stock, total-kg stock over days, savings vs today, per-animal budgets, saving the herd across reloads, `vercel git connect`, a manual month choice.
 - **Deferred by the user (2026-10-15, FEEDBACK Round 6 item 5):** all AI layers in the new flow, both the "Describe your animals and feed" helper and Explain. "Lets just add the core app features now, ill decide upon the AI features later." Existing AI code stays in the repo unused.
 - **Seasons:** the buy set uses feeds in season in today's month (device date, read at Calculate), shown on screen 3 as "in season today (15 October)".
@@ -137,3 +144,4 @@ Prototype, meaning the thinnest working path per milestone. Exception: the solve
 - **Tracking files:** `docs/internal/TASKS.json`, `docs/internal/QA_RESULTS.json`, `docs/internal/ADVERSARIAL_REVIEW.md`, `docs/internal/FEEDBACK.md` (Round 6).
 - **Project facts:** `ui` yes, `deploy` yes, `sensitive-data` no, `existing-code` yes.
 - **Team retro:** `~/.se-agents/retros/ProjectSahiDana-2026-10-15.md` (continued)
+
