@@ -80,10 +80,10 @@ function ExpansionRow({ item, byId, onAddBudget }: ExpansionRowProps) {
         <FeedName feed={feed} />
       </span>
       <Fig audit={auditExpansionKg(item, feed)} className="c4-shop-fig">
-        +{amount}
+        {amount}
       </Fig>
       <Fig audit={auditExpansionCost(item, feed)} className="c4-shop-fig">
-        ({cost})
+        {cost}
       </Fig>
       <span className="c4-shop-gain">
         <BiRich

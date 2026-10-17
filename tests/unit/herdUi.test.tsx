@@ -759,7 +759,8 @@ describe('herdUi (Change 4 Milestone 1 UI and 3-screen flow)', () => {
       const firstRow = expRows?.[0];
       expect(firstRow?.getAttribute('data-feed')).toBe(topItem.feedId);
       expect(firstRow?.textContent).toContain(`(+₹${topItem.deltaCostInrPerDay})`);
-      expect(firstRow?.textContent).toContain(`+`);
+      expect(firstRow?.textContent).not.toContain(`((`);
+      expect(firstRow?.textContent).not.toContain(`++`);
       expect(firstRow?.textContent).toContain('milk');
 
       const topFeed = (DEFAULT_FEED_LIBRARY as FeedItem[]).find((f) => f.id === topItem.feedId)!;
