@@ -534,7 +534,7 @@
             "tests/unit/herdUi.test.tsx"
           ],
           "acceptance_criteria": "SPEC AC-C4-3.1, AC-C4-3.4, AC-C4-3.5, AC-C4-E14; vitest run tests/unit/herdUi.test.tsx exits 0.",
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "C4-M3-T3",

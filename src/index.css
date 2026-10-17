@@ -413,6 +413,14 @@
   background: var(--c-accent-hover);
   color: var(--c-surface);
 }
+.btn-secondary {
+  background: var(--c-accent-tint);
+  color: var(--c-accent-ink);
+  border: 1px solid var(--c-accent-tint-2);
+}
+.btn-secondary:hover:not(:disabled) {
+  background: var(--c-accent-tint-2);
+}
 .btn-primary {
   width: 100%;
   min-height: 56px;
@@ -2786,7 +2794,8 @@ select.input {
   grid-template-columns: minmax(0, 1fr) auto auto;
   grid-template-areas:
     'name kg cost'
-    'gain gain gain';
+    'gain gain gain'
+    'action action action';
   align-items: center;
   column-gap: var(--s-2);
   padding: var(--s-1) 0;
@@ -2812,6 +2821,15 @@ select.input {
   padding-bottom: var(--s-1);
   font-size: var(--fs-sm);
   color: var(--c-text-2);
+}
+.c4-btn-add-budget {
+  grid-area: action;
+  justify-self: start;
+  min-height: 44px;
+  min-width: 44px;
+  font-size: var(--fs-sm);
+  padding: var(--s-1) var(--s-3);
+  margin-top: var(--s-1);
 }
 .c4-shop-total {
   padding-top: var(--s-3);

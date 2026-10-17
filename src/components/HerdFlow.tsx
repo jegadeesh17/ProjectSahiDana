@@ -201,6 +201,14 @@ export function HerdFlow() {
   };
 
   // ---- screen 3 --------------------------------------------------------------------------------
+  const handleAddBudget = (deltaInr: number) => {
+    const current = Number(herdBudget) || 0;
+    const newBudget = Math.round(current + deltaInr);
+    setHerdBudget(String(newBudget));
+    const computedPlan = rationService.planHerd(animals, homeInputs, newBudget);
+    setPlan(computedPlan);
+  };
+
   const removeFromPlan = (key: string) => {
     removeAnimal(key);
     go('animals');
@@ -286,6 +294,7 @@ export function HerdFlow() {
               onRemoveAnimal={removeFromPlan}
               onEditAnimal={editAnimal}
               onAddHomeFeed={addHomeFeed}
+              onAddBudget={handleAddBudget}
             />
             <StepBar
               reasonId="c4-result-reason"

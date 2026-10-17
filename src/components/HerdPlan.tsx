@@ -20,10 +20,11 @@ interface Props {
   onRemoveAnimal: (key: string) => void;
   onEditAnimal?: (key: string) => void;
   onAddHomeFeed?: (feedId: string) => void;
+  onAddBudget?: (deltaInr: number) => void;
 }
 
 /** Screen 3, "Your plan": season line, what to buy, what to give each animal, what is not needed, and the budget prompt. */
-export function HerdPlanView({ plan, library, breeds, onRemoveAnimal }: Props) {
+export function HerdPlanView({ plan, library, breeds, onRemoveAnimal, onAddBudget }: Props) {
   const { lang } = useLang();
   const byId = useMemo(() => new Map(library.map((f) => [f.id, f])), [library]);
   const labels = useMemo(() => new Map<string, AnimalLabel>(plan.animals.map((a) => [a.key, a.label])), [plan.animals]);
@@ -93,6 +94,8 @@ export function HerdPlanView({ plan, library, breeds, onRemoveAnimal }: Props) {
         byId={byId}
         labels={labels}
         isDryHerd={plan.perAnimal.length > 0 && plan.perAnimal.every((a) => a.milkTargetLPerDay === 0)}
+        expansions={plan.expansionItems}
+        onAddBudget={onAddBudget}
       />
 
       <section className="c4-cards" aria-labelledby="c4-cards-h" data-c4="cards">

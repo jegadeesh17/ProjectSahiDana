@@ -363,7 +363,7 @@ describe('herdUi (Change 4 Milestone 1 UI and 3-screen flow)', () => {
       expect(container.textContent).not.toContain('enough for about');
     });
 
-    it('omits gain/milk element from later shop rows for a dry herd (AC-C4-1.14)', () => {
+    it('omits "Then, if you can" completely for a dry herd (AC-C4-E12)', () => {
       const dryCow: HerdAnimal = {
         key: 'a1',
         label: { species: 'cow', n: 1 },
@@ -381,39 +381,18 @@ describe('herdUi (Change 4 Milestone 1 UI and 3-screen flow)', () => {
       const dryPlan = planHerd([dryCow], [], 100, DEFAULT_FEED_LIBRARY as FeedItem[], BREEDS, 10, '2026-10-16');
       if (dryPlan.status !== 'optimal') throw new Error('dryPlan must be optimal');
 
-      const dryPlanWithLater = {
-        ...dryPlan,
-        shopping: {
-          ...dryPlan.shopping,
-          later: [
-            {
-              line: { feedId: 'mustard_cake', kgPerDay: 1.0, costInrPerDay: 30, priceInrPerKg: 30, perAnimalKg: [{ key: 'a1', kg: 1.0 }] },
-              deltaMilkExactL: 0,
-              deltaMilkL: 0,
-              step: { k: 2, prefixFeedIds: ['wheat_straw', 'mustard_cake'], addedFeedIds: ['mustard_cake'], shareT: 0, totalMilkL: 0, purchaseCostInrPerDay: 50 },
-              previous: { k: 1, prefixFeedIds: ['wheat_straw'], addedFeedIds: ['wheat_straw'], shareT: 0, totalMilkL: 0, purchaseCostInrPerDay: 20 },
-            },
-          ],
-        },
-      };
-
       const { container } = render(
         <LanguageProvider>
           <AuditProvider>
-            <HerdPlanView plan={dryPlanWithLater} library={DEFAULT_FEED_LIBRARY as FeedItem[]} breeds={BREEDS} onRemoveAnimal={() => {}} />
+            <HerdPlanView plan={dryPlan} library={DEFAULT_FEED_LIBRARY as FeedItem[]} breeds={BREEDS} onRemoveAnimal={() => {}} />
           </AuditProvider>
         </LanguageProvider>,
       );
 
-      const laterGroup = container.querySelector('[data-group="later"]');
-      expect(laterGroup).toBeTruthy();
-      const laterRow = laterGroup?.querySelector('.c4-shop-row');
-      expect(laterRow).toBeTruthy();
-
-      // c4-shop-gain span must be omitted when isDryHerd is true
-      expect(laterGroup?.querySelector('.c4-shop-gain')).toBeNull();
-      expect(laterRow?.textContent).not.toContain('same milk');
-      expect(laterRow?.textContent).not.toContain('उतना ही दूध');
+      // "Then, if you can" group must be omitted completely for a dry herd
+      expect(container.querySelector('[data-group="later"]')).toBeNull();
+      expect(container.textContent).not.toContain('Then, if you can');
+      expect(container.textContent).not.toContain('फिर, हो सके तो');
     });
 
     it('enforces farmer display units on main view (AC-C4-1.19)', () => {
@@ -698,6 +677,167 @@ describe('herdUi (Change 4 Milestone 1 UI and 3-screen flow)', () => {
       expect(buffalo1Idx).toBeGreaterThan(cow1Idx);
       expect(copiedText).toContain('What to buy');
       expect(copiedText).toContain('What to give each animal');
+    });
+  });
+
+  // ---- 8. Milestone C4-M3: Beyond-budget expansion steps & interactive feed upgrade -----------
+  describe('Milestone C4-M3: Beyond-budget expansion steps & interactive feed upgrade', () => {
+    const buffalo: HerdAnimal = {
+      key: 'a1',
+      label: { species: 'buffalo', n: 1 },
+      profile: {
+        species: 'buffalo',
+        breedId: 'murrah',
+        bodyWeightKg: 500,
+        milkYieldLitersPerDay: 8,
+        milkFatPct: 7.0,
+      },
+      weightSource: 'typed',
+      fatSource: 'typed',
+      isConfirmed: true,
+    };
+
+    it('renders all within-budget feeds in "What to buy" without within-budget later split (AC-C4-3.1)', () => {
+      const plan = planHerd([buffalo], [{ feedId: 'wheat_straw', kgPerDay: 4 }], 200, DEFAULT_FEED_LIBRARY as FeedItem[], BREEDS, 10, '2026-10-16');
+      if (plan.status !== 'optimal') throw new Error('plan must be optimal');
+
+      const { container } = render(
+        <LanguageProvider>
+          <AuditProvider>
+            <HerdPlanView plan={plan} library={DEFAULT_FEED_LIBRARY as FeedItem[]} breeds={BREEDS} onRemoveAnimal={() => {}} />
+          </AuditProvider>
+        </LanguageProvider>,
+      );
+
+      // Buy first group contains all within-budget bought feeds
+      const firstGroup = container.querySelector('[data-group="first"]');
+      expect(firstGroup).toBeTruthy();
+      const firstRows = firstGroup?.querySelectorAll('.c4-shop-row');
+      expect(firstRows?.length).toBe(plan.shopping.buyFirst.length);
+      expect(firstRows?.length).toBeGreaterThan(0);
+
+      // No within-budget feeds partitioned into later
+      expect(plan.shopping.later.length).toBe(0);
+
+      // Shopping total displays P(F) <= Bd
+      const totalEl = container.querySelector('[data-testid="shop-total"]');
+      expect(totalEl).toBeTruthy();
+      expect(plan.shopping.totalInr).toBeLessThanOrEqual(200 + 1e-6);
+    });
+
+    it('renders "Then, if you can" with expansion details and accessible [+ Add to budget] button (AC-C4-3.3, AC-C4-3.4)', () => {
+      const onAddBudget = vi.fn();
+      const plan = planHerd([buffalo], [{ feedId: 'wheat_straw', kgPerDay: 4 }], 150, DEFAULT_FEED_LIBRARY as FeedItem[], BREEDS, 10, '2026-10-16');
+      if (plan.status !== 'optimal') throw new Error('plan must be optimal');
+
+      // Ensure expansion items are present
+      expect(plan.expansionItems.length).toBeGreaterThan(0);
+      const topItem = plan.expansionItems[0];
+
+      const { container } = render(
+        <LanguageProvider>
+          <AuditProvider>
+            <HerdPlanView
+              plan={plan}
+              library={DEFAULT_FEED_LIBRARY as FeedItem[]}
+              breeds={BREEDS}
+              onRemoveAnimal={() => {}}
+              onAddBudget={onAddBudget}
+            />
+          </AuditProvider>
+        </LanguageProvider>,
+      );
+
+      const laterGroup = container.querySelector('[data-group="later"]');
+      expect(laterGroup).toBeTruthy();
+      expect(laterGroup?.textContent).toContain('Then, if you can');
+
+      // Top expansion row rendered with feed name, delta kg, delta cost, and milk gain
+      const expRows = laterGroup?.querySelectorAll('.c4-shop-row');
+      expect(expRows?.length).toBe(plan.expansionItems.length);
+
+      const firstRow = expRows?.[0];
+      expect(firstRow?.getAttribute('data-feed')).toBe(topItem.feedId);
+      expect(firstRow?.textContent).toContain(`(+₹${topItem.deltaCostInrPerDay})`);
+      expect(firstRow?.textContent).toContain(`+`);
+      expect(firstRow?.textContent).toContain('milk');
+
+      // Interactive button
+      const addBtn = firstRow?.querySelector('[data-testid="btn-add-budget"]') as HTMLButtonElement;
+      expect(addBtn).toBeTruthy();
+      expect(addBtn.textContent).toContain('+ Add to budget');
+      expect(addBtn.getAttribute('aria-label')).toBe(`Add ₹${topItem.deltaCostInrPerDay}/day to budget for +${topItem.deltaMilkL} L milk`);
+
+      // Touch target >= 44x44 px (btn class has min-height 48px, min-width 44px)
+      expect(addBtn.classList.contains('c4-btn-add-budget')).toBe(true);
+      expect(addBtn.classList.contains('btn')).toBe(true);
+
+      // Tapping button triggers onAddBudget
+      fireEvent.click(addBtn);
+      expect(onAddBudget).toHaveBeenCalledWith(topItem.deltaCostInrPerDay);
+    });
+
+    it('omits "Then, if you can" when expansion items list is empty (AC-C4-3.6)', () => {
+      const plan = planHerd([buffalo], [{ feedId: 'wheat_straw', kgPerDay: 4 }], 200, DEFAULT_FEED_LIBRARY as FeedItem[], BREEDS, 10, '2026-10-16');
+      if (plan.status !== 'optimal') throw new Error('plan must be optimal');
+
+      const planWithNoExpansions = {
+        ...plan,
+        expansionItems: [],
+      };
+
+      const { container } = render(
+        <LanguageProvider>
+          <AuditProvider>
+            <HerdPlanView plan={planWithNoExpansions} library={DEFAULT_FEED_LIBRARY as FeedItem[]} breeds={BREEDS} onRemoveAnimal={() => {}} />
+          </AuditProvider>
+        </LanguageProvider>,
+      );
+
+      expect(container.querySelector('[data-group="later"]')).toBeNull();
+      expect(container.textContent).not.toContain('Then, if you can');
+    });
+
+    it('tapping [+ Add to budget] updates budget and re-solves herd plan immediately (AC-C4-3.5, AC-C4-E14)', async () => {
+      const { container } = render(<App />);
+      // Load example tight_budget (Cow 1, Buffalo 1, 200 budget)
+      fireEvent.click(container.querySelector('[data-example="tight_budget"]') as HTMLButtonElement);
+
+      await navigateToScreen3(container);
+
+      // On screen 3, verify "Then, if you can" and get the first add-to-budget button
+      const laterGroup = container.querySelector('[data-group="later"]');
+      expect(laterGroup).toBeTruthy();
+
+      const addBtn = laterGroup?.querySelector('[data-testid="btn-add-budget"]') as HTMLButtonElement;
+      expect(addBtn).toBeTruthy();
+
+      // Read initial budget from total
+      const initialTotal = container.querySelector('[data-testid="shop-total"]')?.textContent;
+
+      // Click add to budget
+      fireEvent.click(addBtn);
+
+      // Immediately re-solves and updates Screen 3 view
+      const updatedTotal = container.querySelector('[data-testid="shop-total"]')?.textContent;
+      expect(updatedTotal).not.toBe(initialTotal);
+
+      // Navigate back to Screen 2 and Screen 1 (AC-C4-E14)
+      act(() => {
+        window.location.hash = '#/feeds';
+        window.dispatchEvent(new PopStateEvent('popstate'));
+      });
+      expect(container.querySelector('h1#c4-title')?.textContent).toContain('Feed you already have');
+
+      act(() => {
+        window.location.hash = '#/animals';
+        window.dispatchEvent(new PopStateEvent('popstate'));
+      });
+      expect(container.querySelector('h1#c4-title')?.textContent).toContain('Your animals');
+
+      // Budget input on Screen 1 displays the updated budget > 200
+      const budgetInput = container.querySelector('.c4-budget input.num') as HTMLInputElement;
+      expect(Number(budgetInput.value)).toBeGreaterThan(200);
     });
   });
 });

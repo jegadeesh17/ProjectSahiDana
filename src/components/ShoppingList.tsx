@@ -1,10 +1,10 @@
 import { auditUserInput } from '../domain/audit';
-import { auditShoppingCost, auditShoppingKg, auditShoppingTotal, auditStepGain } from '../domain/auditHerd';
+import { auditShoppingCost, auditShoppingKg, auditShoppingTotal } from '../domain/auditHerd';
 import { displayAmount, isShownAmount, roundInrWhole } from '../domain/format';
-import type { AnimalLabel, FeedItem, ShoppingLine, ShoppingList as ShoppingListData } from '../domain/types';
+import type { AnimalLabel, FeedItem, HerdExpansionItem, ShoppingLine, ShoppingList as ShoppingListData } from '../domain/types';
 import { formatAmount, formatInr, formatInrWhole, formatNumber } from '../i18n/format';
 import { Bi, BiRich } from '../i18n/Bi';
-import { t } from '../i18n/strings';
+import { bi, t } from '../i18n/strings';
 import { FeedChip, FeedName } from './FeedName';
 import { Fig } from './Fig';
 
@@ -14,18 +14,17 @@ interface Props {
   byId: Map<string, FeedItem>;
   labels: Map<string, AnimalLabel>;
   isDryHerd?: boolean;
+  expansions?: HerdExpansionItem[];
+  onAddBudget?: (deltaInr: number) => void;
 }
 
 interface RowProps {
   line: ShoppingLine;
   byId: Map<string, FeedItem>;
   labels: Map<string, AnimalLabel>;
-  /** "Then, if you can" lines show the cost in brackets and end with the milk it adds. */
-  gain?: ShoppingListData['later'][number];
-  isDryHerd?: boolean;
 }
 
-function ShopRow({ line, byId, labels, gain, isDryHerd }: RowProps) {
+function ShopRow({ line, byId, labels }: RowProps) {
   const feed = byId.get(line.feedId);
   if (!feed || !isShownAmount(line.kgPerDay)) return null;
   const amount = formatAmount(displayAmount(line.feedId, line.kgPerDay));
@@ -40,33 +39,56 @@ function ShopRow({ line, byId, labels, gain, isDryHerd }: RowProps) {
         {amount}
       </Fig>
       <Fig audit={auditShoppingCost(line, feed)} className="c4-shop-fig">
-        {gain ? `(${cost})` : cost}
+        {cost}
       </Fig>
-      {gain && !isDryHerd && (
-        <span className="c4-shop-gain">
-          {gain.deltaMilkL > 0 ? (
-            <BiRich
-              id="c4_shop_gain"
-              nodes={{
-                l: (
-                  <Fig inline audit={auditStepGain(gain, byId)}>
-                    {formatNumber(gain.deltaMilkL, 1)}
-                  </Fig>
-                ),
-              }}
-            />
-          ) : (
-            <Bi id="c4_shop_same" />
-          )}
-        </span>
-      )}
     </li>
   );
 }
 
-/** "What to buy": the Buy first group, the Then, if you can lines with the milk each adds, and the total against the budget. */
-export function ShoppingList({ shopping, budgetInrPerDay, byId, labels, isDryHerd }: Props) {
-  const empty = shopping.buyFirst.length === 0 && shopping.later.length === 0;
+interface ExpansionRowProps {
+  item: HerdExpansionItem;
+  byId: Map<string, FeedItem>;
+  onAddBudget?: (deltaInr: number) => void;
+}
+
+function ExpansionRow({ item, byId, onAddBudget }: ExpansionRowProps) {
+  const feed = byId.get(item.feedId);
+  if (!feed || !isShownAmount(item.deltaKgPerDay)) return null;
+  const amount = `+${formatAmount(displayAmount(item.feedId, item.deltaKgPerDay))}`;
+  const cost = `(+₹${item.deltaCostInrPerDay})`;
+  const ariaLabel = bi('c4_add_to_budget_aria', {
+    cost: item.deltaCostInrPerDay,
+    milk: formatNumber(item.deltaMilkL, 1),
+  });
+
+  return (
+    <li className="c4-shop-row" data-feed={item.feedId}>
+      <span className="c4-shop-name">
+        <FeedChip feed={feed} />
+        <FeedName feed={feed} />
+      </span>
+      <span className="c4-shop-fig">{amount}</span>
+      <span className="c4-shop-fig">{cost}</span>
+      <span className="c4-shop-gain">
+        <Bi id="c4_shop_gain" params={{ l: formatNumber(item.deltaMilkL, 1) }} />
+      </span>
+      <button
+        type="button"
+        className="btn btn-secondary c4-btn-add-budget"
+        data-testid="btn-add-budget"
+        onClick={() => onAddBudget?.(item.deltaCostInrPerDay)}
+        aria-label={ariaLabel}
+      >
+        <Bi id="c4_add_to_budget" />
+      </button>
+    </li>
+  );
+}
+
+/** "What to buy": all within-budget feeds consolidated, followed by beyond-budget expansions in "Then, if you can". */
+export function ShoppingList({ shopping, budgetInrPerDay, byId, labels, isDryHerd, expansions, onAddBudget }: Props) {
+  const showLater = Boolean(expansions && expansions.length > 0 && !isDryHerd);
+  const empty = shopping.buyFirst.length === 0 && !showLater;
   const budgetText = formatInr(budgetInrPerDay, budgetInrPerDay % 1 === 0 ? 0 : 2);
   return (
     <section className="c4-card" aria-labelledby="c4-shop-h" data-c4="shopping">
@@ -80,31 +102,31 @@ export function ShoppingList({ shopping, budgetInrPerDay, byId, labels, isDryHer
         </p>
       ) : (
         <>
-          <div className="c4-group c4-group-first" data-group="first">
-            <h3 className="c4-group-title">
-              <Bi id="c4_shop_first" />
-            </h3>
-            <ul className="c4-shop-list">
-              {shopping.buyFirst.map((line) => (
-                <ShopRow key={line.feedId} line={line} byId={byId} labels={labels} />
-              ))}
-            </ul>
-          </div>
+          {shopping.buyFirst.length > 0 && (
+            <div className="c4-group c4-group-first" data-group="first">
+              <h3 className="c4-group-title">
+                <Bi id="c4_shop_first" />
+              </h3>
+              <ul className="c4-shop-list">
+                {shopping.buyFirst.map((line) => (
+                  <ShopRow key={line.feedId} line={line} byId={byId} labels={labels} />
+                ))}
+              </ul>
+            </div>
+          )}
 
-          {shopping.later.length > 0 && (
+          {showLater && (
             <div className="c4-group" data-group="later">
               <h3 className="c4-group-title">
                 <Bi id="c4_shop_later" />
               </h3>
               <ul className="c4-shop-list">
-                {shopping.later.map((step) => (
-                  <ShopRow
-                    key={step.line.feedId}
-                    line={step.line}
+                {expansions!.map((item) => (
+                  <ExpansionRow
+                    key={item.feedId}
+                    item={item}
                     byId={byId}
-                    labels={labels}
-                    gain={step}
-                    isDryHerd={isDryHerd}
+                    onAddBudget={onAddBudget}
                   />
                 ))}
               </ul>
@@ -133,3 +155,4 @@ export function ShoppingList({ shopping, budgetInrPerDay, byId, labels, isDryHer
     </section>
   );
 }
+

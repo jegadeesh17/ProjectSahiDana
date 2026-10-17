@@ -246,6 +246,14 @@
     "exit_code": 0,
     "summary": "1 unit test file passed, 28 tests passed in tests/unit/herdPlan.test.ts (verifying What to buy consolidation without baseline rung splitting per AC-C4-3.1, beyond-budget expansion items generation per AC-C4-3.2, sorting by returnPerRupee per AC-C4-3.3, breed cap omission at t*=1.0 per AC-C4-3.6, dry herd omission per AC-C4-E12, and intake ceiling/non-budget tightness omission per AC-C4-E13)",
     "failure_output": ""
+  },
+  {
+    "task_id": "C4-M3-T2",
+    "attempt": 1,
+    "command": "cmd.exe /c \"npx vitest run tests/unit/herdUi.test.tsx\"",
+    "exit_code": 0,
+    "summary": "1 unit test file passed, 27 tests passed in tests/unit/herdUi.test.tsx (verifying What to buy displays all within-budget feeds per AC-C4-3.1, 'Then, if you can' renders expansion items with accessible [+ Add to budget] button per AC-C4-3.3/3.4, omission when expansionItems is empty per AC-C4-3.6, and tapping [+ Add to budget] updates budget and re-solves herd plan immediately per AC-C4-3.5/AC-C4-E14)",
+    "failure_output": ""
   }
 ]
 
