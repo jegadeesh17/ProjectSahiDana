@@ -177,3 +177,60 @@ None.
 - `src/components/HerdPlan.tsx`: In the season line, the figure button `<Fig inline>` applies `--s-1` (4px) horizontal padding, which slightly separates the date from enclosing parentheses `( 16 October )`. Removing the outer whitespace inside the string or adjusting the inline fig margin would yield tighter typographical parentheses without reducing target height.
 - `src/components/AnimalPlanCard.tsx`: On desktop (1440px), the expanded "Details (for paravet)" nutrient bars look clean, but adding a slight background tint or card separator to the expanded accordion container could further visually distinguish paravet technical data from the farmer's primary plan view.
 - Desktop multi-column anticipation: Currently the 3-screen flow is centered single-column (max 640px). When C4-M2 introduces multiple herd animals, consider whether multi-animal cards could sit side-by-side on wide viewports to minimize page scrolling.
+
+## Change 4 (herd and 3-step flow), C4-M2 UI Review 1 (2026-10-17)
+
+Verdict: APPROVED
+Screenshots:
+- `.ui-review/C4-M2/screen1-animals-desktop.png`
+- `.ui-review/C4-M2/screen1-animals-mobile.png`
+- `.ui-review/C4-M2/screen1-animals-mobile-375.png`
+- `.ui-review/C4-M2/screen1-10animals-limit-desktop.png`
+- `.ui-review/C4-M2/screen1-10animals-limit-mobile.png`
+- `.ui-review/C4-M2/screen2-feeds-desktop.png`
+- `.ui-review/C4-M2/screen2-feeds-mobile.png`
+- `.ui-review/C4-M2/screen2-feeds-mobile-375.png`
+- `.ui-review/C4-M2/screen3-herdplan-desktop.png`
+- `.ui-review/C4-M2/screen3-herdplan-mobile.png`
+- `.ui-review/C4-M2/screen3-herdplan-mobile-375.png`
+- `.ui-review/C4-M2/screen3-herdplan-details-desktop.png`
+- `.ui-review/C4-M2/screen3-herdplan-details-mobile.png`
+- `.ui-review/C4-M2/screen3-herdplan-hindi-desktop.png`
+- `.ui-review/C4-M2/screen3-herdplan-hindi-mobile.png`
+- `.ui-review/C4-M2/screen3-audit-drawer-desktop.png`
+- `.ui-review/C4-M2/screen3-audit-drawer-mobile.png`
+
+### Critical defects (must fix; any defect means REJECTED)
+None.
+
+### Recommendations (non-blocking)
+- **StepBar floating container on wide desktop viewports**: In desktop viewports with tall screens, `.c4-bar` has `position: sticky; bottom: var(--s-4)` which creates a floating rounded action dock. While functional and accessible, consider evaluating whether an inline position beneath the budget card on desktop viewports (>= 1024px) feels more cohesive with desktop information flow, keeping the pinned sticky bar exclusively for mobile (< 720px).
+- **Animal list visual density when approaching 10 animals**: When 8–10 animals are added, the animal list card becomes long on mobile before reaching the budget input. Consider adding a small counter badge (e.g., "3 of 10") in the card header for quick scanning on small viewports.
+
+### Detailed Audit Summary
+1. **Multi-Animal UI & Monotonic Labeling (AC-C4-2.1, AC-C4-2.2, AC-C4-E5)**
+   - Monotonic labels (`Cow 1`, `Cow 2`, `Buffalo 1` / `गाय 1`, `गाय 2`, `भैंस 1`) accurately preserved across Screen 1 cards and Screen 3 plan cards.
+   - Add-card visibility: correctly available while `< 10` animals, automatically hidden at 10 animals with the limit banner (`You can add up to 10 animals` / `ज़्यादा से ज़्यादा 10 गाय-भैंस जोड़ सकते हैं`).
+   - Animal removal on Screen 3 returns to Screen 1, retains remaining animals/budget/home feeds, and clears stale plan state until recalculated.
+2. **Contrast Ratios & Colors (WCAG 2.2 AA & DESIGN.md)**
+   - Neutral text: `#1f2a24` on `#ffffff` (14.8:1) and `#5b6660` on `#ffffff` (6.0:1) comfortably exceed 4.5:1.
+   - Accent button: `#ffffff` on `#12804a` (5.0:1); hover `#0e6b3d` (6.6:1).
+   - Semantic tags: `tag-buy` (`#0b5a33` on `#e3f4ea`): 7.3:1; `tag-you-have` (`#1f2a24` on `#f1f4f1`): 13.5:1; Limit message (`#704708` on `#fbf3e1`): 7.3:1.
+   - Zero hardcoded hex/rgb outside theme variables in `src/index.css`.
+3. **Touch Targets (AC-C4-1.31)**
+   - All interactive controls (buttons, chips, select controls, remove buttons, and audit figure buttons) meet or exceed the 44×44 px minimum touch target requirement (verified via automated e2e touch target suite).
+4. **Mobile Viewport (375px & 390px)**
+   - Layout reflows smoothly with zero horizontal scroll.
+   - Consistent 16px padding on both sides.
+   - "Not needed today" and "What to buy" sections maintain matching horizontal padding.
+5. **Language Isolation & Numerals (AC-C4-L1, AC-C4-E7)**
+   - Complete language isolation: Hindi mode renders 100% Devanagari text for titles, tags, and headings with zero English leakage.
+   - Western Arabic digits (0–9) maintained across both languages with standard Latin abbreviations (`kg`, `L`, `g`, `Mcal`, `₹`, `%`).
+   - Devanagari feed names properly include team-asserted provenance dagger markers where cited transliterations were used.
+6. **Audit Drawer & Accessibility**
+   - Accessible roles (`role="meter"`, `aria-valuemin`, `aria-valuemax`, `aria-valuenow`, `aria-label`) properly set on nutrient progress indicators.
+   - Keyboard focus management: focus returns to triggering figures upon closing drawers; back-navigation history listener preserves screen state.
+   - Motion respects `prefers-reduced-motion`. All animations cleanly scoped.
+7. **Pattern Scan**
+   - No prohibited gradients, blobs, frosted glass, emoji icons, lorem ipsum/filler text, or invented metrics. Zero hits across the craft refuse list.
+

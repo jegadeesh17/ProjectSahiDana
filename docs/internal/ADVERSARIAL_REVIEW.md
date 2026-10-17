@@ -128,3 +128,25 @@ None.
 ### Recommendations (non-blocking):
 - `src/domain/herdPlan.ts`: Consider exporting a reusable helper `export function isDryHerd(plan: HerdPlan): boolean` in `herdPlan.ts` to share between `HerdPlan.tsx` and `domain/summary.ts` ahead of C4-M2.
 - `src/lib/hashRoute.ts:136`: Guard `window.history.state?.drawerOpen` before calling `window.history.back()` for extra defense against external unmounts.
+
+## Change 4 (herd and 3-step flow), C4-M2 Review 1 (2026-10-17)
+
+Verdict: APPROVED
+Base commit: `2134ab6` (Head: `a7ad058`)
+Test command: `npm test && npx playwright test tests/e2e/herd-flow.spec.ts && npm run build && npm run eval:dump && npm run eval:scipy` (exit code 0, 432 unit tests, 10 Playwright E2E tests, 32 SciPy tests)
+
+### Summary of Review
+- **Multi-Animal Herd Flow (AC-C4-2.1, AC-C4-E5, AC-C4-2.2):** Supports up to 10 animals (`MAX_ANIMALS = 10`) with persistent monotonic per-species labeling (`label_cow_n`, `label_buffalo_n`) that never renumbers after removal. The add-animal card stays visible until 10 animals are listed, whereupon it hides and displays `c4_max_animals` ("You can add up to 10 animals" / "ज़्यादा से ज़्यादा 10 गाय-भैंस जोड़ सकते हैं"). Removing an animal on Screen 3 correctly drops the plan, redirects the hash to `#/animals`, and preserves remaining animals, budget, and home feeds.
+- **Fair-share Joint LP & Home Feeds (AC-C4-2.3, AC-C4-2.4, AC-C4-2.5):** Solves multi-animal joint LP maximizing common scale factor $t^* \in [0, 1]$ across milking animals ($Y_i = t^* g_i$) while holding dry animals at maintenance ($y_i = 0$). Stage 2 minimizes purchase cost $P(F)$ with home stock costed at ₹0 and shared across animals ($\sum_i h_{i,f} \le q_f + 10^{-6}$). Stage 3 minimizes total home kg at that purchase cost. Double-precision `verifyHerdSolution` verifies all per-animal nutritional requirements (DM ceiling, roughage share $\ge 40\%$, CP, ME, Ca, P, Ca:P, Ca:DM), feed caps, and shopping conservation ($\sum_i b_{i,f} = B_f$).
+- **Shopping Steps & Marginal Milk (AC-C4-2.6):** Buying order $Bu_H$ prioritizes mandatory supplements, ascending cost, and feed ID tie-breaking. Real joint prefix solves from $P_1$ to the full set guarantee non-decreasing milk ($\Delta L_k \ge 0$), with the final step matching $F$ within $10^{-6}$ relative tolerance.
+- **Limit Diagnosis (AC-C4-2.10):** Evaluated at $Y$, tight constraints follow strict architectural priority: `budget`, `milk_target` ($t^* = 1$), `home_stock` in row order, then per-animal in list order (`intake`, `roughage`, `CP`, `ME`, `Ca`, `P`). Comprehensive isolated limit unit tests confirm exact detection for every limit kind.
+- **SciPy HiGHS Cross-Check (AC-C4-2.9):** `eval/test_herd_animals.json` defines 7 benchmark herd cases spanning multi-species herds, dry animals, binding home stock, below maintenance, infeasible restricted feeds, $t^* = 1$, and tight budget. `scripts/dump_solver_results.ts` dumps browser solver outputs, and `eval/test_scipy_herd_agreement.py` asserts 100% agreement against SciPy HiGHS within $10^{-4}$ tolerance on $t^*$, $P(F)$, $M_H$, $\text{costAtCap}_H$, Stage 3 home kg, and $S_i$ floor formula.
+- **Regressions & Presets (AC-C4-2.11, AC-C4-R1..R12):** Single-animal equivalence preserved across all 18 benchmark animals. Presets updated cleanly from single-animal to 3 multi-animal herd examples ("Cow + Buffalo", "Straw only", "Tight budget"). 10-animal worst case benchmark solves in ~466 ms ($\le 1.0$ s budget). All unit, E2E, build, and Python eval suites pass cleanly.
+
+### Critical defects (must fix; any defect means REJECTED)
+None.
+
+### Recommendations (non-blocking)
+- In `src/domain/herdSolver.ts:1463-1466`, the residual budget calculation for per-animal tight constraint detection loops through `slicesAtY`. While already optimized with a memoized `slicesAtY` map, caching `sumOtherCosts = totalCost - slice.totalCost` could marginally optimize future scaling beyond 10 animals.
+- In `eval/cross_check_herd.py`, add explicit type annotations to `parse_args()` helper functions for consistency with the rest of the Python eval codebase.
+
