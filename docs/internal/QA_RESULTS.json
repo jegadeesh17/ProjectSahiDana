@@ -238,6 +238,14 @@
     "exit_code": 0,
     "summary": "dump_solver_results.ts succeeded (7 benchmark herds: 5 optimal, 1 below_maintenance, 1 infeasible) and 9 pytest tests passed in eval/test_scipy_herd_agreement.py (100% agreement between browser javascript-lp-solver and SciPy HiGHS on t*, P(F), M_H, costAtCap_H, Stage 3 home kg, and S_i rounding across all scenarios)",
     "failure_output": ""
+  },
+  {
+    "task_id": "C4-M3-T1",
+    "attempt": 1,
+    "command": "cmd.exe /c \"npx vitest run tests/unit/herdPlan.test.ts\"",
+    "exit_code": 0,
+    "summary": "1 unit test file passed, 28 tests passed in tests/unit/herdPlan.test.ts (verifying What to buy consolidation without baseline rung splitting per AC-C4-3.1, beyond-budget expansion items generation per AC-C4-3.2, sorting by returnPerRupee per AC-C4-3.3, breed cap omission at t*=1.0 per AC-C4-3.6, dry herd omission per AC-C4-E12, and intake ceiling/non-budget tightness omission per AC-C4-E13)",
+    "failure_output": ""
   }
 ]
 

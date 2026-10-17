@@ -586,6 +586,21 @@ export interface ShoppingList {
   firstStep: HerdStep | null;
 }
 
+export interface HerdExpansionItem {
+  feedId: string;
+  deltaKgPerDay: number;
+  deltaCostInrPerDay: number;
+  priceInrPerKg: number;
+  deltaMilkExactL: number;
+  deltaMilkL: number;
+  returnPerRupee: number;
+  auditProbe?: {
+    probeBudgetInrPerDay: number;
+    newTotalMilkL: number;
+    baseTotalMilkL: number;
+  };
+}
+
 export interface HerdBudgetPrompt {
   /** X = roundUpInrWhole(costAtCap_H - Bd). */
   extraInrPerDay: number;
@@ -624,6 +639,7 @@ export type HerdPlan =
       /** Bu_H */
       buyOrder: string[];
       shopping: ShoppingList;
+      expansionItems: HerdExpansionItem[];
       /** Home feedIds with sum h <= 1e-6 in F, in row order. */
       notNeeded: string[];
       budgetPrompt: HerdBudgetPrompt | null;
@@ -637,6 +653,7 @@ export type HerdPlan =
       perAnimal: [];
       buyOrder: [];
       shopping: null;
+      expansionItems: [];
       notNeeded: [];
       budgetPrompt: null;
       shortfall: HerdShortfallPrompt;
@@ -648,6 +665,7 @@ export type HerdPlan =
       perAnimal: [];
       buyOrder: [];
       shopping: null;
+      expansionItems: [];
       notNeeded: [];
       budgetPrompt: null;
       shortfall: null;

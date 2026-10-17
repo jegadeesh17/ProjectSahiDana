@@ -2,15 +2,16 @@
 // Pure domain module: zero UI dependencies, zero network requests, fully deterministic.
 import { BREEDS } from './breeds';
 import { floorMilk1, roundUpInrWhole } from './format';
-import { solveHerd, solveHerdStep } from './herdSolver';
+import { solveHerd } from './herdSolver';
 import { buildCandidates, MANDATORY_SUPPLEMENT_IDS } from './rationPlan';
-import { DEFAULT_FEED_LIBRARY, SolverError } from './solver';
+import { DEFAULT_FEED_LIBRARY } from './solver';
 import type {
   AnimalLabel,
   BreedStandard,
   FeedItem,
   HerdAnimal,
   HerdBudgetPrompt,
+  HerdExpansionItem,
   HerdPlan,
   HerdPlanBase,
   HerdStep,
@@ -96,6 +97,7 @@ export function planHerd(
       perAnimal: [],
       buyOrder: [],
       shopping: null,
+      expansionItems: [],
       notNeeded: [],
       budgetPrompt: null,
       shortfall: {
@@ -120,6 +122,7 @@ export function planHerd(
       perAnimal: [],
       buyOrder: [],
       shopping: null,
+      expansionItems: [],
       notNeeded: [],
       budgetPrompt: null,
       shortfall: null,
@@ -150,10 +153,8 @@ export function planHerd(
   });
   const buyOrder = sortedBuyTotals.map((line) => line.feedId);
 
-  // 4. Shopping list & ladder steps
+  // 4. Shopping list: consolidate all within-budget feeds into What to buy (AC-C4-3.1)
   let shopping: ShoppingList;
-  let lastStepMatchesBest = true;
-
   if (buyOrder.length === 0) {
     shopping = {
       buyFirst: [],
@@ -162,79 +163,25 @@ export function planHerd(
       firstStep: null,
     };
   } else {
-    const s = buyOrder.filter((id) => MANDATORY_SUPPLEMENT_IDS.includes(id)).length;
-    const cMap = new Map(C.map((item) => [item.feedId, item]));
-
-    let firstStep: HerdStep | null = null;
-    let previousStep: HerdStep | null = null;
-    let lastStep: HerdStep | null = null;
-    const later: ShoppingList['later'] = [];
-
-    for (let k = Math.max(1, s); k <= buyOrder.length; k++) {
-      const sliceIds = buyOrder.slice(0, k);
-      const prefixBuySet = sliceIds.map((id) => cMap.get(id)!);
-      const stepOutcome = solveHerdStep(animals, prefixBuySet, homeFeeds, budgetInrPerDay, feedLibrary, breedLibrary);
-
-      if (firstStep === null) {
-        if (stepOutcome.status === 'optimal') {
-          firstStep = {
-            k,
-            prefixFeedIds: sliceIds,
-            addedFeedIds: sliceIds,
-            shareT: stepOutcome.shareT,
-            totalMilkL: stepOutcome.totalMilkL,
-            purchaseCostInrPerDay: stepOutcome.purchaseCostInrPerDay,
-          };
-          previousStep = firstStep;
-          lastStep = firstStep;
-        }
-      } else {
-        if (stepOutcome.status !== 'optimal') {
-          throw new SolverError(`Herd step prefix ${k} after P1 was not optimal`);
-        }
-        const currentStep: HerdStep = {
-          k,
-          prefixFeedIds: sliceIds,
-          addedFeedIds: [buyOrder[k - 1]],
-          shareT: stepOutcome.shareT,
-          totalMilkL: stepOutcome.totalMilkL,
-          purchaseCostInrPerDay: stepOutcome.purchaseCostInrPerDay,
-        };
-        const deltaMilkExactL = Math.max(0, currentStep.totalMilkL - previousStep!.totalMilkL);
-        const deltaMilkL = floorMilk1(deltaMilkExactL);
-        later.push({
-          line: sortedBuyTotals[k - 1],
-          deltaMilkExactL,
-          deltaMilkL,
-          step: currentStep,
-          previous: previousStep!,
-        });
-        previousStep = currentStep;
-        lastStep = currentStep;
-      }
-    }
-
-    if (firstStep === null || lastStep === null) {
-      throw new SolverError('No optimal prefix found for herd buy list');
-    }
-
-    const buyFirst = sortedBuyTotals.slice(0, firstStep.k);
+    const totalMilkL = best.animals.reduce((sum, a) => sum + a.milkLPerDay, 0);
+    const firstStep: HerdStep = {
+      k: sortedBuyTotals.length,
+      prefixFeedIds: buyOrder,
+      addedFeedIds: buyOrder,
+      shareT: best.shareT,
+      totalMilkL,
+      purchaseCostInrPerDay: best.purchaseCostInrPerDay,
+    };
     shopping = {
-      buyFirst,
-      later,
+      buyFirst: sortedBuyTotals,
+      later: [],
       totalInr: best.purchaseCostInrPerDay,
       firstStep,
     };
-
-    const fTotalMilk = best.animals.reduce((sum, a) => sum + a.milkLPerDay, 0);
-    const milkMatches = Math.abs(lastStep.totalMilkL - fTotalMilk) <= 1e-6 * Math.max(1, fTotalMilk);
-    const purchaseMatches =
-      Math.abs(lastStep.purchaseCostInrPerDay - best.purchaseCostInrPerDay) <=
-      1e-6 * Math.max(1, best.purchaseCostInrPerDay);
-    lastStepMatchesBest = milkMatches && purchaseMatches;
   }
+  const lastStepMatchesBest = true;
 
-  // 7. Not needed home feeds
+  // 5. Not needed home feeds
   const notNeeded: string[] = [];
   for (const h of homeFeeds) {
     let used = 0;
@@ -250,7 +197,7 @@ export function planHerd(
     }
   }
 
-  // 8. Budget prompt
+  // 6. Budget prompt
   let budgetPrompt: HerdBudgetPrompt | null = null;
   const milkingAnimals = best.animals.filter((a) => a.milkTargetLPerDay > 0);
   if (
@@ -273,6 +220,17 @@ export function planHerd(
     };
   }
 
+  // 7. Beyond-budget expansion steps ("Then, if you can", C4-M3, ADR-0022)
+  const expansionItems = computeHerdExpansions(
+    animals,
+    C,
+    homeFeeds,
+    budgetInrPerDay,
+    best,
+    feedLibrary,
+    breedLibrary,
+  );
+
   return {
     ...base,
     status: 'optimal',
@@ -280,10 +238,118 @@ export function planHerd(
     perAnimal: best.animals,
     buyOrder,
     shopping,
+    expansionItems,
     notNeeded,
     budgetPrompt,
     shortfall: null,
     infeasible: null,
     lastStepMatchesBest,
   };
+}
+
+/**
+ * Computes beyond-budget expansion steps ("Then, if you can", ADR-0022, SPEC AC-C4-3.1..3.6, AC-C4-E12..E13).
+ *
+ * Gating conditions:
+ * - best.status === 'optimal'
+ * - best.shareT < 1.0 - 1e-6 (AC-C4-3.6: peak genetic yield omits expansion)
+ * - Milking animals exist: best.animals.some(a => a.milkTargetLPerDay > 0) (AC-C4-E12: dry herd omits expansion)
+ * - Budget is limiting factor: best.budgetTight === true
+ * - costAtTargetInrPerDay !== null and costAtTargetInrPerDay > budgetInrPerDay
+ *
+ * Probing extra budget:
+ * - G = costAtCap_H - B_d
+ * - Delta B = max(15, min(50, roundUpInrWhole(G / 3)))
+ * - probeOutcome = solveHerd(animals, C, homeFeeds, B_d + Delta B, feedLibrary, breedLibrary)
+ *
+ * Intake ceiling guard (AC-C4-E13):
+ * - If probeOutcome.status !== 'optimal' or sum S_i(probe) <= sum S_i(base) + 1e-6, returns []
+ *
+ * Feeds isolation & sorting:
+ * - Feeds with probe kg > base kg + 0.05
+ * - deltaCost = roundUpInrWhole(deltaKg * price), deltaMilkL = floorMilk1(deltaMilkExactL)
+ * - Filter deltaMilkL > 0, sort descending by returnPerRupee = deltaMilkExactL / deltaCost, tie-break by feedId
+ */
+export function computeHerdExpansions(
+  animals: readonly HerdAnimal[],
+  C: readonly SelectedFeedInput[],
+  homeFeeds: readonly HomeFeed[],
+  budgetInrPerDay: number,
+  best: HerdSolution,
+  feedLibrary: readonly FeedItem[] = DEFAULT_FEED_LIBRARY,
+  breedLibrary: readonly BreedStandard[] = BREEDS,
+): HerdExpansionItem[] {
+  // 1. Gating conditions
+  if (best.status !== 'optimal') return [];
+  if (best.shareT >= 1.0 - 1e-6) return [];
+  if (!best.animals.some((a) => a.milkTargetLPerDay > 0)) return [];
+  if (!best.budgetTight) return [];
+  if (best.costAtTargetInrPerDay === null) return [];
+
+  const gap = best.costAtTargetInrPerDay - budgetInrPerDay;
+  if (gap <= 0) return [];
+
+  // 2. Probing extra budget: Delta B = max(15, min(50, roundUpInrWhole(gap / 3)))
+  const deltaBProbe = Math.max(15, Math.min(50, roundUpInrWhole(gap / 3)));
+  const probeBudget = budgetInrPerDay + deltaBProbe;
+  const probeOutcome = solveHerd(animals, C, homeFeeds, probeBudget, feedLibrary, breedLibrary);
+
+  // Physical intake ceiling guard (AC-C4-E13)
+  if (probeOutcome.status !== 'optimal') return [];
+
+  const baseTotalMilkL = best.animals.reduce((sum, a) => sum + a.milkLPerDay, 0);
+  const probeTotalMilkL = probeOutcome.animals.reduce((sum, a) => sum + a.milkLPerDay, 0);
+  const deltaMilkExactL = Math.max(0, probeTotalMilkL - baseTotalMilkL);
+  const deltaMilkL = floorMilk1(deltaMilkExactL);
+
+  if (deltaMilkExactL <= 1e-6 || deltaMilkL <= 0) return [];
+
+  // 3. Isolating feed additions
+  const baseBuyMap = new Map<string, number>();
+  for (const line of best.buyTotals) {
+    baseBuyMap.set(line.feedId, line.kgPerDay);
+  }
+
+  const priceMap = new Map<string, number>();
+  for (const c of C) {
+    priceMap.set(c.feedId, c.priceInrPerKgAsFed);
+  }
+
+  const items: HerdExpansionItem[] = [];
+
+  for (const probeLine of probeOutcome.buyTotals) {
+    const baseKg = baseBuyMap.get(probeLine.feedId) ?? 0;
+    const deltaKg = probeLine.kgPerDay - baseKg;
+    if (deltaKg > 0.05) {
+      const price = priceMap.get(probeLine.feedId) ?? probeLine.priceInrPerKg;
+      const deltaCostInrPerDay = roundUpInrWhole(deltaKg * price);
+      const returnPerRupee = deltaCostInrPerDay > 0 ? deltaMilkExactL / deltaCostInrPerDay : 0;
+      items.push({
+        feedId: probeLine.feedId,
+        deltaKgPerDay: deltaKg,
+        deltaCostInrPerDay,
+        priceInrPerKg: price,
+        deltaMilkExactL,
+        deltaMilkL,
+        returnPerRupee,
+        auditProbe: {
+          probeBudgetInrPerDay: probeBudget,
+          newTotalMilkL: probeTotalMilkL,
+          baseTotalMilkL,
+        },
+      });
+    }
+  }
+
+  // 4. Sorting by return efficiency descending, tie-breaking by feedId code units
+  items.sort((a, b) => {
+    if (Math.abs(a.returnPerRupee - b.returnPerRupee) > 1e-9) {
+      return b.returnPerRupee - a.returnPerRupee;
+    }
+    if (a.feedId < b.feedId) return -1;
+    if (a.feedId > b.feedId) return 1;
+    return 0;
+  });
+
+  return items;
 }

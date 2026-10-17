@@ -2,7 +2,14 @@ import { describe, expect, it } from 'vitest';
 import feedsV1 from '../../src/data/feeds.v1.json';
 import { BREEDS } from '../../src/domain/breeds';
 import { floorMilk1, roundUpInrWhole } from '../../src/domain/format';
-import { EMPTY_COUNTERS, formatLocalDateIso, MAX_ANIMALS, nextAnimalLabel, planHerd } from '../../src/domain/herdPlan';
+import {
+  computeHerdExpansions,
+  EMPTY_COUNTERS,
+  formatLocalDateIso,
+  MAX_ANIMALS,
+  nextAnimalLabel,
+  planHerd,
+} from '../../src/domain/herdPlan';
 import {
   HERD_EXAMPLE_COW_BUFFALO,
   HERD_EXAMPLE_STRAW_ONLY,
@@ -15,6 +22,7 @@ import type {
   BenchmarkAnimalEntry,
   FeedItem,
   HerdAnimal,
+  HerdExpansionItem,
   HomeFeed,
 } from '../../src/domain/types';
 import { currentMonth } from '../../src/i18n/months';
@@ -95,24 +103,10 @@ describe('herdPlan (Change 4 pure herd plan engine)', () => {
     // Buy order matches
     expect(hPlan.buyOrder).toEqual(c3Plan.buyFeedIds);
 
-    // Buy first group matches C3 rung 1
+    // In C4-M3, all within-budget feeds are consolidated into What to buy (AC-C4-3.1, ADR-0022)
     const buyFirstIds = hPlan.shopping.buyFirst.map((l) => l.feedId);
-    expect(buyFirstIds).toEqual(c3Plan.rungs[0].addedFeedIds);
-
-    // Later steps match C3 subsequent rungs
-    const laterIds = hPlan.shopping.later.map((l) => l.line.feedId);
-    const c3LaterIds = c3Plan.rungs.slice(1).map((r) => r.addedFeedIds[0]);
-    expect(laterIds).toEqual(c3LaterIds);
-
-    // Delta milk equals consecutive C3 rung milk differences
-    for (let i = 0; i < hPlan.shopping.later.length; i++) {
-      const prev = c3Plan.rungs[i].outcome;
-      const cur = c3Plan.rungs[i + 1].outcome;
-      const prevC3Milk = prev.status === 'optimal' ? prev.supportedMilkLPerDay : 0;
-      const curC3Milk = cur.status === 'optimal' ? cur.supportedMilkLPerDay : 0;
-      const expectedDelta = floorMilk1(curC3Milk - prevC3Milk);
-      expect(hPlan.shopping.later[i].deltaMilkL).toBeCloseTo(expectedDelta, 1);
-    }
+    expect(buyFirstIds).toEqual(c3Plan.buyFeedIds);
+    expect(hPlan.shopping.later).toEqual([]);
   });
 
   it('ensures step marginal milk difference is non-decreasing (ΔL_k >= 0)', () => {
@@ -649,6 +643,129 @@ describe('herdPlan (Change 4 pure herd plan engine)', () => {
       expect(mockPlan.status).toBe('optimal');
 
       setRationAdapterMode('env');
+    });
+  });
+
+  describe('C4-M3 beyond-budget expansion steps and What to buy consolidation (ADR-0022)', () => {
+    it('consolidates all within-budget feeds into What to buy without baseline rung splitting (AC-C4-3.1)', () => {
+      const ex = HERD_EXAMPLE_COW_BUFFALO;
+      const plan = planHerd(ex.animals, ex.homeFeeds, ex.budget, LIVE_FEEDS, BREEDS, month);
+
+      expect(plan.status).toBe('optimal');
+      if (plan.status !== 'optimal') return;
+
+      // All within-budget feeds in Bu_H are in buyFirst
+      expect(plan.shopping.buyFirst.map((l) => l.feedId)).toEqual(plan.buyOrder);
+      // No within-budget feeds are partitioned into later
+      expect(plan.shopping.later).toEqual([]);
+      // Total cost of all items in What to buy equals best.purchaseCostInrPerDay <= Bd
+      const totalCost = plan.shopping.buyFirst.reduce((sum, l) => sum + l.costInrPerDay, 0);
+      expect(totalCost).toBeCloseTo(plan.best.purchaseCostInrPerDay, 4);
+      expect(plan.shopping.totalInr).toBe(plan.best.purchaseCostInrPerDay);
+      expect(plan.shopping.totalInr).toBeLessThanOrEqual(ex.budget + 1e-6);
+    });
+
+    it('generates beyond-budget expansion items when t* < 1 and budget is tight (AC-C4-3.2, AC-C4-3.3)', () => {
+      const ex = HERD_EXAMPLE_TIGHT_BUDGET;
+      const plan = planHerd(ex.animals, ex.homeFeeds, ex.budget, LIVE_FEEDS, BREEDS, month);
+
+      expect(plan.status).toBe('optimal');
+      if (plan.status !== 'optimal') return;
+
+      expect(plan.best.budgetTight).toBe(true);
+      expect(plan.best.shareT).toBeLessThan(1.0 - 1e-6);
+      expect(plan.expansionItems.length).toBeGreaterThan(0);
+
+      for (const item of plan.expansionItems) {
+        expect(item.deltaKgPerDay).toBeGreaterThan(0.05);
+        expect(item.deltaCostInrPerDay).toBe(roundUpInrWhole(item.deltaKgPerDay * item.priceInrPerKg));
+        expect(item.deltaMilkL).toBeGreaterThan(0);
+        expect(item.deltaMilkExactL).toBeGreaterThan(0);
+        expect(item.returnPerRupee).toBe(item.deltaMilkExactL / item.deltaCostInrPerDay);
+        expect(item.auditProbe).toBeDefined();
+        expect(item.auditProbe?.probeBudgetInrPerDay).toBeGreaterThan(ex.budget);
+        expect(item.auditProbe?.newTotalMilkL).toBeGreaterThan(item.auditProbe!.baseTotalMilkL);
+      }
+    });
+
+    it('sorts expansion items in strictly decreasing order of returnPerRupee (AC-C4-3.3, ADR-0022)', () => {
+      const ex = HERD_EXAMPLE_TIGHT_BUDGET;
+      const plan = planHerd(ex.animals, ex.homeFeeds, ex.budget, LIVE_FEEDS, BREEDS, month);
+
+      expect(plan.status).toBe('optimal');
+      if (plan.status !== 'optimal') return;
+
+      expect(plan.expansionItems.length).toBeGreaterThan(0);
+      for (let i = 1; i < plan.expansionItems.length; i++) {
+        const prev = plan.expansionItems[i - 1];
+        const curr = plan.expansionItems[i];
+        expect(prev.returnPerRupee).toBeGreaterThanOrEqual(curr.returnPerRupee - 1e-9);
+        if (Math.abs(prev.returnPerRupee - curr.returnPerRupee) <= 1e-9) {
+          expect(prev.feedId.localeCompare(curr.feedId)).toBeLessThan(0);
+        }
+      }
+    });
+
+    it('omits beyond-budget expansion items when t* = 1.0 at peak breed cap (AC-C4-3.6)', () => {
+      const ex = HERD_EXAMPLE_COW_BUFFALO;
+      // Generous budget so herd reaches peak genetic potential
+      const plan = planHerd(ex.animals, ex.homeFeeds, 1000, LIVE_FEEDS, BREEDS, month);
+
+      expect(plan.status).toBe('optimal');
+      if (plan.status !== 'optimal') return;
+
+      expect(plan.best.shareT).toBeCloseTo(1.0, 5);
+      expect(plan.expansionItems).toEqual([]);
+    });
+
+    it('omits beyond-budget expansion items for dry herds (target milk = 0) (AC-C4-E12)', () => {
+      const entry = benchmarkEntries[7]; // A08_surti_dry_buffalo_maintenance
+      const animal = toHerdAnimal(entry);
+      const plan = planHerd([animal], [], 120, LIVE_FEEDS, BREEDS, month);
+
+      expect(plan.status).toBe('optimal');
+      if (plan.status !== 'optimal') return;
+
+      expect(plan.perAnimal[0].milkTargetLPerDay).toBe(0);
+      expect(plan.expansionItems).toEqual([]);
+
+      // Multi-animal dry herd
+      const dryHerdPlan = planHerd(
+        [animal, { ...animal, key: 'a2', label: { species: 'buffalo', n: 2 } }],
+        [],
+        250,
+        LIVE_FEEDS,
+        BREEDS,
+        month,
+      );
+      expect(dryHerdPlan.status).toBe('optimal');
+      if (dryHerdPlan.status !== 'optimal') return;
+      expect(dryHerdPlan.expansionItems).toEqual([]);
+    });
+
+    it('omits beyond-budget expansion items when non-budget constraint is tight or intake capped (AC-C4-E13)', () => {
+      // Animal A09 (Sahiwal with high budget where intake is the sole binding constraint)
+      const entry = benchmarkEntries.find((e) => e.id === 'A09_sahiwal_intake_binding') ?? benchmarkEntries[8];
+      const animal = toHerdAnimal(entry);
+      const plan = planHerd([animal], [], 500, LIVE_FEEDS, BREEDS, month);
+
+      expect(plan.status).toBe('optimal');
+      if (plan.status !== 'optimal') return;
+
+      // Budget is not tight (or intake ceiling prevents milk increase)
+      expect(plan.best.budgetTight).toBe(false);
+      expect(plan.expansionItems).toEqual([]);
+
+      // Direct probe outcome guard: if probe outcome cannot increase milk or is not optimal, returns []
+      const fakeBest: typeof plan.best = {
+        ...plan.best,
+        budgetTight: true,
+        shareT: 0.8,
+        costAtTargetInrPerDay: 600,
+      };
+      // When animals already capped, extra budget cannot yield milk
+      const expansions = computeHerdExpansions([animal], plan.buySet, [], 500, fakeBest, LIVE_FEEDS, BREEDS);
+      expect(expansions).toEqual([]);
     });
   });
 });
