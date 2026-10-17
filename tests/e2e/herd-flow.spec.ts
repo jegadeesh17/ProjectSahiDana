@@ -483,14 +483,14 @@ test.describe('Herd Flow (Change 4 Milestone 1: 3-screen flow for 1 animal)', ()
 
     // Verify accessible aria-label (AC-C4-3.4)
     const ariaLabel = await firstAddBtn.getAttribute('aria-label');
-    expect(ariaLabel).toMatch(/Add ₹\d+\/day to budget for \+\d+(\.\d+)? L milk/);
+    expect(ariaLabel).toMatch(/Add .+ for ₹\d+\/day to budget for \+\d+(\.\d+)? L milk/);
 
     // Initial shop total reflects initial budget of 200
     const shopTotal = page.getByTestId('shop-total');
     await expect(shopTotal).toContainText('of your ₹200 a day');
 
     // Extract delta cost from aria-label
-    const costMatch = ariaLabel!.match(/Add ₹(\d+)\/day/);
+    const costMatch = ariaLabel!.match(/for ₹(\d+)\/day/);
     expect(costMatch).not.toBeNull();
     const deltaCost = Number(costMatch![1]);
     expect(deltaCost).toBeGreaterThan(0);
