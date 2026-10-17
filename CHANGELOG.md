@@ -28,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Pure herd plan module and rationService integration with buy order ladder (`C4-M1-T2`)
 - Farmer display units, cited breed prefill, herd audits, plain text summary, and hash routing (`C4-M1-T3`)
 - Dedicated 3-screen herd flow UI (`#/animals`, `#/feeds`, `#/result`) and C4-M1 test suites (`C4-M1-T4`)
+- Multi-animal herd solver, fair-share joint LP, shared home stock allocation, and limit diagnosis (`C4-M2-T1`)
+- Multi-animal herd plan, buying order steps with non-decreasing milk, and herd budget prompts (`C4-M2-T2`)
+- Multi-animal UI with persistent monotonic per-species numbering and 10-animal cap (`C4-M2-T3`)
+- Independent Python SciPy HiGHS herd cross-check and mathematical agreement test suite (`C4-M2-T4`)
 
 ### Changed
 - Reordered form layout into farmer-first sequence: description extractor, cow or buffalo card, daily feed budget, optional own feeds, and prominent "Calculate ration" action (`C3-M1-T1`)
@@ -36,6 +40,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enabled ration calculation with zero feeds selected, treating own feeds as optional and sourcing needed feeds from library (`C3-M2-T3`)
 - Tagged ration feed rows explicitly as "You have" vs "Buy" in results table (`C3-M2-T3`)
 - Defaulted application view to 3-screen herd flow with single animal limit and today's season line (`C4-M1-T4`)
+- Expanded herd capacity from 1 animal to up to 10 animals with Screen 3 animal removal workflow (`C4-M2-T3`)
+- Updated demo presets to multi-animal herd examples: Cow + Buffalo, Straw only, and Tight budget (`C4-M2-T2`)
 
 ### Fixed
 - Scoped Rung 0 audit drawer feeds strictly to owned feeds when own feeds balance alone (`C3-M2-FIX-1`)
