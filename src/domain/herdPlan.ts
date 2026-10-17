@@ -10,12 +10,15 @@ import type {
   BreedStandard,
   FeedItem,
   HerdAnimal,
+  HerdAnimalSolution,
   HerdBudgetPrompt,
   HerdExpansionItem,
   HerdPlan,
   HerdPlanBase,
+  HerdSolution,
   HerdStep,
   HomeFeed,
+  SelectedFeedInput,
   ShoppingList,
   Species,
 } from './types';
@@ -282,7 +285,7 @@ export function computeHerdExpansions(
   // 1. Gating conditions
   if (best.status !== 'optimal') return [];
   if (best.shareT >= 1.0 - 1e-6) return [];
-  if (!best.animals.some((a) => a.milkTargetLPerDay > 0)) return [];
+  if (!best.animals.some((a: HerdAnimalSolution) => a.milkTargetLPerDay > 0)) return [];
   if (!best.budgetTight) return [];
   if (best.costAtTargetInrPerDay === null) return [];
 
@@ -297,8 +300,8 @@ export function computeHerdExpansions(
   // Physical intake ceiling guard (AC-C4-E13)
   if (probeOutcome.status !== 'optimal') return [];
 
-  const baseTotalMilkL = best.animals.reduce((sum, a) => sum + a.milkLPerDay, 0);
-  const probeTotalMilkL = probeOutcome.animals.reduce((sum, a) => sum + a.milkLPerDay, 0);
+  const baseTotalMilkL = best.animals.reduce((sum: number, a: HerdAnimalSolution) => sum + a.milkLPerDay, 0);
+  const probeTotalMilkL = probeOutcome.animals.reduce((sum: number, a: HerdAnimalSolution) => sum + a.milkLPerDay, 0);
   const deltaMilkExactL = Math.max(0, probeTotalMilkL - baseTotalMilkL);
   const deltaMilkL = floorMilk1(deltaMilkExactL);
 

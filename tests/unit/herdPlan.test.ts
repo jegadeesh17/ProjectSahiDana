@@ -22,7 +22,6 @@ import type {
   BenchmarkAnimalEntry,
   FeedItem,
   HerdAnimal,
-  HerdExpansionItem,
   HomeFeed,
 } from '../../src/domain/types';
 import { currentMonth } from '../../src/i18n/months';
