@@ -7,7 +7,6 @@ import type {
   FeedItem,
   HerdAnimal,
   HerdInfeasible,
-  HerdShortfall,
   HerdSolution,
   HomeFeed,
   SelectedFeedInput,
@@ -404,7 +403,7 @@ describe('herdSolver invalid and edge inputs', () => {
         breedId: 'non_existent_breed',
         bodyWeightKg: 450,
         milkYieldLitersPerDay: -10, // negative milk treated as dry animal
-        milkFatPct: null,
+        milkFatPct: null as unknown as number,
       },
       weightSource: 'typed',
       fatSource: 'typed',
@@ -833,13 +832,13 @@ describe('herdSolver multi-animal herd up to 10 animals (AC-C4-2.3, AC-C4-2.4, A
     expect(sol.purchaseCostInrPerDay).toBeLessThanOrEqual(budget + TOL);
     for (const aSol of sol.animals) {
       expect(aSol.solution.supplied.dmKgPerDay).toBeLessThanOrEqual(
-        aSol.solution.requirementsAtS.dmKgPerDay + TOL,
+        aSol.solution.requirementsAtS!.dmKgPerDay + TOL,
       );
       expect(aSol.solution.supplied.cpGramsPerDay).toBeGreaterThanOrEqual(
-        aSol.solution.requirementsAtS.cpGramsPerDay - TOL,
+        aSol.solution.requirementsAtS!.cpGramsPerDay - TOL,
       );
       expect(aSol.solution.supplied.meMcalPerDay).toBeGreaterThanOrEqual(
-        aSol.solution.requirementsAtS.meMcalPerDay - TOL,
+        aSol.solution.requirementsAtS!.meMcalPerDay - TOL,
       );
     }
 
@@ -1035,9 +1034,10 @@ describe('herdSolver edge cases: below maintenance, all dry, and infeasible (AC-
 
     const outcome = solveHerd([a1, a2], buySet, homeFeeds, 20);
     expect(outcome.status).toBe('below_maintenance');
-    const shortfall = outcome as HerdShortfall;
-    expect(shortfall.budgetInrPerDay).toBe(20);
-    expect(shortfall.maintenanceCostInrPerDay).toBeGreaterThan(20);
+    if (outcome.status === 'below_maintenance') {
+      expect(outcome.budgetInrPerDay).toBe(20);
+      expect(outcome.maintenanceCostInrPerDay).toBeGreaterThan(20);
+    }
   });
 
   it('solves all-dry herd at maintenance with t* = 0 and costAtTarget = null (AC-C4-2.7)', () => {

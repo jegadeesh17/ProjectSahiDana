@@ -529,7 +529,7 @@ describe('herdUi (Change 4 Milestone 1 UI and 3-screen flow)', () => {
     });
   });
 
-  async function navigateToScreen3(container: HTMLElement) {
+  async function navigateToScreen3(_container?: HTMLElement) {
     const nextBtn = screen.getByRole('button', { name: t('c4_action_next').en });
     fireEvent.click(nextBtn);
 
