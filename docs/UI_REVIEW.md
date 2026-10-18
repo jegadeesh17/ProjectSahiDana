@@ -234,3 +234,33 @@ None.
 7. **Pattern Scan**
    - No prohibited gradients, blobs, frosted glass, emoji icons, lorem ipsum/filler text, or invented metrics. Zero hits across the craft refuse list.
 
+## Change 4 (herd and 3-step flow), C4-M3 UI Review 1 (2026-10-18)
+
+Verdict: APPROVED
+Test command: `cmd.exe /c "npm test && npx playwright test tests/e2e/herd-flow.spec.ts"` (exit code 0 across 442 unit tests and 13 E2E tests)
+
+### Critical defects (must fix; any defect means REJECTED)
+None.
+
+### Recommendations (non-blocking)
+- None.
+
+### Detailed Audit Summary
+1. **Consolidated "What to buy" (AC-C4-3.1):**
+   - Feeds required for the within-budget solve are rendered in "What to buy" (`data-group="first"`). No within-budget feeds are partitioned or labeled into "Then, if you can".
+   - Total shopping cost matches $P(F) \le B_d$ and is auditable with `<Fig inline audit={auditShoppingTotal(shopping)}>`.
+2. **Beyond-Budget Expansion Rows ("Then, if you can", AC-C4-3.2, AC-C4-3.3):**
+   - Rendered strictly when $t^* < 1.0$ and herd is not dry.
+   - Each row displays feed chip, localized name, delta kg (`+<amount>`), delta cost (`(+₹<cost>)`), and milk gain (`→ about +<gain> L milk` / Hindi `→ लगभग +<gain> L दूध`).
+   - Every number is wrapped in `<Fig audit={...}>` connecting to solver probe metadata with zero double signs (`++`) or double parentheses.
+3. **Interactive `[+ Add to budget]` Button & Touch Target (AC-C4-3.4, AC-C4-3.5):**
+   - Primary button styling with min-height 48px and min-width 44px meeting $\ge 44\times 44$ px touch target requirements.
+   - Screen-reader accessible `aria-label="Add <Feed> for ₹<cost>/day to budget for +<gain> L milk"` / Hindi `"+<gain> L दूध के लिए बजट में ₹<cost>/दिन में <Feed> जोड़ें"`.
+   - 1-tap interaction triggers immediate auto-resolve with updated budget and persists when navigating back to Screen 2 and Screen 1.
+4. **Contrast & Language Isolation (WCAG 2.2 AA & AC-C4-L1):**
+   - Contrast exceeds 4.5:1 across all expansion elements (`--c-text-2` on `--c-ground`, button inks on backgrounds).
+   - Strict language isolation maintained with Western Arabic numerals (0–9) across English and Hindi.
+5. **Craft Refuse List:**
+   - Zero hardcoded colors outside `src/index.css`, zero emojis, zero gradients or glassmorphism.
+
+

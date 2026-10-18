@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Multi-animal herd plan, buying order steps with non-decreasing milk, and herd budget prompts (`C4-M2-T2`)
 - Multi-animal UI with persistent monotonic per-species numbering and 10-animal cap (`C4-M2-T3`)
 - Independent Python SciPy HiGHS herd cross-check and mathematical agreement test suite (`C4-M2-T4`)
+- Beyond-budget expansion probe and interactive feed upgrade `[+ Add to budget]` with immediate auto-resolve (`C4-M3-T1`, `C4-M3-T2`, `C4-M3-T3`)
 
 ### Changed
 - Reordered form layout into farmer-first sequence: description extractor, cow or buffalo card, daily feed budget, optional own feeds, and prominent "Calculate ration" action (`C3-M1-T1`)
@@ -42,10 +43,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Defaulted application view to 3-screen herd flow with single animal limit and today's season line (`C4-M1-T4`)
 - Expanded herd capacity from 1 animal to up to 10 animals with Screen 3 animal removal workflow (`C4-M2-T3`)
 - Updated demo presets to multi-animal herd examples: Cow + Buffalo, Straw only, and Tight budget (`C4-M2-T2`)
+- Consolidated all within-budget feeds under "What to buy" and repurposed "Then, if you can" strictly for beyond-budget expansion steps (`C4-M3-T1`, `C4-M3-T2`)
 
 ### Fixed
 - Scoped Rung 0 audit drawer feeds strictly to owned feeds when own feeds balance alone (`C3-M2-FIX-1`)
 - Omitted milk increment suffix on shopping rows for dry herds (`AC-C4-1.14`, `AC-C4-1.24`)
 - Cleaned up audit drawer history entry on non-popstate close to prevent trapping phone Back button (`AC-C4-1.22`, `AC-C4-R5`)
+- Wrapped beyond-budget expansion figures in audit drawers with solver probe metadata and included feed name in button `aria-label` (`AC-C4-3.3`, `AC-C4-3.4`)
+
 
 

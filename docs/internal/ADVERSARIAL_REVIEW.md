@@ -150,3 +150,39 @@ None.
 - In `src/domain/herdSolver.ts:1463-1466`, the residual budget calculation for per-animal tight constraint detection loops through `slicesAtY`. While already optimized with a memoized `slicesAtY` map, caching `sumOtherCosts = totalCost - slice.totalCost` could marginally optimize future scaling beyond 10 animals.
 - In `eval/cross_check_herd.py`, add explicit type annotations to `parse_args()` helper functions for consistency with the rest of the Python eval codebase.
 
+## Change 4 (herd and 3-step flow), C4-M3 Review 1 (2026-10-17)
+
+Verdict: REJECTED
+Base commit: `2134ab6` (Head: `5bb8a78`)
+Test command: `npm test && npx playwright test tests/e2e/herd-flow.spec.ts && npm run build && npm run eval:dump && npm run eval:scipy` (exit code 0, 442 unit tests, 13 Playwright E2E tests, 32 SciPy tests)
+
+### Critical defects (must fix; any defect means REJECTED):
+1. `src/components/ShoppingList.tsx:68-80`: Expansion figures (amount `+X kg`, cost `(+₹Y)`, and milk gain `+Z L milk`) were rendered as plain text spans without `<Fig audit={...}>` wrappers, violating SPEC AC-C4-3.3 and ARCHITECTURE.md line 2266. Fix: export `auditExpansionKg`, `auditExpansionCost`, and `auditExpansionGain` in `src/domain/auditHerd.ts` and wrap each expansion figure with `<Fig audit={...}>`.
+2. `src/components/ShoppingList.tsx:83-88`: The `aria-label` on `[+ Add to budget]` button omitted the feed name (`Add ₹X/day to budget for +Y L milk`), violating SPEC AC-C4-3.4 and ARCHITECTURE line 2271. Fix: update `c4_add_to_budget_aria` in `src/i18n/strings.ts` to include the feed name and pass `localizedFeed` to the label.
+
+### Recommendations (non-blocking):
+- None.
+
+## Change 4 (herd and 3-step flow), C4-M3 Review 2 (2026-10-18)
+
+Verdict: APPROVED
+Base commit: `2134ab6` (Head: `a8b5249`)
+Test command: `npm test && npx playwright test tests/e2e/herd-flow.spec.ts && npm run build && npm run eval:dump && npm run eval:scipy` (exit code 0, 442 unit tests, 13 Playwright E2E tests, 32 SciPy tests)
+
+### Summary of Review
+- **Within-budget Consolidation (AC-C4-3.1):** All bought feeds required for the optimal solve within the farmer's entered budget $B_d$ are consolidated in "What to buy" without artificial baseline rung splitting. Total shopping cost strictly obeys $P(F) \le B_d$.
+- **Beyond-budget Expansion Steps (AC-C4-3.2, AC-C4-3.3):** "Then, if you can" (Hindi "फिर, हो सके तो") appears strictly when the budget limits yield ($t^* < 1.0 - 10^{-6}$ for milking herds). Beyond-budget feed additions $\Delta q_f$ are isolated from probed extra budget solves, rounded up to whole rupees, floored to 0.1 L milk, and sorted in descending order of economic return ($\Delta L / \Delta\text{Cost}$).
+- **Interactive Budget Upgrade (AC-C4-3.4, AC-C4-3.5, AC-C4-E14):** Each expansion item provides an accessible `[+ Add to budget]` / `[+ बजट में जोड़ें]` button with $\ge 44\times 44$ px touch target and descriptive `aria-label` naming the feed, cost, and milk gain. Tapping the button immediately increments daily budget by $\Delta\text{Cost}$, triggers auto-resolve, updates Screen 3 view, and retains the upgraded budget when navigating back to Screen 2 and Screen 1.
+- **Omission Criteria (AC-C4-3.6, AC-C4-E12, AC-C4-E13):** "Then, if you can" is cleanly omitted when the herd achieves peak genetic yield ($t^* = 1.0$), for dry herds ($Y = 0$), and when physical intake or non-budget constraints are tight.
+- **Fix Verification (Review 1 Critical Defects):**
+  - Defect 1 verified: All expansion figures wrapped in `<Fig audit={...}>` with solver probe metadata. Cleanly rendered without duplicate sign (`+`) or double parentheses (`((...))`).
+  - Defect 2 verified: Button `aria-label` includes the localized feed name in English and Hindi.
+- **Invariants & Regressions:** Zero regressions across single-animal benchmarks, multi-animal joint LP, offline PWA capability, language isolation, and SciPy HiGHS agreement.
+
+### Critical defects:
+None.
+
+### Recommendations (non-blocking):
+- None.
+
+
