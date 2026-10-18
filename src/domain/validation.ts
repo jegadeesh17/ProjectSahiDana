@@ -2,7 +2,7 @@
 import { parseDecimal } from '../i18n/format';
 import type { BiParams, StringId } from '../i18n/strings';
 import { breedById } from './breeds';
-import type { AnimalProfile, SelectedFeedInput, Species } from './types';
+import type { AnimalProfile, HerdAnimalProfile, HomeFeed, SelectedFeedInput, Species } from './types';
 
 export const RANGES = {
   weight: { min: 150, max: 800 },
@@ -173,4 +173,54 @@ export function todayCostInr(drafts: FeedDraft[]): number | null {
     any = true;
   }
   return any ? total : null;
+}
+
+// ---- Change 4: the add-animal card and the home-feed rows (docs/ARCHITECTURE.md, "C4 data models") -------------
+export interface AnimalCardDraft {
+  species: '' | Species;
+  breedId: string;
+  weight: string;
+  milk: string;
+  fat: string;
+  /** true once the user has put a value in the field; a breed change then no longer overwrites it (AC-C4-1.5). */
+  weightTyped: boolean;
+  fatTyped: boolean;
+}
+
+export const EMPTY_CARD: AnimalCardDraft = {
+  species: '',
+  breedId: '',
+  weight: '',
+  milk: '',
+  fat: '',
+  weightTyped: false,
+  fatTyped: false,
+};
+
+/** The card's own fields, checked like the single-animal form (same messages), with no budget. */
+export function validateAnimalCard(d: AnimalCardDraft): { errors: AnimalErrors; profile: HerdAnimalProfile | null } {
+  const { errors, profile } = validateAnimal({
+    species: d.species,
+    breedId: d.breedId,
+    weight: d.weight,
+    milk: d.milk,
+    fat: d.fat,
+    budget: '1',
+    budgetEdited: true,
+  });
+  if (!profile) return { errors, profile: null };
+  const { budgetInrPerDay: _budget, ...herdProfile } = profile;
+  return { errors, profile: herdProfile };
+}
+
+export interface HomeFeedDraft {
+  feedId: string;
+  kg: string;
+}
+
+/** A home row needs kg per day above 0 (AC-C4-E4). `error` is the id of a Change 4 string. */
+export function validateHomeFeed(d: HomeFeedDraft): { error?: 'c4_error_kg_positive'; input: HomeFeed | null } {
+  const kg = parseDecimal(d.kg);
+  if (Number.isNaN(kg) || kg <= 0) return { error: 'c4_error_kg_positive', input: null };
+  return { input: { feedId: d.feedId, kgPerDay: kg } };
 }

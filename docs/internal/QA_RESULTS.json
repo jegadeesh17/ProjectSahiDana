@@ -166,8 +166,117 @@
     "exit_code": 0,
     "summary": "npm test: 16 unit test files passed, 276 tests passed (including 50 tests in tests/unit/resultUi.test.tsx with Rung 0 audit drawer verifying only owned feeds and zero library candidates). npx playwright test: 30 passed in 54.6s.",
     "failure_output": ""
+  },
+  {
+    "task_id": "C4-M1-T1",
+    "attempt": 1,
+    "command": "npm test",
+    "exit_code": 0,
+    "summary": "17 unit test files passed, 314 tests passed (including 38 tests in tests/unit/herdSolver.test.ts verifying exact solveRation equivalence on all 18 benchmark animals, home feed bounds, Stage 3 tie-break, numerical verification with verifyHerdSolution, and multi-animal joint LP)",
+    "failure_output": ""
+  },
+  {
+    "task_id": "C4-M1-T2",
+    "attempt": 1,
+    "command": "npm test",
+    "exit_code": 0,
+    "summary": "18 unit test files passed, 331 tests passed (including 17 tests in tests/unit/herdPlan.test.ts verifying buy order, C3 oracle alignment, non-decreasing marginal milk ΔL_k >= 0, lastStepMatchesBest, Nothing to buy, notNeeded home feeds in row order, budgetPrompt bounds and suppression, below_maintenance shortfall, dry animal T=0 handling, and mock/live adapter integration)",
+    "failure_output": ""
+  },
+  {
+    "task_id": "C4-M1-T3",
+    "attempt": 1,
+    "command": "npm test",
+    "exit_code": 0,
+    "summary": "21 unit test files passed, 385 tests passed (including 23 tests in tests/unit/domainFormat.test.ts, 16 tests in tests/unit/breedPrefill.test.ts, and 15 tests in tests/unit/hashRoute.test.ts verifying farmer display units, mineral mix / common salt whole gram display, breed prefill and midpoint citations, plain-words summary text across optimal/dry/below-maintenance states, hash routing #/animals, #/feeds, #/result and audit drawer history Back behavior)",
+    "failure_output": ""
+  },
+  {
+    "task_id": "C4-M1-T4",
+    "attempt": 1,
+    "command": "cmd.exe /c \"npm test && npx playwright test tests/e2e/herd-flow.spec.ts\"",
+    "exit_code": 0,
+    "summary": "22 unit test files passed (403 tests, including 18 tests in tests/unit/herdUi.test.tsx covering screen 1 gating and disabled Next, add card/list with MAX_ANIMALS=1 limit, screen 2 home feeds with no price/season/month, section order, display units, plain words scan, and number tap audits) and 7 Playwright E2E tests passed in tests/e2e/herd-flow.spec.ts (Journey C4-A end to end, phone Back/Forward navigation, drawer closed by Back, offline execution, three deterministic examples, 375px padding parity, and 44x44px touch targets)",
+    "failure_output": ""
+  },
+  {
+    "task_id": "C4-M1-FIX-1",
+    "attempt": 1,
+    "command": "cmd.exe /c \"npm test && npx playwright test tests/e2e/herd-flow.spec.ts\"",
+    "exit_code": 0,
+    "summary": "22 unit test files passed (405 tests, including dry herd shopping list milk omission per AC-C4-1.14/AC-C4-1.24 in tests/unit/herdUi.test.tsx and tests/unit/domainFormat.test.ts, and audit drawer history cleanup on non-popstate close per AC-C4-1.22/AC-C4-R5/ARCHITECTURE line 1317 in tests/unit/hashRoute.test.ts) and 8 Playwright E2E tests passed in tests/e2e/herd-flow.spec.ts (including single page.goBack() navigation to #/feeds after closing audit drawer with Close button)",
+    "failure_output": ""
+  },
+  {
+    "task_id": "C4-M2-T1",
+    "attempt": 1,
+    "command": "npm test",
+    "exit_code": 0,
+    "summary": "22 unit test files passed, 423 tests passed (including 56 tests in tests/unit/herdSolver.test.ts verifying multi-animal herd solver up to 10 animals, fair-share t*, home stock conservation, Stage 3 tie-break, single-animal equivalence on all 18 benchmark animals, double-precision verification via verifyHerdSolution, and isolated limit diagnosis across all limit kinds)",
+    "failure_output": ""
+  },
+  {
+    "task_id": "C4-M2-T2",
+    "attempt": 1,
+    "command": "npx vitest run tests/unit/herdPlan.test.ts tests/unit/herdPerf.slow.test.ts",
+    "exit_code": 0,
+    "summary": "2 test files passed, 23 tests passed (including 22 tests in tests/unit/herdPlan.test.ts verifying multi-animal herd plan, non-decreasing marginal milk ΔL_k >= 0, dry animal inclusion per AC-C4-2.7, herd budget prompt per AC-C4-2.8, three M2 herd examples per AC-C4-2.11, monotonic animal labelling and MAX_ANIMALS=10 per AC-C4-2.1, and 1 test in tests/unit/herdPerf.slow.test.ts verifying 10-animal worst case benchmark solves in 466ms <= 1.0s)",
+    "failure_output": ""
+  },
+  {
+    "task_id": "C4-M2-T3",
+    "attempt": 1,
+    "command": "cmd.exe /c \"npx vitest run tests/unit/herdUi.test.tsx && npx playwright test tests/e2e/herd-flow.spec.ts\"",
+    "exit_code": 0,
+    "summary": "1 unit test file passed (23 tests in tests/unit/herdUi.test.tsx covering screen 1 gating, add-animal card/list, MAX_ANIMALS=10 limit message, monotonic per-species labeling, screen 2 home feeds, screen 3 sections/units/audits/dry herds, screen 3 removal returning to screen 1, 3 herd presets, and multi-animal copy summary) and 1 Playwright E2E spec passed (10 tests in tests/e2e/herd-flow.spec.ts covering 1-animal journey, back/forward history navigation, audit drawer back/close handling, offline operation, 3 herd examples, 375px padding parity, 44x44px touch targets, screen 3 removal, and 10-animal card hiding with limit message)",
+    "failure_output": ""
+  },
+  {
+    "task_id": "C4-M2-T4",
+    "attempt": 1,
+    "command": "cmd.exe /c \"npx vite-node scripts/dump_solver_results.ts && python -m pytest -q eval/test_scipy_herd_agreement.py\"",
+    "exit_code": 0,
+    "summary": "dump_solver_results.ts succeeded (7 benchmark herds: 5 optimal, 1 below_maintenance, 1 infeasible) and 9 pytest tests passed in eval/test_scipy_herd_agreement.py (100% agreement between browser javascript-lp-solver and SciPy HiGHS on t*, P(F), M_H, costAtCap_H, Stage 3 home kg, and S_i rounding across all scenarios)",
+    "failure_output": ""
+  },
+  {
+    "task_id": "C4-M3-T1",
+    "attempt": 1,
+    "command": "cmd.exe /c \"npx vitest run tests/unit/herdPlan.test.ts\"",
+    "exit_code": 0,
+    "summary": "1 unit test file passed, 28 tests passed in tests/unit/herdPlan.test.ts (verifying What to buy consolidation without baseline rung splitting per AC-C4-3.1, beyond-budget expansion items generation per AC-C4-3.2, sorting by returnPerRupee per AC-C4-3.3, breed cap omission at t*=1.0 per AC-C4-3.6, dry herd omission per AC-C4-E12, and intake ceiling/non-budget tightness omission per AC-C4-E13)",
+    "failure_output": ""
+  },
+  {
+    "task_id": "C4-M3-T2",
+    "attempt": 1,
+    "command": "cmd.exe /c \"npx vitest run tests/unit/herdUi.test.tsx\"",
+    "exit_code": 0,
+    "summary": "1 unit test file passed, 27 tests passed in tests/unit/herdUi.test.tsx (verifying What to buy displays all within-budget feeds per AC-C4-3.1, 'Then, if you can' renders expansion items with accessible [+ Add to budget] button per AC-C4-3.3/3.4, omission when expansionItems is empty per AC-C4-3.6, and tapping [+ Add to budget] updates budget and re-solves herd plan immediately per AC-C4-3.5/AC-C4-E14)",
+    "failure_output": ""
+  },
+  {
+    "task_id": "C4-M3-T3",
+    "attempt": 1,
+    "command": "cmd.exe /c \"npx playwright test tests/e2e/herd-flow.spec.ts\"",
+    "exit_code": 0,
+    "summary": "1 test file passed, 13 tests passed in tests/e2e/herd-flow.spec.ts (verifying What to buy consolidation, beyond-budget expansion delta feeds in 'Then, if you can', [+ Add to budget] auto-resolve and re-solve with budget retention across Screen 2 and 1 per AC-C4-3.1..3.5 and AC-C4-E14, and omission of expansion at peak yield per AC-C4-3.6 and for dry herds per AC-C4-E12)",
+    "failure_output": ""
+  },
+  {
+    "task_id": "C4-M3-FIX",
+    "attempt": 1,
+    "command": "cmd.exe /c \"npx vitest run tests/unit/herdUi.test.tsx\"",
+    "exit_code": 0,
+    "summary": "1 unit test file passed, 27 tests passed in tests/unit/herdUi.test.tsx (verifying C4-M3 critical defect fixes: expansion figures auditable with <Fig audit={...}> for kg, cost, and milk gain opening solver output audit drawer per AC-C4-3.3, and feed name included in aria-label of [+ Add to budget] button per AC-C4-3.4)",
+    "failure_output": ""
   }
 ]
+
+
+
+
+
 
 
 

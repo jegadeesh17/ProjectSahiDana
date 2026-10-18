@@ -357,6 +357,198 @@
           "status": "completed"
         }
       ]
+    },
+    {
+      "milestone_id": "C4-M1",
+      "name": "Change 4: 3 screens, breed prefill, home feed at ₹0, plain result (single animal)",
+      "tasks": [
+        {
+          "id": "C4-M1-T1",
+          "title": "Joint herd solver (src/domain/herdSolver.ts) with single-animal equivalence",
+          "owner": "backend-developer",
+          "description": "Create src/domain/herdSolver.ts implementing solveHerd, solveHerdStep, and verifyHerdSolution using javascript-lp-solver. Expose necessary internal solver helpers from src/domain/solver.ts with export (without changing their implementation: runLp, solveFixedMilk, diagnoseAtMilk, detectTightConstraintsAtYStar, buildFeedLinesAndTotals). Support single animal and multi-animal joint LP formulations with per-animal constraint blocks identical to solveRation, home feed variables at ₹0 capped by q_f, buy variables at cited prices from C(m), and Stage 3 tie-break to minimize total home kg at minimum purchase cost. Create tests/unit/herdSolver.test.ts asserting 100% equivalence on all 18 benchmark animals from eval/test_animals.json (identical status, ration lines within 1e-6, S, Y*, totalCostInr, bindingConstraint, verdict kind, costAtCapInrPerDay, maintenanceCostInrPerDay), home feed bounds (<= q_f), and Stage 3 behavior.",
+          "files_to_create": [
+            "src/domain/herdSolver.ts",
+            "tests/unit/herdSolver.test.ts"
+          ],
+          "files_to_modify": [
+            "src/domain/solver.ts"
+          ],
+          "acceptance_criteria": "SPEC AC-C4-1.11, AC-C4-1.12, AC-C4-R1; ARCHITECTURE 'C4 tests': npx vitest run tests/unit/herdSolver.test.ts passes with zero errors, confirming exact equivalence with solveRation on all 18 benchmark animals, home feed usage bounded by stock, and Stage 3 tie-break minimizing home feed.",
+          "status": "completed"
+        },
+        {
+          "id": "C4-M1-T2",
+          "title": "Pure herd plan (src/domain/herdPlan.ts) and rationService.planHerd",
+          "owner": "backend-developer",
+          "description": "Implement src/domain/herdPlan.ts exporting planHerd(animals, herdBudget, homeFeeds, library, breeds, month, planDate). Build buy set C(m) using feeds inSeason(feed, month) with non-null default prices. Compute best plan F using solveHerd. Compute Bu_H buying order (supplements first, then purchase cost ascending, then feedId code-unit tiebreak). Compute prefix buying steps with marginal milk differences ΔL_k, not-needed feeds, and budget prompts. Add planHerd to src/services/rationService.ts reading current device date/month. Create tests/unit/herdPlan.test.ts asserting buy order, non-decreasing ΔL_k, lastStepMatchesBest, prompts, and M1 examples.",
+          "files_to_create": [
+            "src/domain/herdPlan.ts",
+            "tests/unit/herdPlan.test.ts"
+          ],
+          "files_to_modify": [
+            "src/services/rationService.ts"
+          ],
+          "acceptance_criteria": "SPEC AC-C4-1.10, AC-C4-1.13, AC-C4-1.14, AC-C4-1.15, AC-C4-1.16, AC-C4-1.17, AC-C4-1.18, AC-C4-1.19, AC-C4-1.20: npx vitest run tests/unit/herdPlan.test.ts passes, confirming buying order, positive step milk increments, prompt conditions, and Oracle alignment with C3 single-animal plan.",
+          "status": "completed"
+        },
+        {
+          "id": "C4-M1-T3",
+          "title": "Domain format, breed prefill, audits, summary, and hash routing",
+          "owner": "frontend-developer",
+          "description": "Implement src/domain/format.ts with farmer display rounding (roundKg1, toGrams, roundUpInrWhole, roundInrWhole, displayAmount, isShownAmount). Implement breed prefill in src/domain/breeds.ts for weight and fat with citations and midpoints. Implement src/domain/auditHerd.ts (audits for share t*, ΔL, shopping totals, prefill weight/fat, and auditSeasonSet). Implement buildHerdSummary in src/domain/summary.ts. Implement src/lib/hashRoute.ts exporting useHashStep with popstate handling and guards for #/animals, #/feeds, #/result. Create tests/unit/domainFormat.test.ts, tests/unit/breedPrefill.test.ts, and tests/unit/hashRoute.test.ts.",
+          "files_to_create": [
+            "src/domain/format.ts",
+            "src/domain/auditHerd.ts",
+            "src/lib/hashRoute.ts",
+            "tests/unit/domainFormat.test.ts",
+            "tests/unit/breedPrefill.test.ts",
+            "tests/unit/hashRoute.test.ts"
+          ],
+          "files_to_modify": [
+            "src/domain/breeds.ts",
+            "src/domain/summary.ts"
+          ],
+          "acceptance_criteria": "SPEC AC-C4-1.1, AC-C4-1.2, AC-C4-1.3, AC-C4-1.4, AC-C4-1.21, AC-C4-1.24, AC-C4-E1: npx vitest run tests/unit/domainFormat.test.ts tests/unit/breedPrefill.test.ts tests/unit/hashRoute.test.ts passes, confirming farmer display units, breed prefill with citations, summary text, and hash route transitions and guards.",
+          "status": "completed"
+        },
+        {
+          "id": "C4-M1-T4",
+          "title": "Real 3-screen UI components, wiring App.tsx, and C4-M1 test suite",
+          "owner": "frontend-developer",
+          "description": "Wire the real 3-screen flow in src/App.tsx replacing the prototype mock behind ?c4. Connect AnimalsScreen.tsx, AnimalCardForm.tsx / AnimalProfileForm.tsx, HomeFeedsScreen.tsx, HerdPlan.tsx (HerdPlanView), ShoppingList.tsx, AnimalPlanCard.tsx, and RationDetails.tsx with MAX_ANIMALS = 1. Implement season line with today's date and auditSeasonSet. Maintain AI layers deferred (no description helper, no explain control). Create tests/unit/herdUi.test.tsx and tests/e2e/herd-flow.spec.ts.",
+          "files_to_create": [
+            "tests/unit/herdUi.test.tsx",
+            "tests/e2e/herd-flow.spec.ts"
+          ],
+          "files_to_modify": [
+            "src/App.tsx",
+            "src/components/AnimalsScreen.tsx",
+            "src/components/HomeFeedsScreen.tsx",
+            "src/components/HerdPlan.tsx",
+            "src/components/AnimalPlanCard.tsx",
+            "src/components/ShoppingList.tsx"
+          ],
+          "acceptance_criteria": "SPEC AC-C4-1.1 through AC-C4-1.25, AC-C4-E1 through AC-C4-E8, AC-C4-R1 through AC-C4-R9: npm test passes all unit tests, npm run test:full passes all vitest and playwright tests, and npm run build succeeds.",
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "milestone_id": "C4-M2",
+      "name": "Change 4: herd (fair-share joint LP, buying steps with per-animal split)",
+      "tasks": [
+        {
+          "id": "C4-M2-T1",
+          "title": "Multi-animal herd solver, fair-share split, and limit diagnosis",
+          "owner": "backend-developer",
+          "description": "Extend solveHerd to up to 10 animals (MAX_ANIMALS = 10) with shared home stock and fair-share t*. Diagnose herd limits (budget, milk_target, home_stock, animal intake/roughage/nutrients). Create multi-animal solver tests in tests/unit/herdSolver.test.ts.",
+          "files_to_create": [],
+          "files_to_modify": [
+            "src/domain/herdSolver.ts",
+            "tests/unit/herdSolver.test.ts"
+          ],
+          "acceptance_criteria": "SPEC AC-C4-2.3, AC-C4-2.4, AC-C4-2.5, AC-C4-2.10: vitest run tests/unit/herdSolver.test.ts passes all herd cases.",
+          "status": "completed"
+        },
+        {
+          "id": "C4-M2-T2",
+          "title": "Multi-animal herd plan, buying steps, herd prompts, and demos",
+          "owner": "backend-developer",
+          "description": "Update herdPlan.ts for multi-animal shopping steps, herd budget prompts, and presets. Add performance benchmark in tests/unit/herdPerf.slow.test.ts.",
+          "files_to_create": [
+            "tests/unit/herdPerf.slow.test.ts"
+          ],
+          "files_to_modify": [
+            "src/domain/herdPlan.ts",
+            "src/domain/presets.ts",
+            "tests/unit/herdPlan.test.ts"
+          ],
+          "acceptance_criteria": "SPEC AC-C4-2.1, AC-C4-2.6, AC-C4-2.7, AC-C4-2.8, AC-C4-2.11: vitest tests pass and 10-animal worst case solves <= 1.0 s in Node.",
+          "status": "completed"
+        },
+        {
+          "id": "C4-M2-T3",
+          "title": "Multi-animal UI (labels, list, removal, herd summary) and E2E",
+          "owner": "frontend-developer",
+          "description": "Support up to 10 animals in AnimalsScreen, AnimalList, per-species labels (Cow 1, Cow 2, Buffalo 1), animal removal on screen 3 with return to screen 1, and multi-animal summary copy. Update tests/unit/herdUi.test.tsx and tests/e2e/herd-flow.spec.ts.",
+          "files_to_create": [],
+          "files_to_modify": [
+            "src/components/AnimalsScreen.tsx",
+            "src/components/AnimalList.tsx",
+            "src/components/HerdFlow.tsx",
+            "src/components/HerdPlan.tsx",
+            "tests/unit/herdUi.test.tsx",
+            "tests/e2e/herd-flow.spec.ts"
+          ],
+          "acceptance_criteria": "SPEC AC-C4-2.2, AC-C4-2.14, AC-C4-E5, AC-C4-E6: UI tests and E2E tests pass for multi-animal herd flows.",
+          "status": "completed"
+        },
+        {
+          "id": "C4-M2-T4",
+          "title": "SciPy herd cross-check and eval suite",
+          "owner": "backend-developer",
+          "description": "Create eval/test_herd_animals.json with at least 7 benchmark herd cases. Add dumpHerdCases() to scripts/dump_solver_results.ts. Implement eval/cross_check_herd.py and eval/test_scipy_herd_agreement.py using HiGHS. Verify 100% agreement.",
+          "files_to_create": [
+            "eval/test_herd_animals.json",
+            "eval/cross_check_herd.py",
+            "eval/test_scipy_herd_agreement.py"
+          ],
+          "files_to_modify": [
+            "scripts/dump_solver_results.ts"
+          ],
+          "acceptance_criteria": "SPEC AC-C4-2.9: python -m pytest -q eval/test_scipy_herd_agreement.py passes with 100% agreement across all benchmark cases.",
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "milestone_id": "C4-M3",
+      "name": "Beyond-budget expansion steps & interactive feed upgrade ('Then, if you can')",
+      "tasks": [
+        {
+          "id": "C4-M3-T1",
+          "title": "Domain beyond-budget expansion calculation and types",
+          "owner": "backend-developer",
+          "description": "Update src/domain/types.ts to export HerdExpansionItem and update HerdPlan. In src/domain/herdPlan.ts, implement expansion calculation probing extra budget, isolating feed additions delta_q_f, incremental cost, and incremental milk yield, filtered and sorted by decreasing return rate (Delta L / Delta Cost). Consolidate all within-budget feeds into What to buy without baseline rung splitting. Add unit tests in tests/unit/herdPlan.test.ts asserting return sorting, breed cap ceiling, dry herd omission, and intake-capped omission.",
+          "files_to_create": [],
+          "files_to_modify": [
+            "src/domain/types.ts",
+            "src/domain/herdPlan.ts",
+            "tests/unit/herdPlan.test.ts"
+          ],
+          "acceptance_criteria": "SPEC AC-C4-3.1, AC-C4-3.2, AC-C4-3.3, AC-C4-3.6, AC-C4-E12, AC-C4-E13; vitest run tests/unit/herdPlan.test.ts exits 0.",
+          "status": "completed"
+        },
+        {
+          "id": "C4-M3-T2",
+          "title": "Interactive 'Then, if you can' UI and 'Add to budget' action",
+          "owner": "frontend-developer",
+          "description": "Update src/components/ShoppingList.tsx to render What to buy with all within-budget feeds and Then, if you can strictly for beyond-budget expansion items with [+ Add to budget] / [+ बजट में जोड़ें] action button. Update src/components/HerdPlan.tsx, src/components/HerdFlow.tsx to wire onAddBudget callback (setting new budget = old budget + deltaCost, re-solving, and updating Screen 3 immediately). Update src/i18n/strings.ts with c4_add_to_budget and c4_extra_spend strings. Update tests/unit/herdUi.test.tsx.",
+          "files_to_create": [],
+          "files_to_modify": [
+            "src/components/ShoppingList.tsx",
+            "src/components/HerdPlan.tsx",
+            "src/components/HerdFlow.tsx",
+            "src/i18n/strings.ts",
+            "tests/unit/herdUi.test.tsx"
+          ],
+          "acceptance_criteria": "SPEC AC-C4-3.1, AC-C4-3.4, AC-C4-3.5, AC-C4-E14; vitest run tests/unit/herdUi.test.tsx exits 0.",
+          "status": "completed"
+        },
+        {
+          "id": "C4-M3-T3",
+          "title": "E2E test suite for budget expansion and auto-resolve",
+          "owner": "frontend-developer",
+          "description": "Update tests/e2e/herd-flow.spec.ts with E2E tests for beyond-budget expansion: verifying What to buy displays all within-budget feeds, Then, if you can shows expansion feed deltas, tapping [+ Add to budget] updates total budget, re-solves ration, updates animal cards and shopping list, and persists updated budget when navigating back to Screen 2. Assert omission of Then, if you can at breed cap and for dry herds.",
+          "files_to_create": [],
+          "files_to_modify": [
+            "tests/e2e/herd-flow.spec.ts"
+          ],
+          "acceptance_criteria": "SPEC AC-C4-3.1..3.6, AC-C4-E12..E14; npx playwright test tests/e2e/herd-flow.spec.ts exits 0.",
+          "status": "completed"
+        }
+      ]
     }
   ]
 }

@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-Key technical, hosting, solver, AI integration, data and language decisions for SahiDana, referenced by [ARCHITECTURE.md](ARCHITECTURE.md) and [SPEC.md](SPEC.md). Last updated: 2026-10-15 (ADR-0010 to ADR-0017 added for Change 3, farmer-first flow; ADR-0001 to ADR-0009 unchanged since the freeze on 2026-10-12).
+Key technical, hosting, solver, AI integration, data and language decisions for SahiDana, referenced by [ARCHITECTURE.md](ARCHITECTURE.md) and [SPEC.md](SPEC.md). Last updated: 2026-10-17 (ADR-0022 added for Change 4 Milestone C4-M3: beyond-budget expansion steps and interactive feed upgrade "Then, if you can", superseding within-budget ladder partitioning from ADR-0012 and ADR-0020; ADR-0021 added for the Change 4 Round 6 amendment and amended at the Change 4 freeze: the month comes from today's date, the herd explanation is never cut, and unitless number matching is accepted; ADR-0016 unchanged; ADR-0019 and ADR-0020 added for Change 4, herd and 3-step flow, with the status of ADR-0010, ADR-0011, ADR-0012 and ADR-0014 updated; ADR-0010 to ADR-0018 added for Change 3 and its UI primitives; ADR-0001 to ADR-0009 unchanged since the freeze on 2026-10-12).
 
 | ID | Title | Status | Date |
 |---|---|---|---|
@@ -13,15 +13,19 @@ Key technical, hosting, solver, AI integration, data and language decisions for 
 | [ADR-0007](#adr-0007-two-stage-budget-max-milk-lp) | Two-Stage Budget Max-Milk LP | Accepted | 2026-10-12 |
 | [ADR-0008](#adr-0008-breed-based-milk-cap-body-weight-sets-intake-not-milk) | Breed-Based Milk Cap; Body Weight Sets Intake, Not Milk | Accepted | 2026-10-12 |
 | [ADR-0009](#adr-0009-language-toggle-one-language-per-screen) | Language Toggle, One Language per Screen | Accepted | 2026-10-12 |
-| [ADR-0010](#adr-0010-farmer-first-candidate-set-own-feeds-plus-in-season-priced-library-feeds) | Farmer-First Candidate Set: Own Feeds Plus In-Season Priced Library Feeds | Accepted | 2026-10-15 |
-| [ADR-0011](#adr-0011-own-feeds-used-first-at-the-farmers-price-and-cap-never-forced) | Own Feeds Used First at the Farmer's Price and Cap, Never Forced | Accepted | 2026-10-15 |
-| [ADR-0012](#adr-0012-cheapest-first-upgrade-ladder-from-nested-prefix-solves) | Cheapest-First Upgrade Ladder from Nested Prefix Solves | Accepted | 2026-10-15 |
+| [ADR-0010](#adr-0010-farmer-first-candidate-set-own-feeds-plus-in-season-priced-library-feeds) | Farmer-First Candidate Set: Own Feeds Plus In-Season Priced Library Feeds | Accepted (the own-feed part of decision 1, and decision 2, superseded by [ADR-0019](#adr-0019-home-feed-at-0-capped-by-the-herds-daily-amount-with-a-separate-buy-option)) | 2026-10-15 |
+| [ADR-0011](#adr-0011-own-feeds-used-first-at-the-farmers-price-and-cap-never-forced) | Own Feeds Used First at the Farmer's Price and Cap, Never Forced | Superseded by [ADR-0019](#adr-0019-home-feed-at-0-capped-by-the-herds-daily-amount-with-a-separate-buy-option) | 2026-10-15 |
+| [ADR-0012](#adr-0012-cheapest-first-upgrade-ladder-from-nested-prefix-solves) | Cheapest-First Upgrade Ladder from Nested Prefix Solves | Accepted (decision 4, rung 0 and the per-rung display, superseded by [ADR-0020](#adr-0020-joint-herd-lp-with-a-fair-share-of-each-milk-target); within-budget splitting into "Then, if you can" superseded by [ADR-0022](#adr-0022-beyond-budget-expansion-steps--interactive-feed-upgrade-then-if-you-can)) | 2026-10-15 |
 | [ADR-0013](#adr-0013-cost-at-cap-solver-field) | Cost-at-Cap Solver Field | Accepted | 2026-10-15 |
-| [ADR-0014](#adr-0014-budget-increase-prompt-with-rupee-amounts-rounded-up) | Budget-Increase Prompt with Rupee Amounts Rounded Up | Accepted | 2026-10-15 |
+| [ADR-0014](#adr-0014-budget-increase-prompt-with-rupee-amounts-rounded-up) | Budget-Increase Prompt with Rupee Amounts Rounded Up | Accepted (rounding to the paisa in decisions 2 and 4 superseded by [ADR-0020](#adr-0020-joint-herd-lp-with-a-fair-share-of-each-milk-target)) | 2026-10-15 |
 | [ADR-0015](#adr-0015-no-invented-per-feed-inclusion-caps-for-library-feeds) | No Invented Per-Feed Inclusion Caps for Library Feeds | Accepted | 2026-10-15 |
 | [ADR-0016](#adr-0016-candidate-month-is-the-devices-current-month) | Candidate Month Is the Device's Current Month | Accepted | 2026-10-15 |
 | [ADR-0017](#adr-0017-two-milestone-delivery-layout-first-then-farmer-first-solve) | Two-Milestone Delivery: Layout First, Then Farmer-First Solve | Accepted | 2026-10-15 |
 | [ADR-0018](#adr-0018-ui-primitives-vaul-radix-shadcn-style-components-lucide) | UI Primitives: vaul, Radix, shadcn-Style Components, lucide | Accepted | 2026-10-15 |
+| [ADR-0019](#adr-0019-home-feed-at-0-capped-by-the-herds-daily-amount-with-a-separate-buy-option) | Home Feed at ₹0, Capped by the Herd's Daily Amount, with a Separate Buy Option | Accepted | 2026-10-15 |
+| [ADR-0020](#adr-0020-joint-herd-lp-with-a-fair-share-of-each-milk-target) | Joint Herd LP with a Fair Share of Each Milk Target | Accepted (decision 7's within-budget "Then, if you can" partitioning superseded by [ADR-0022](#adr-0022-beyond-budget-expansion-steps--interactive-feed-upgrade-then-if-you-can)) | 2026-10-15 |
+| [ADR-0021](#adr-0021-herd-ai-layers-and-visible-season) | Herd AI Layers and Visible Season | Accepted | 2026-10-15 |
+| [ADR-0022](#adr-0022-beyond-budget-expansion-steps--interactive-feed-upgrade-then-if-you-can) | Beyond-Budget Expansion Steps & Interactive Feed Upgrade ("Then, if you can") | Accepted | 2026-10-17 |
 
 ---
 
@@ -333,7 +337,7 @@ This supersedes ADR-0005 decision 1, and with it the side-by-side display in ADR
 ## ADR-0010: Farmer-First Candidate Set: Own Feeds Plus In-Season Priced Library Feeds
 
 Date: 2026-10-15
-Status: Accepted
+Status: Accepted (the own-feed part of decision 1, and decision 2, superseded by [ADR-0019](#adr-0019-home-feed-at-0-capped-by-the-herds-daily-amount-with-a-separate-buy-option))
 
 ### Context
 
@@ -369,7 +373,7 @@ In Change 3 (FEEDBACK Round 5, [SPEC.md](SPEC.md) "Change 3: Farmer-first flow")
 ## ADR-0011: Own Feeds Used First at the Farmer's Price and Cap, Never Forced
 
 Date: 2026-10-15
-Status: Accepted
+Status: Superseded by [ADR-0019](#adr-0019-home-feed-at-0-capped-by-the-herds-daily-amount-with-a-separate-buy-option)
 
 ### Context
 
@@ -395,7 +399,7 @@ The user wants feeds the farmer already has to be "used first" (FEEDBACK Round 5
 ## ADR-0012: Cheapest-First Upgrade Ladder from Nested Prefix Solves
 
 Date: 2026-10-15
-Status: Accepted
+Status: Accepted (decision 4, rung 0 and the per-rung display, superseded by [ADR-0020](#adr-0020-joint-herd-lp-with-a-fair-share-of-each-milk-target))
 
 ### Context
 
@@ -472,7 +476,7 @@ The new prompt "Add ₹X/day to your budget to reach Y L/day (breed best)" needs
 ## ADR-0014: Budget-Increase Prompt with Rupee Amounts Rounded Up
 
 Date: 2026-10-15
-Status: Accepted
+Status: Accepted (rounding to the paisa in decisions 2 and 4 superseded by [ADR-0020](#adr-0020-joint-herd-lp-with-a-fair-share-of-each-milk-target))
 
 ### Context
 
@@ -614,4 +618,279 @@ Technical trade-offs were identified: `vaul` is currently unmaintained, and stan
 
 - **Positive:** Audit sheet has native drag-down dismiss and scroll locking; button/input/badge markup is type-safe and consistent; visual styling and language test isolation remain 100% intact.
 - **Negative:** `vaul` is unmaintained; dependency pinned at version 1.1.2.
+
+---
+
+## ADR-0019: Home Feed at ₹0, Capped by the Herd's Daily Amount, with a Separate Buy Option
+
+Date: 2026-10-15
+Status: Accepted
+
+### Context
+
+In Change 3 the farmer's own feeds entered the calculation at the farmer's own price, with an optional "how much you have" limit, and one entry per feed ([ADR-0010](#adr-0010-farmer-first-candidate-set-own-feeds-plus-in-season-priced-library-feeds), [ADR-0011](#adr-0011-own-feeds-used-first-at-the-farmers-price-and-cap-never-forced)). Three problems followed:
+- the farmer had to type a price for straw that was already in the shed;
+- a farmer who had some straw could not also be told to buy more of it;
+- the budget mixed money already spent with money still to spend.
+
+For Change 4 ([SPEC.md](SPEC.md) "Change 4: Herd and 3-step flow") the user said on 2026-10-15:
+- home feed is just what the farmer has, used first where it helps;
+- the budget is for buying only;
+- screen 2 asks only for kg per day for all animals, with no price.
+
+The single-animal solver (`solveRation`) names each feed's amount by the feed's id, so it cannot hold the same feed twice ("from home" and "bought") in one calculation. It must stay unchanged so the 100% SciPy agreement holds.
+
+### Decision
+
+1. **A home-feed row** is a library feed plus the kg per day the farmer can give to the whole herd (`q_f > 0`). It has no price. It may be out of season or have no cited price, because the farmer already has it. There is at most one row per feed.
+2. **Home feed costs ₹0.** In the herd calculation ([ADR-0020](#adr-0020-joint-herd-lp-with-a-fair-share-of-each-milk-target)) each animal gets a "from home" amount of that feed at ₹0. The herd's total from home can never exceed `q_f`.
+3. **The same feed can also be bought, as a separate line.** If the feed is in season this month and has a cited price, it is also in the buy set, and each animal gets a separate "bought" amount at that cited price, shown as its own "Buy" line. If the feed is not in the buy set, it is never bought.
+4. **Never forced.** There is no minimum use of any home feed. A home feed the plan does not use is listed under "Not needed today".
+5. **The budget pays for purchases only.** Home feed adds nothing to the cost or to "₹A of your ₹Bd a day".
+6. **What is replaced.**
+   - This replaces [ADR-0011](#adr-0011-own-feeds-used-first-at-the-farmers-price-and-cap-never-forced) entirely, and the own-feed part of decision 1 and decision 2 of [ADR-0010](#adr-0010-farmer-first-candidate-set-own-feeds-plus-in-season-priced-library-feeds) (own feeds at the farmer's price; one entry per feed).
+   - ADR-0010's library rule still builds the buy set (in-season library feeds with a cited price, at that price), now with no own feeds. Its decision 4 (no buying advice for feeds that cannot be bought) also still applies.
+7. **How much home feed the plan uses** is settled by the Stage 3 tie-break in [ADR-0020](#adr-0020-joint-herd-lp-with-a-fair-share-of-each-milk-target): the least home feed at the cheapest purchase.
+
+### Alternatives considered
+
+- **Keep the farmer's own price (Rejected, user choice):** It asks the farmer for a number they do not think about, and the budget then mixes spent and unspent money.
+- **Value home feed at a market price (Rejected):** This is a non-goal in SPEC C4.6. It would also put an estimated value on feed the farmer is not going to sell.
+- **Force the solver to use all, or some, of the home stock (Rejected):** Too much straw can break the intake or nutrient limits, making the ration impossible or worse, and hiding the better one ([ADR-0011](#adr-0011-own-feeds-used-first-at-the-farmers-price-and-cap-never-forced) reasoning).
+- **One entry per feed, as in Change 3 (Rejected):** A farmer with 3 kg of straw who needs 5 kg could not be told to buy 2 kg.
+- **Pass home feed through `solveRation` as a second entry with the same feed id (Rejected):** That solver names amounts by feed id, so it would need changing, which would put the 100% SciPy agreement at risk.
+
+### Consequences
+
+- **Positive:**
+  - The screens match how farmers think: "what I have" and "what I must buy".
+  - Entering a home feed can never raise the purchase cost (AC-C4-1.11).
+  - "Some at home, buy the rest" now works.
+  - No price is asked for on screen 2.
+- **Negative:**
+  - The plan does not show the value of the home feed used (a SPEC non-goal).
+  - Because home feed is free, the cheapest purchase alone does not decide how much home feed to use. ADR-0020's Stage 3 resolves this, at the cost of one extra calculation.
+  - A home feed out of season or without a price is accepted as typed, with no warning.
+
+---
+
+## ADR-0020: Joint Herd LP with a Fair Share of Each Milk Target
+
+Date: 2026-10-15
+Status: Accepted
+
+### Context
+
+Change 4 plans feed for up to 10 cows and buffaloes with:
+- **one daily budget** for buying feed for the whole herd;
+- **home feed shared** between the animals ([ADR-0019](#adr-0019-home-feed-at-0-capped-by-the-herds-daily-amount-with-a-separate-buy-option)).
+
+The user's money rule (2026-10-15) is that every animal is kept healthy first, then the budget is shared so all animals reach the same share of their milk target, and no animal is starved for another.
+
+The existing single-animal calculation (`solveRation`, [ADR-0007](#adr-0007-two-stage-budget-max-milk-lp)) is checked by SciPy at 100% on 18 benchmark animals and must not change. The results must also stay practical for a farmer:
+- one shopping list in buying order, with the milk each later feed adds;
+- amounts in whole rupees, kg to 1 decimal and grams for supplements;
+- no arbitrary amounts of home feed.
+
+### Decision
+
+1. **One joint calculation (LP) for the herd**, in the new module `src/domain/herdSolver.ts`:
+   - It is built by placing each animal's own rows side by side. These are the same rows `solveRation` uses: nutrients, the intake ceiling, the roughage minimum, the calcium limit and the mineral and salt minimums.
+   - Each animal's amounts are named with its key (`a1__<feedId>` for bought feed, `a1__home__<feedId>` for home feed, `a1__Y` for milk).
+   - Only two kinds of rows are shared: the total purchase must stay within the budget, and each home feed's total use must stay within its daily amount.
+   - `solveRation` is not changed. Its internal helpers are only exported for reuse.
+2. **Healthy first.** The herd maintenance cost `M_H` (every animal at 0 L, no budget limit) is calculated first:
+   - if no ration exists, each animal is checked alone with the existing diagnosis (`diagnoseAtMilk`), and the ones that fail are named with their limit;
+   - if the budget is below `M_H`, the screen says how much more to spend;
+   - otherwise every animal's maintenance needs are hard limits in every later stage.
+3. **Stage 1, the fair share.** The calculation finds the largest share `t` (from 0 to 1) such that every milking animal gets at least `t` times its milk target, where the target `g` is the existing effective cap (the breed figure or today's milk, whichever is higher). In LP terms the rule is `y_i ≥ t·g_i` with `y_i ≤ g_i`.
+   - Dry animals have a target of 0 and get a maintenance ration.
+   - Each animal's milk is then `t*·g`, rounded down to 0.1 L (`S_i`).
+4. **Stage 2, the cheapest purchase.** With every animal's milk fixed at `S_i`, the cheapest purchase within the budget is found (`P*`).
+5. **Stage 3, the home-feed tie-break (orchestrator decision, 2026-10-15).**
+   - **Why.** Home feed costs ₹0, so Stage 2 alone leaves the amount taken from home open; a card could show an arbitrary "Bhusa 9 kg".
+   - **What.** For the best plan only, a third calculation keeps every Stage 2 limit, allows the purchase to rise by at most the usual tolerance (`P*` plus `1e-6 × max(1, P*)`), and uses the least total home feed. In plain words: feed exactly what is needed from home, and keep the rest of the stock for tomorrow.
+   - It runs only when home feed is entered. With no home feed the result is exactly Stage 2's, so the one-animal check against `solveRation` is unaffected.
+   - It is not run for the buying-order steps, whose amounts are never shown.
+6. **One animal equals the old calculation.** A herd of one animal with no home feed must give the same ration, milk, cost and main limit as `solveRation` (SPEC AC-C4-1.12). This is tested on all 18 benchmark animals.
+7. **Buying order.**
+   - The Change 3 step rule ([ADR-0012](#adr-0012-cheapest-first-upgrade-ladder-from-nested-prefix-solves): supplements first, then cheapest spend first, nested steps) is applied to the herd's shopping list, and every step is a real joint calculation.
+   - "Rung 0" (own feeds alone) is removed, and only the best plan's amounts are shown. The steps decide only the order and the milk each later feed adds.
+   - This replaces decision 4 of ADR-0012 (rung 0 and the per-rung milk and cost display).
+8. **Whole rupees.** The herd prompts "Add ₹X/day to reach Y L" and "Spend at least ₹X more a day" round X **up to a whole rupee** (`X = ⌈costAtCap_H − Bd⌉`, `⌈M_H − Bd⌉`), so adding X is always enough. Every other rupee figure on the main view is rounded to the nearest whole rupee (SPEC C4.1 display units), and the audit shows the exact value. This replaces the rounding to the paisa in decisions 2 and 4 of [ADR-0014](#adr-0014-budget-increase-prompt-with-rupee-amounts-rounded-up). ADR-0014's rule for when the prompt appears carries over to the herd.
+9. **Independent check.** A Python SciPy (HiGHS) version (`eval/cross_check_herd.py`) rebuilds `M_H`, Stage 1, Stage 2, Stage 3 and the cost at every target on herd benchmark cases. Its test must agree at 100%.
+
+### Alternatives considered
+
+- **A separate budget per animal (Rejected, user choice and SPEC non-goal):** The farmer thinks in one daily amount.
+- **Most total milk for the herd (Rejected):** Money would flow to the animals that turn feed into milk most cheaply, and others would get only maintenance. That breaks the user's fairness rule.
+- **The same litres for every animal (Rejected):** A high-yielding buffalo and a small desi cow have very different targets. Equal litres would cap the buffalo far below its target and push the cow above hers.
+- **Feed the animals one at a time in list order (Rejected):** The result would depend on the order of entry, and the last animals could be starved.
+- **Raise the others after the most limited animal stops (Rejected for now):** This "lexicographic" fair share would use leftover budget, but it needs many more LP runs and more rules to explain. Kept as a possible later change.
+- **Extend `solveRation` itself to herds (Rejected):** It would change the frozen solver and reopen the 100% SciPy agreement.
+- **Let free home feed fall where the solver puts it (Rejected, orchestrator decision):** It gives arbitrary amounts on the cards and fragile SciPy agreement on the ration lines.
+- **A small invented cost on home feed instead of Stage 3 (Rejected):** It is a number without a citation and would change the purchase optimum.
+
+### Consequences
+
+- **Positive:**
+  - The rule is fair and easy to explain: "every animal is kept healthy, then every milking animal gets the same share of its milk target".
+  - The one-animal case is exactly the old, SciPy-verified calculation.
+  - Home amounts on the cards are the least needed, so they are stable and checkable.
+  - Every number still comes from a calculation or a cited row and opens its audit.
+- **Negative:**
+  - The calculation grows with the herd. For 10 animals and the full library, one tap is estimated at 0.8–2.3 s on a low-end phone. It is measured by a slow test, and a Web Worker (no new dependency) is the fallback ([ARCHITECTURE.md](ARCHITECTURE.md) "C4 risks").
+  - The per-animal rows are written again in `herdSolver.ts`, and drift from `solver.ts` is caught only by the equivalence tests.
+  - Because Stage 1 uses "at least `t` times the target", the Stage 2 calculation at the rounded milk can in rare cases need a retry. Tests assert it never does on the benchmark cases.
+- **Known limitation (accepted 2026-10-15):** one animal can hold the whole herd back. If one animal is stopped by its own intake, roughage or a nutrient limit, the shared share `t` stops there for every animal, even when budget is left over. This is accepted for now. Details and the audit of `t` name the limiting animal and its limit, so the paravet can see why.
+
+---
+
+## ADR-0021: Herd AI Layers and Visible Season
+
+Date: 2026-10-15
+Status: Accepted
+
+### Context
+
+The user reviewed the Change 4 prototype and asked for three things ([FEEDBACK.md](internal/FEEDBACK.md) Round 6):
+- the AI helpers at both ends of the 3-step flow: a description helper on screen 1 that can read several animals, and an explanation of the whole herd plan on screen 3;
+- the seasons made visible.
+
+The earlier Change 4 design kept the AI only for one animal. It left the description helper reading one animal through the existing `extract` action, which needs a body weight and fills a missing fat percentage with a fixed default. The season was used silently: the buy list holds only feeds in season in the device's month ([ADR-0016](#adr-0016-candidate-month-is-the-devices-current-month)), but screen 3 never said so.
+
+A first version of this ADR also let the paravet change the month. The user withdrew that on 2026-10-15, before the Change 4 architecture was frozen. In the same decision the user made the herd explanation a part that is never cut, and accepted the number check as it is. This record reflects those decisions.
+
+The founding rule still holds: the solver and cited tables own every number, and the AI only reads text in and writes text out.
+
+### Decision
+
+1. **A new, versioned request `extract_herd` for the description helper; `extract` is left unchanged.**
+   - The new request returns:
+     - a list of up to 10 animals (species, breed, milk, and an optional weight and fat);
+     - the farmer's home feeds with kg per day;
+     - the herd budget.
+   - Weight and fat are left empty when the text does not state them, so the cited breed figures fill them in. No default is ever invented.
+   - The server builds the answer only from a fixed list of allowed fields, so any price, nutrient or season figure the model returns is thrown away. It also cuts the list to 10 animals.
+   - Everything lands as an unconfirmed review list that the farmer must confirm.
+2. **Explain covers the whole herd plan.**
+   - The model receives only the plan's own figures (shopping list, each animal's ration, the share of target, the limit, the prompts) with English names.
+   - Every number it writes must match a figure in that plan, the inputs or a cited row, or the app shows a fixed, pre-checked template instead. There is one retry, then the template.
+   - The explanation stays in English in both language modes.
+   - Offline, or when the server has no key, the template is shown.
+   - Rate limits and timeouts are unchanged.
+   - The herd explanation is never cut for time. The template is the fallback, not a replacement.
+3. **The season is shown with today's date and cannot be changed.**
+   - The month is read from the phone's date when **Calculate ration** is tapped, exactly as ADR-0016 decides. It is not kept as a screen setting.
+   - Screen 3 says, for example, "Feeds to buy: in season today (15 October)".
+   - Tapping the date opens the audit, which shows:
+     - the date and month used;
+     - the in-season priced feeds and the excluded ones;
+     - that home feeds count in any month.
+   - There is no month control and no "try another month" hint. ADR-0016 is not superseded.
+4. **The number check stays unitless (accepted limitation).**
+   - The explanation check matches each number against the allowed numbers by value only, not by unit or meaning.
+   - The user declined unit-aware matching.
+5. **Placement.**
+   - **C4-M1:** the one-animal helper (with the new request), the one-animal Explain, and the season line with today's date.
+   - **C4-M2:** the helper opens to 10 animals, and the herd Explain is added.
+   - **If time runs short:** only the multi-animal helper is cut.
+
+### Alternatives considered
+
+- **Extend `extract` with an animals list (Rejected):**
+  - It would change a contract that the extraction eval and its tests measure.
+  - It would keep the forced weight and the uncited fat default, which clash with the breed figures.
+  - The server would have to guess which shape it was given.
+- **Let the model return nutrient or price figures for unknown feeds (Rejected):** These are uncited numbers. Unknown feeds go to the farmer to map or drop, as before.
+- **Template only for the herd, no AI explanation (Rejected by the user's feedback):** The template is kept only as the fallback.
+- **A "Change month" control on screen 3 (Rejected by the user, 2026-10-15):** The advice should match what is in season today. A control adds state, a recompute path and a way to give advice for the wrong season.
+- **Solve all 12 months automatically and suggest the best one (Rejected):** That is 11 more full herd calculations on a slow phone, for a choice the user does not want offered.
+- **A month field on screen 1 (Rejected):** It adds an input the farmer does not need.
+- **Unit-aware number matching (Rejected by the user, 2026-10-15):** It would tie each number to its unit (kg, L, ₹, %) before matching. It is more work and more brittle across the varied ways a model writes units.
+
+### Consequences
+
+- **Positive:**
+  - The AI now appears at both ends of the flow, as the user asked, without ever supplying a number.
+  - Seasons are visible and auditable, with the exact date used.
+  - Offline users always get a checked explanation.
+- **Negative:**
+  - It adds about 11–13 hours to C4-M1 and 13–15 hours to C4-M2 ([ARCHITECTURE.md](ARCHITECTURE.md) "Effort, risk and cut order"). If time runs short, only the multi-animal helper is cut.
+  - Planning for a future month is not possible, and a phone with a wrong date gives the wrong season.
+  - A second extraction prompt must be maintained.
+  - The live site needs the `OPENROUTER_API_KEY` set in Vercel before either AI layer works. Until then both fall back to the template or to manual entry.
+- **Known limitation (accepted by the user, 2026-10-15): unitless number matching.**
+  - **How the check works.** A number in the AI text passes if its value matches any allowed number, whatever unit is written next to it.
+  - **What can slip through.** The herd's set of allowed numbers is larger, and includes small whole numbers such as animal labels and counts. So a stray "3 kg" passes when the herd has 3 animals, and a kg figure could pass as a rupee figure.
+  - **What limits the risk:**
+    - only the plan's own figures are sent to the model;
+    - the tolerance is unchanged;
+    - tests inject untraced numbers and check they are caught;
+    - every figure on the screen itself still comes from the solver or a cited row.
+
+---
+
+## ADR-0022: Beyond-Budget Expansion Steps & Interactive Feed Upgrade ("Then, if you can")
+
+Date: 2026-10-17
+Status: Accepted
+
+### Context
+
+In Change 3 ([ADR-0012](#adr-0012-cheapest-first-upgrade-ladder-from-nested-prefix-solves)) and Change 4 Milestones C4-M1/M2 ([ADR-0020](#adr-0020-joint-herd-lp-with-a-fair-share-of-each-milk-target) decision 7), feeds purchased within the entered budget $B_d$ were artificially partitioned across two distinct visual buckets: "Buy first" (supplements and the minimal maintenance prefix $P_1$) and "Then, if you can" (the remaining feeds bought within the budget, each showing incremental milk $\Delta L_k$).
+
+Paravet user tests and feedback revealed that this within-budget split caused significant confusion:
+1. All feeds in both groups were already completely affordable within the farmer's entered budget and were essential components of the optimal least-cost ration $F$. Labeling affordable feeds as "Then, if you can" (Hindi "फिर, हो सके तो") mistakenly implied they were optional luxuries or required additional money beyond the entered budget.
+2. When the farmer's entered budget limits milk yield ($t^* < 1.0$), farmers naturally asked: "If I do have ₹20 to ₹50 more to spend each day, what specific feed should I buy next, what will it cost, and how much extra milk will my animals give?"
+3. The static budget prompt ("Add ₹X/day to reach Y L") only provided the all-or-nothing leap to peak genetic potential, which often requires an unrealistic expenditure jump (e.g. ₹80 to ₹150+/day) for resource-constrained smallholders, with no actionable intermediate steps or direct upgrade path.
+
+For Milestone C4-M3 ([SPEC.md](SPEC.md) lines 894–920, AC-C4-3.1–3.6, AC-C4-E12–E14), the app must clarify the distinction between affordable feeds and beyond-budget expansion options, ranking expansion steps by economic efficiency and enabling one-tap interactive budget upgrades.
+
+### Decision
+
+1. **All within-budget feeds belong in "What to buy" (supersedes within-budget "Then, if you can").**
+   - All feeds chosen by the solver in the optimal herd plan $F$ within the entered daily budget $B_d$ are displayed together in the primary shopping list ("What to buy" / Hindi "क्या ख़रीदें").
+   - No feed required for the within-budget solve is labeled or partitioned into "Then, if you can".
+   - The total cost of all items in "What to buy" satisfies $P(F) \le B_d + 1e-6$.
+   - This supersedes the within-budget ladder partitioning of decision 4 in ADR-0012 and decision 7 in ADR-0020.
+2. **"Then, if you can" is repurposed strictly for beyond-budget expansion steps.**
+   - The section "Then, if you can" (Hindi "फिर, हो सके तो") appears if and only if the entered budget is the limiting constraint on herd milk yield ($t^* < 1.0 - 1e-6$, `budgetTight === true`, the herd is not dry, and milk yield is not capped by physical intake or non-budget constraints).
+   - If the budget does not limit yield (e.g., peak breed potential $t^* = 1.0$, a completely dry herd, or when physical intake/roughage constraints prevent higher yield), the section is omitted completely.
+3. **Expansion items specify feed additions, incremental costs, and incremental milk yield.**
+   - Each expansion item defines:
+     - The specific feed addition (`+<amount> kg/day` or `g/day`, e.g. `+1.0 kg/day Cottonseed cake`).
+     - The incremental daily purchase cost: `+₹<X>/day` (`ΔCost`), rounded up to a whole rupee (`roundUpInrWhole`).
+     - The incremental herd milk yield gain: `+<Y> L milk` (Hindi `लगभग +<Y> L दूध`), floored to 0.1 L (`floorMilk1`).
+     - Auditable metadata linking to the solver calculations.
+4. **Sorted strictly by return efficiency.**
+   - All expansion items are sorted in strictly decreasing order of return efficiency:
+     $$\text{Return Efficiency} = \frac{\Delta L}{\Delta\text{Cost}} \quad (\text{litres of milk gained per rupee spent})$$
+   - Ties within $1e-9$ are broken deterministically by `feedId` code units.
+   - This ensures the farmer is always presented with the highest return on investment feed addition first.
+5. **Interactive budget upgrade: `[+ Add to budget]` / `[+ बजट में जोड़ें]`.**
+   - Each expansion item features an accessible button with a minimum $44 \times 44$ px touch target and an `aria-label` identifying the feed and incremental cost.
+   - When tapped, the herd daily budget is immediately updated:
+     $$\text{newBudget} = \text{oldBudget} + \Delta\text{Cost}$$
+   - The herd plan is automatically re-solved with `newBudget`, instantly updating the "What to buy" list, per-animal rations, shopping total, and recomputed expansion items on Screen 3.
+   - The updated budget is preserved in state so that navigating back to Screen 2 (`#/feeds`) and Screen 1 (`#/animals`) reflects the updated budget in the input field (AC-C4-E14).
+
+### Alternatives considered
+
+- **Keep within-budget ladder steps (Rejected):** Partitioning within-budget feeds misleads farmers into believing essential parts of their affordable ration are optional extras.
+- **Only show the jump to 100% breed target (Rejected):** Jumping straight to peak genetic potential requires too much cash at once. Farmers need realistic, stepwise incremental upgrades.
+- **Greedy heuristic feed recommendations without joint LP solving (Rejected):** Adding feed outside the LP can violate physical dry matter intake limits, roughage minimums, or mineral safety bands. All expansion recommendations must come from genuine herd LP solutions.
+- **Manual budget typing only (no [+ Add to budget] button) (Rejected):** Forcing the farmer to memorize the number, go back two screens, edit the input, and re-calculate introduces friction and defeats the simplicity of the 3-step workflow.
+
+### Consequences
+
+- **Positive:**
+  - Clear, unambiguous mental model: "What to buy" shows everything affordable today; "Then, if you can" shows what to buy if extra money is available.
+  - Farmers receive prioritized, high-ROI feed expansion steps.
+  - Interactive one-tap budget upgrades allow seamless exploration of higher yields.
+  - Accessible touch targets and state persistence across screen navigation.
+- **Negative:**
+  - `planHerd` performs additional LP probe solves when the budget is tight, slightly increasing solve time on complex herds.
+  - Edge cases where intake ceilings are reached before budget exhaustion must be detected and suppressed cleanly (AC-C4-E13).
+
 

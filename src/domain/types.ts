@@ -202,6 +202,8 @@ export interface RationFeedLine {
   priceInrPerKg: number;
   /** true when the amount sits on the user's max kg/day cap */
   atCap: boolean;
+  /** Change 4, set only by the herd solver: 'home' for h_{i,f} (price 0, cost 0), 'buy' for b_{i,f}. */
+  source?: 'home' | 'buy';
 }
 
 /** What limits the supported milk. When several are tight the first in this order is named (OQ6). */
@@ -450,4 +452,235 @@ export interface RationAppAdapter {
     context: ExplanationRequestContext,
     options?: { signal?: AbortSignal },
   ): Promise<VerifiedExplanationResult>;
+}
+
+// ---- Change 4: herd and the 3-step flow (docs/ARCHITECTURE.md, "C4 data models"). Additive only. ----------------
+// Prototype note: `src/data/herdPrototype.json` holds fixtures in the HerdPlan shape. The real joint herd LP
+// (herdSolver.ts, herdPlan.ts) is not built yet; `sourceKey` therefore also allows 'PROTO-HERD-FIXTURE'.
+
+/** "Cow 2" is { species: 'cow', n: 2 }; rendered with <Bi id="label_cow_n" params={{ n }} /> so it switches language (AC-C4-E7). */
+export interface AnimalLabel {
+  species: Species;
+  n: number;
+}
+
+/** Where a weight or fat value came from: typed by the user (or the description helper), the breed row, the midpoint of a cited range, or the dry-animal species default (OQ1, never shown). */
+export type InputSource = 'typed' | 'breed' | 'breed_midpoint' | 'species_default_dry';
+
+export type HerdAnimalProfile = Omit<AnimalProfile, 'budgetInrPerDay' | 'isConfirmed'>;
+
+export interface HerdAnimal {
+  /** 'a1', 'a2', ... unique in the session, never reused, never contains '__'. Used as the LP variable prefix. */
+  key: string;
+  /** Stable; never renumbered after a removal (OQ-C4-3). */
+  label: AnimalLabel;
+  profile: HerdAnimalProfile;
+  weightSource: 'typed' | 'breed';
+  fatSource: InputSource;
+  /** false while the values come from the description helper and the user has not tapped Add/Save (AC-2.3). */
+  isConfirmed: boolean;
+}
+
+/** One screen-2 row: q_f, the herd total in kg/day as fed. kgPerDay > 0. At most one row per feedId. */
+export interface HomeFeed {
+  feedId: string;
+  kgPerDay: number;
+}
+
+export interface HerdAnimalSolution {
+  key: string;
+  /** g_i = effCap_i = max(cap_i, T_i) when T_i > 0; 0 for a dry animal. */
+  milkTargetLPerDay: number;
+  /** Y_i = t* x g_i, unrounded. */
+  milkExactLPerDay: number;
+  /** S_i = floor(10 x Y_i + 1e-7) / 10. */
+  milkLPerDay: number;
+  /** This animal's part of the plan as a normal RationSolution; home and buy lines are separate (`source` set). */
+  solution: RationSolution;
+  /** computeRequirements at S_i, for Details. */
+  requirementAtS: RequirementResult;
+}
+
+export type HerdLimit =
+  | { kind: 'budget' }
+  | { kind: 'milk_target' }
+  | { kind: 'home_stock'; feedId: string }
+  | { kind: 'animal'; key: string; constraint: 'intake' | 'roughage' | 'CP' | 'ME' | 'Ca' | 'P' };
+
+export interface ShoppingLine {
+  feedId: string;
+  /** Sum over animals of b_{i,f} in F, exact. */
+  kgPerDay: number;
+  /** price x kgPerDay, exact. */
+  costInrPerDay: number;
+  /** Cited default price. */
+  priceInrPerKg: number;
+  /** For the audit; sums to kgPerDay within 1e-6 (AC-C4-2.5). */
+  perAnimalKg: { key: string; kg: number }[];
+}
+
+export interface HerdSolution {
+  status: 'optimal';
+  /** t* in [0, 1]; 0 when every animal is dry or Stage 1 is infeasible. */
+  shareT: number;
+  stage1Feasible: boolean;
+  /** Herd purchase at Stage 2 at Y is >= Bd - relTol(Bd). */
+  budgetTight: boolean;
+  limits: HerdLimit[];
+  /** M_H */
+  maintenanceCostInrPerDay: number;
+  /** costAtCap_H */
+  costAtTargetInrPerDay: number | null;
+  /** P(F) */
+  purchaseCostInrPerDay: number;
+  /** Bd */
+  budgetInrPerDay: number;
+  /** Screen-1 order. */
+  animals: HerdAnimalSolution[];
+  /** Herd totals of bought feeds with sum b > 1e-6. */
+  buyTotals: ShoppingLine[];
+  homeUse: { feedId: string; usedKgPerDay: number; stockKgPerDay: number; tight: boolean }[];
+  stage2Path: 'direct' | 'retry_minus_0_1' | 'maintenance';
+  stage3Applied: boolean | null;
+  stage2PurchaseInrPerDay: number;
+  solvedOn: string;
+  /** 'PROTO-HERD-FIXTURE' marks the prototype fixtures (a widening of the architecture's literal). */
+  sourceKey: 'SOLVER-HERD-LP-V1' | 'PROTO-HERD-FIXTURE';
+}
+
+export interface HerdInfeasible {
+  status: 'infeasible';
+  animals: { key: string; limitingNutrients: LimitingNutrient[]; dmConflict: boolean; suggestedFeeds: FeedSuggestion[] }[];
+  jointConflict: boolean;
+}
+
+export interface HerdStep {
+  /** Prefix length in Bu_H. */
+  k: number;
+  prefixFeedIds: string[];
+  /** Bu_H[1..k1] for P1, else [Bu_H[k]]. */
+  addedFeedIds: string[];
+  shareT: number;
+  /** Sum over animals of S_i(k). */
+  totalMilkL: number;
+  /** P at Stage 2 of prefix k (audit only, never on the main view). */
+  purchaseCostInrPerDay: number;
+}
+
+export interface ShoppingList {
+  /** Bu_H[1..k1], amounts from F. */
+  buyFirst: ShoppingLine[];
+  later: {
+    /** Bu_H[k], amounts from F. */
+    line: ShoppingLine;
+    /** Delta L_k = sum S_i(k) - sum S_i(k - 1). */
+    deltaMilkExactL: number;
+    /** floor(10 x delta + 1e-7) / 10; 0 reads "same milk". */
+    deltaMilkL: number;
+    step: HerdStep;
+    previous: HerdStep;
+  }[];
+  /** A = P(F), exact. */
+  totalInr: number;
+  /** P1; null when Bu_H is empty. */
+  firstStep: HerdStep | null;
+}
+
+export interface HerdExpansionItem {
+  feedId: string;
+  deltaKgPerDay: number;
+  deltaCostInrPerDay: number;
+  priceInrPerKg: number;
+  deltaMilkExactL: number;
+  deltaMilkL: number;
+  returnPerRupee: number;
+  auditProbe?: {
+    probeBudgetInrPerDay: number;
+    newTotalMilkL: number;
+    baseTotalMilkL: number;
+  };
+}
+
+export interface HerdBudgetPrompt {
+  /** X = roundUpInrWhole(costAtCap_H - Bd). */
+  extraInrPerDay: number;
+  /** Y = sum floor(10 g_i) / 10 over milking animals. */
+  targetMilkL: number;
+  perAnimalTargetL: { key: string; targetL: number }[];
+  costAtTargetInrPerDay: number;
+  budgetInrPerDay: number;
+}
+
+export interface HerdShortfallPrompt {
+  /** X = roundUpInrWhole(M_H - Bd). */
+  extraInrPerDay: number;
+  maintenanceCostInrPerDay: number;
+  budgetInrPerDay: number;
+}
+
+export interface HerdPlanBase {
+  animals: HerdAnimal[];
+  homeFeeds: HomeFeed[];
+  budgetInrPerDay: number;
+  /** C, exactly as passed to the solver. */
+  buySet: SelectedFeedInput[];
+  /** Device month (ADR-0016). */
+  month: number;
+  /** ISO date (YYYY-MM-DD) of the device date at plan time; shown on the season line (ADR-0021). */
+  planDate: string;
+}
+
+export type HerdPlan =
+  | (HerdPlanBase & {
+      status: 'optimal';
+      /** F */
+      best: HerdSolution;
+      perAnimal: HerdAnimalSolution[];
+      /** Bu_H */
+      buyOrder: string[];
+      shopping: ShoppingList;
+      expansionItems: HerdExpansionItem[];
+      /** Home feedIds with sum h <= 1e-6 in F, in row order. */
+      notNeeded: string[];
+      budgetPrompt: HerdBudgetPrompt | null;
+      shortfall: null;
+      infeasible: null;
+      lastStepMatchesBest: boolean;
+    })
+  | (HerdPlanBase & {
+      status: 'below_maintenance';
+      best: null;
+      perAnimal: [];
+      buyOrder: [];
+      shopping: null;
+      expansionItems: [];
+      notNeeded: [];
+      budgetPrompt: null;
+      shortfall: HerdShortfallPrompt;
+      infeasible: null;
+    })
+  | (HerdPlanBase & {
+      status: 'infeasible';
+      best: null;
+      perAnimal: [];
+      buyOrder: [];
+      shopping: null;
+      expansionItems: [];
+      notNeeded: [];
+      budgetPrompt: null;
+      shortfall: null;
+      infeasible: HerdInfeasible;
+    });
+
+export interface BenchmarkAnimalEntry {
+  id: string;
+  description: string;
+  animal: AnimalProfile;
+  selectedFeeds: SelectedFeedInput[];
+  budget: number;
+  expected: {
+    status: 'optimal' | 'below_maintenance' | 'infeasible';
+    bindingConstraint?: string;
+    gainVerdict?: string;
+  };
 }

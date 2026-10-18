@@ -1,0 +1,243 @@
+[
+  {
+    "id": "herd_cow_buffalo",
+    "description": "2 animals: Gir cow (400kg, 6 L/day, 4.5% fat) and Murrah buffalo (500kg, 8 L/day, 7.0% fat). Winter month (Jan). Home wheat straw (8 kg). Ample budget.",
+    "month": 1,
+    "budgetInrPerDay": 350,
+    "animals": [
+      {
+        "key": "a1",
+        "species": "cow",
+        "breedId": "gir",
+        "bodyWeightKg": 400,
+        "milkYieldLitersPerDay": 6,
+        "milkFatPct": 4.5
+      },
+      {
+        "key": "a2",
+        "species": "buffalo",
+        "breedId": "murrah",
+        "bodyWeightKg": 500,
+        "milkYieldLitersPerDay": 8,
+        "milkFatPct": 7.0
+      }
+    ],
+    "homeFeeds": [
+      {
+        "feedId": "wheat_straw",
+        "kgPerDay": 8
+      }
+    ],
+    "buyFeedIds": null,
+    "expected": {
+      "status": "optimal"
+    }
+  },
+  {
+    "id": "herd_with_dry",
+    "description": "2 animals: Sahiwal milking cow (350kg, 8 L/day, 4.5% fat) and Murrah dry buffalo (450kg, 0 L/day, 6.5% fat). Winter month (Jan).",
+    "month": 1,
+    "budgetInrPerDay": 280,
+    "animals": [
+      {
+        "key": "a1",
+        "species": "cow",
+        "breedId": "sahiwal",
+        "bodyWeightKg": 350,
+        "milkYieldLitersPerDay": 8,
+        "milkFatPct": 4.5
+      },
+      {
+        "key": "a2",
+        "species": "buffalo",
+        "breedId": "murrah",
+        "bodyWeightKg": 450,
+        "milkYieldLitersPerDay": 0,
+        "milkFatPct": 6.5
+      }
+    ],
+    "homeFeeds": [
+      {
+        "feedId": "wheat_straw",
+        "kgPerDay": 10
+      }
+    ],
+    "buyFeedIds": null,
+    "expected": {
+      "status": "optimal"
+    }
+  },
+  {
+    "id": "herd_shared_home_binds",
+    "description": "2 milking animals (Gir 400kg 6L and Murrah 500kg 8L) sharing 10 kg/day home wheat straw with no bought roughage, so home stock binds t*.",
+    "month": 1,
+    "budgetInrPerDay": 600,
+    "animals": [
+      {
+        "key": "a1",
+        "species": "cow",
+        "breedId": "gir",
+        "bodyWeightKg": 400,
+        "milkYieldLitersPerDay": 6,
+        "milkFatPct": 4.5
+      },
+      {
+        "key": "a2",
+        "species": "buffalo",
+        "breedId": "murrah",
+        "bodyWeightKg": 500,
+        "milkYieldLitersPerDay": 8,
+        "milkFatPct": 7.0
+      }
+    ],
+    "homeFeeds": [
+      {
+        "feedId": "wheat_straw",
+        "kgPerDay": 10
+      }
+    ],
+    "buyFeedIds": [
+      "mustard_cake",
+      "wheat_bran",
+      "mineral_mix",
+      "common_salt"
+    ],
+    "expected": {
+      "status": "optimal",
+      "limitKind": "home_stock"
+    }
+  },
+  {
+    "id": "herd_below_maintenance",
+    "description": "Gir cow and Murrah buffalo with ₹15/day budget, strictly below maintenance cost M_H.",
+    "month": 1,
+    "budgetInrPerDay": 15,
+    "animals": [
+      {
+        "key": "a1",
+        "species": "cow",
+        "breedId": "gir",
+        "bodyWeightKg": 400,
+        "milkYieldLitersPerDay": 6,
+        "milkFatPct": 4.5
+      },
+      {
+        "key": "a2",
+        "species": "buffalo",
+        "breedId": "murrah",
+        "bodyWeightKg": 500,
+        "milkYieldLitersPerDay": 8,
+        "milkFatPct": 7.0
+      }
+    ],
+    "homeFeeds": [],
+    "buyFeedIds": null,
+    "expected": {
+      "status": "below_maintenance"
+    }
+  },
+  {
+    "id": "herd_infeasible_restricted",
+    "description": "2 animals with restricted buy feeds lacking roughage (concentrates and minerals only), making roughage constraint infeasible.",
+    "month": 1,
+    "budgetInrPerDay": 500,
+    "animals": [
+      {
+        "key": "a1",
+        "species": "cow",
+        "breedId": "gir",
+        "bodyWeightKg": 400,
+        "milkYieldLitersPerDay": 5,
+        "milkFatPct": 4.5
+      },
+      {
+        "key": "a2",
+        "species": "buffalo",
+        "breedId": "murrah",
+        "bodyWeightKg": 480,
+        "milkYieldLitersPerDay": 6,
+        "milkFatPct": 7.0
+      }
+    ],
+    "homeFeeds": [],
+    "buyFeedIds": [
+      "mustard_cake",
+      "wheat_bran",
+      "mineral_mix",
+      "common_salt"
+    ],
+    "expected": {
+      "status": "infeasible"
+    }
+  },
+  {
+    "id": "herd_t_star_one",
+    "description": "Cow and buffalo with generous ₹500 budget and abundant feeds, achieving t* = 1 (milk_target limit).",
+    "month": 1,
+    "budgetInrPerDay": 500,
+    "animals": [
+      {
+        "key": "a1",
+        "species": "cow",
+        "breedId": "hariana",
+        "bodyWeightKg": 325,
+        "milkYieldLitersPerDay": 4,
+        "milkFatPct": 4.5
+      },
+      {
+        "key": "a2",
+        "species": "buffalo",
+        "breedId": "murrah",
+        "bodyWeightKg": 450,
+        "milkYieldLitersPerDay": 5,
+        "milkFatPct": 7.0
+      }
+    ],
+    "homeFeeds": [
+      {
+        "feedId": "wheat_straw",
+        "kgPerDay": 8
+      }
+    ],
+    "buyFeedIds": null,
+    "expected": {
+      "status": "optimal",
+      "limitKind": "milk_target"
+    }
+  },
+  {
+    "id": "herd_tight_budget",
+    "description": "Gir cow and Murrah buffalo with tight ₹180 budget, where budget is the limiting factor (t* < 1, budget tight).",
+    "month": 1,
+    "budgetInrPerDay": 180,
+    "animals": [
+      {
+        "key": "a1",
+        "species": "cow",
+        "breedId": "gir",
+        "bodyWeightKg": 400,
+        "milkYieldLitersPerDay": 8,
+        "milkFatPct": 4.5
+      },
+      {
+        "key": "a2",
+        "species": "buffalo",
+        "breedId": "murrah",
+        "bodyWeightKg": 500,
+        "milkYieldLitersPerDay": 10,
+        "milkFatPct": 7.0
+      }
+    ],
+    "homeFeeds": [
+      {
+        "feedId": "wheat_straw",
+        "kgPerDay": 6
+      }
+    ],
+    "buyFeedIds": null,
+    "expected": {
+      "status": "optimal",
+      "limitKind": "budget"
+    }
+  }
+]

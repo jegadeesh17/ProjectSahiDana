@@ -4,6 +4,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import feedsV1 from '../src/data/feeds.v1.json';
+import { solveHerd, verifyHerdSolution } from '../src/domain/herdSolver';
+import { buildCandidates } from '../src/domain/rationPlan';
 import { computeRequirements, solveRation, verifyRationSolution } from '../src/domain/solver';
 import type {
   AnimalProfile,
@@ -11,6 +13,9 @@ import type {
   CapBasis,
   ExplanationRequestContext,
   FeedItem,
+  HerdAnimal,
+  HerdSolveOutcome,
+  HomeFeed,
   RationSolveOutcome,
   SelectedFeedInput,
   Verdict,
@@ -278,4 +283,198 @@ function main(): void {
   );
 }
 
+interface BenchmarkHerdAnimal {
+  key: string;
+  species: 'cow' | 'buffalo';
+  breedId: string;
+  bodyWeightKg: number;
+  milkYieldLitersPerDay: number;
+  milkFatPct: number;
+}
+
+interface BenchmarkHerdExpected {
+  status: 'optimal' | 'below_maintenance' | 'infeasible';
+  limitKind?: string;
+}
+
+interface BenchmarkHerdEntry {
+  id: string;
+  description: string;
+  month: number;
+  budgetInrPerDay: number;
+  animals: BenchmarkHerdAnimal[];
+  homeFeeds: HomeFeed[];
+  buyFeedIds: string[] | null;
+  expected: BenchmarkHerdExpected;
+}
+
+const HERD_INPUT_PATH = path.join(ROOT_DIR, 'eval', 'test_herd_animals.json');
+const HERD_OUT_PATH = path.join(OUT_DIR, 'browser_herd_results.json');
+
+function dumpHerdCases(): void {
+  if (!fs.existsSync(HERD_INPUT_PATH)) {
+    return;
+  }
+  const rawJson = fs.readFileSync(HERD_INPUT_PATH, 'utf-8');
+  const entries = JSON.parse(rawJson) as BenchmarkHerdEntry[];
+
+  const results = [];
+  let optimalCount = 0;
+  let belowMaintenanceCount = 0;
+  let infeasibleCount = 0;
+
+  for (const entry of entries) {
+    const herdAnimals: HerdAnimal[] = entry.animals.map((a, idx) => ({
+      key: a.key,
+      label: { species: a.species, n: idx + 1 },
+      profile: {
+        species: a.species,
+        breedId: a.breedId,
+        bodyWeightKg: a.bodyWeightKg,
+        milkYieldLitersPerDay: a.milkYieldLitersPerDay,
+        milkFatPct: a.milkFatPct,
+      },
+      weightSource: 'typed',
+      fatSource: 'typed',
+      isConfirmed: true,
+    }));
+
+    let buySet: SelectedFeedInput[];
+    if (entry.buyFeedIds === null || entry.buyFeedIds === undefined) {
+      buySet = buildCandidates([], allFeeds, entry.month);
+    } else {
+      buySet = [];
+      for (const fid of entry.buyFeedIds) {
+        const feed = allFeeds.find((f) => f.id === fid);
+        if (!feed) {
+          throw new Error(`Feed not found: ${fid}`);
+        }
+        if (feed.defaultPriceInrPerKgAsFed === null) {
+          throw new Error(`Feed ${fid} has no default price`);
+        }
+        buySet.push({
+          feedId: feed.id,
+          priceInrPerKgAsFed: feed.defaultPriceInrPerKgAsFed,
+          maxKgAsFedPerDay: null,
+          currentKgAsFedPerDay: null,
+        });
+      }
+    }
+
+    const outcome: HerdSolveOutcome = solveHerd(
+      herdAnimals,
+      buySet,
+      entry.homeFeeds,
+      entry.budgetInrPerDay,
+      allFeeds,
+    );
+
+    if (outcome.status !== entry.expected.status) {
+      throw new Error(
+        `${entry.id}: expected status ${entry.expected.status}, got ${outcome.status}`,
+      );
+    }
+
+    let shareT: number | null = null;
+    const milkLPerDay: Record<string, number> = {};
+    const milkTargetLPerDay: Record<string, number> = {};
+    let purchaseCostInrPerDay: number | null = null;
+    let maintenanceCostInrPerDay: number | null = null;
+    let costAtTargetInrPerDay: number | null = null;
+    const animalLines: { key: string; feeds: any[] }[] = [];
+    let homeUse: any[] = [];
+    let limits: any[] = [];
+    let stage2Path: string | null = null;
+    let stage3Applied: boolean | null = null;
+    let totalHomeKg: number | null = null;
+
+    if (outcome.status === 'optimal') {
+      optimalCount += 1;
+      verifyHerdSolution(outcome, herdAnimals, buySet, entry.homeFeeds, allFeeds);
+
+      if (entry.expected.limitKind) {
+        const primaryLimit = outcome.limits[0]?.kind;
+        if (primaryLimit !== entry.expected.limitKind) {
+          throw new Error(
+            `${entry.id}: expected limitKind ${entry.expected.limitKind}, got ${primaryLimit}`,
+          );
+        }
+      }
+
+      shareT = outcome.shareT;
+      purchaseCostInrPerDay = outcome.purchaseCostInrPerDay;
+      maintenanceCostInrPerDay = outcome.maintenanceCostInrPerDay;
+      costAtTargetInrPerDay = outcome.costAtTargetInrPerDay;
+      stage2Path = outcome.stage2Path;
+      stage3Applied = outcome.stage3Applied;
+      homeUse = outcome.homeUse;
+      limits = outcome.limits;
+
+      let computedHomeKg = 0;
+      for (const a of outcome.animals) {
+        milkLPerDay[a.key] = a.milkLPerDay;
+        milkTargetLPerDay[a.key] = a.milkTargetLPerDay;
+        animalLines.push({
+          key: a.key,
+          feeds: a.solution.feeds,
+        });
+        for (const line of a.solution.feeds) {
+          if (line.source === 'home') {
+            computedHomeKg += line.kgAsFed;
+          }
+        }
+      }
+      totalHomeKg = computedHomeKg;
+    } else if (outcome.status === 'below_maintenance') {
+      belowMaintenanceCount += 1;
+      maintenanceCostInrPerDay = outcome.maintenanceCostInrPerDay;
+    } else if (outcome.status === 'infeasible') {
+      infeasibleCount += 1;
+    }
+
+    results.push({
+      id: entry.id,
+      description: entry.description,
+      month: entry.month,
+      budgetInrPerDay: entry.budgetInrPerDay,
+      animals: entry.animals,
+      homeFeeds: entry.homeFeeds,
+      buyFeedIds: entry.buyFeedIds,
+      buySet,
+      expected: entry.expected,
+      outcome,
+      shareT,
+      milkLPerDay,
+      milkTargetLPerDay,
+      purchaseCostInrPerDay,
+      maintenanceCostInrPerDay,
+      costAtTargetInrPerDay,
+      animalLines,
+      homeUse,
+      limits,
+      stage2Path,
+      stage3Applied,
+      totalHomeKg,
+    });
+  }
+
+  const output = {
+    generatedAt: new Date().toISOString(),
+    summary: {
+      totalHerds: entries.length,
+      optimalCount,
+      belowMaintenanceCount,
+      infeasibleCount,
+    },
+    results,
+  };
+
+  fs.mkdirSync(OUT_DIR, { recursive: true });
+  fs.writeFileSync(HERD_OUT_PATH, `${JSON.stringify(output, null, 2)}\n`, 'utf-8');
+  console.log(
+    `Wrote ${HERD_OUT_PATH} (${entries.length} herds: ${optimalCount} optimal, ${belowMaintenanceCount} below_maintenance, ${infeasibleCount} infeasible)`,
+  );
+}
+
 main();
+dumpHerdCases();

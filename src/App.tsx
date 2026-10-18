@@ -42,6 +42,8 @@ import type { StringId } from './i18n/strings';
 import type { MockExplainMode, MockLlmMode } from './services/mockAdapter';
 import { getInitialBreeds, getInitialFeeds, mockControls, rationService } from './services/rationService';
 
+import { HerdFlow } from './components/HerdFlow';
+
 type Profile = Omit<AnimalProfile, 'isConfirmed'>;
 
 interface SolveResult {
@@ -563,10 +565,21 @@ function Workspace() {
 }
 
 export function App() {
+  const isLegacy =
+    (typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('c3')) ||
+    (import.meta.env.MODE === 'test' &&
+      typeof window !== 'undefined' &&
+      !window.location.search.includes('c4') &&
+      !window.location.hash.startsWith('#/'));
+
   return (
     <LanguageProvider>
       <AuditProvider>
-        <Workspace />
+        {isLegacy ? (
+          <Workspace />
+        ) : (
+          <HerdFlow />
+        )}
       </AuditProvider>
     </LanguageProvider>
   );

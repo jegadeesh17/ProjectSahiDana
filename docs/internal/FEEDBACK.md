@@ -69,3 +69,13 @@ Source: the official Track 6 card. "Formulate algorithmic nutritional balancing 
 | 4 | "move the demo mode somewhere else" | UI | C3-M1: demo moves below the Calculate button as "Try an example". |
 | 5 | Farmer fills the cow, then the budget, then calculates directly; optional dropdown to add feeds they have; solver optimises within budget including those feeds | Contract | C3-M2: library-wide candidate set, owned feeds used first (user's choice), new `rationPlan` module. |
 | 6 | Tell them what to add, cheapest to best; if budget is the constraint, say increase by X for the best result | Contract | C3-M2: upgrade ladder (user's choice) and the `costAtCapInrPerDay` solver field behind "Add ₹X/day". |
+
+## Round 6 (Change 4 prototype review, 2026-10-15)
+
+| # | Feedback (user's words, condensed) | Class | Action |
+|---|---|---|---|
+| 1 | "make sure the AI layers are added too in the final layer" | Contract | Explain on screen 3 for the whole herd (the herd plan `F`), every number verified against solver output or cited rows, deterministic template fallback offline. Supersedes the Change 4 non-goal "whole-herd explanation" and OQ-C4-10. |
+| 2 | "and also in the starting layer" | Contract | Screen 1 "Describe your animals and feed" helper: free text (Hindi, Hinglish, English) extracts several animals, home feeds with kg/day and the herd budget into an unconfirmed prefill the user must confirm (existing AC-2.3 pattern). Extraction schema in `api/llm.ts` gains an animals array. |
+| 4 | "make sure the season and months are calculated acording to the day" | Behavior | The planning month is today's device date, read at Calculate; no month control. Screen 3 shows "in season today (15 October)". |
+| 5 | "remove the AI options completely, lets just add the core app features now ill decide upon the AI features later" | Contract | Items 1 and 2 are deferred out of Change 4: the 3-screen flow ships with no description helper and no Explain. Existing AI code (`api/llm.ts`, extractor, explanation) stays in the repo unused; ADR-0021's AI parts are marked Deferred. Architecture frozen with the user's yes the same day. |
+| 3 | "make sure the seasons are also taken into account, for the crops selection" | Behavior | The buy set already uses only feeds in season this month (`C`). Make it visible: screen 3 says which month's in-season feeds were used, and a paravet can change the month (planning ahead); out-of-season home feeds stay usable. |

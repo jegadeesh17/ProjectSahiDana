@@ -29,9 +29,11 @@ import { buildFatComparison, roundSupportedMilkDown, selectVerdict } from './ver
 
 export { computeRequirements };
 
-const DEFAULT_FEED_LIBRARY: readonly FeedItem[] = feedsV1 as unknown as FeedItem[];
+/** @internal for herdSolver.ts */
+export const DEFAULT_FEED_LIBRARY: readonly FeedItem[] = feedsV1 as unknown as FeedItem[];
 const SOLVER_SOURCE_KEY = 'SOLVER-LP-V1';
-const TOL = 1e-6;
+/** @internal for herdSolver.ts */
+export const TOL = 1e-6;
 
 export class SolverError extends Error {
   constructor(message: string) {
@@ -40,12 +42,14 @@ export class SolverError extends Error {
   }
 }
 
-interface ActiveFeed {
+/** @internal for herdSolver.ts */
+export interface ActiveFeed {
   input: SelectedFeedInput;
   feed: FeedItem;
 }
 
-interface RawLpResult {
+/** @internal for herdSolver.ts */
+export interface RawLpResult {
   feasible: boolean;
   bounded: boolean;
   evaluation: number;
@@ -60,7 +64,8 @@ interface InternalTableau {
   variablesPerIndex: Array<{ id?: string; isSlack?: boolean } | undefined>;
 }
 
-interface FixedMilkSolveResult {
+/** @internal for herdSolver.ts */
+export interface FixedMilkSolveResult {
   lines: RationFeedLine[];
   totalKgAsFed: number;
   totalCost: number;
@@ -70,15 +75,17 @@ interface FixedMilkSolveResult {
   roughageSharePct: number;
 }
 
-function relTol(rhs: number): number {
+/** @internal for herdSolver.ts */
+export function relTol(rhs: number): number {
   return TOL * Math.max(1, Math.abs(rhs));
 }
 
 /**
  * Run javascript-lp-solver and extract unrounded IEEE-754 double values from the simplex tableau
  * so Solver's display rounding never introduces drift > 1e-6.
+ * @internal for herdSolver.ts
  */
-function runLp(model: LpModel): RawLpResult {
+export function runLp(model: LpModel): RawLpResult {
   const raw = Solver.Solve(model, 1e-9, true) as LpSolution & {
     _tableau?: InternalTableau;
     solutionSet?: Record<string, number>;
@@ -127,7 +134,8 @@ function runLp(model: LpModel): RawLpResult {
   };
 }
 
-function buildFeedLinesAndTotals(inputs: readonly ActiveFeed[], values: Record<string, number>): FixedMilkSolveResult {
+/** @internal for herdSolver.ts */
+export function buildFeedLinesAndTotals(inputs: readonly ActiveFeed[], values: Record<string, number>): FixedMilkSolveResult {
   const lines: RationFeedLine[] = [];
   let totalKgAsFed = 0;
   let totalCost = 0;
@@ -191,8 +199,9 @@ function buildFeedLinesAndTotals(inputs: readonly ActiveFeed[], values: Record<s
  * Solve a fixed-milk LP (Maintenance at y=0, Stage 2 at y=Y* or y=S, Stage 2' at y=T).
  * Enforces nutrient minimums, NRC 2001 DM upper ceiling, homogeneous roughage row rho(x) >= 0 (unless includeRoughage=false),
  * optional budget cap, and per-feed max caps. No 85% DM floor.
+ * @internal for herdSolver.ts
  */
-function solveFixedMilk(
+export function solveFixedMilk(
   inputs: readonly ActiveFeed[],
   reqModel: RequirementModel,
   milkYieldLPerDay: number,
@@ -406,8 +415,9 @@ function computeMaxRoughageSharePct(
 
 /**
  * Diagnose why a fixed milk level y (0 for maintenance, T for Stage 2') is infeasible (AC-E2.1, AC-E2.2).
+ * @internal for herdSolver.ts
  */
-function diagnoseAtMilk(
+export function diagnoseAtMilk(
   inputs: readonly ActiveFeed[],
   reqModel: RequirementModel,
   milkYieldLPerDay: number,
@@ -599,8 +609,9 @@ function isNutrientBottleneckAtYStar(
 /**
  * Detect tight constraints on the Stage 2 solution at Y* in the frozen BINDING_ORDER:
  * ['budget', 'breed_cap', 'intake', 'roughage', 'CP', 'ME', 'Ca', 'P'] (ARCHITECTURE.md section 5, SPEC OQ6).
+ * @internal for herdSolver.ts
  */
-function detectTightConstraintsAtYStar(
+export function detectTightConstraintsAtYStar(
   inputs: readonly ActiveFeed[],
   reqModel: RequirementModel,
   yStar: number,

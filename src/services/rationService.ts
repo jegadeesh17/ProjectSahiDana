@@ -1,7 +1,16 @@
-// Adapter factory and singleton. Components import `rationService` and never a concrete adapter.
-import type { AnimalProfile, BreedStandard, FeedItem, RationAppAdapter, SelectedFeedInput } from '../domain/types';
+import type {
+  AnimalProfile,
+  BreedStandard,
+  FeedItem,
+  HerdAnimal,
+  HerdPlan,
+  HomeFeed,
+  RationAppAdapter,
+  SelectedFeedInput,
+} from '../domain/types';
 import { planRation } from '../domain/rationPlan';
 import type { RationPlan } from '../domain/rationPlan';
+import { planHerd } from '../domain/herdPlan';
 import { currentMonth } from '../i18n/months';
 import { LIVE_BREEDS, LIVE_FEEDS, liveAdapter } from './liveAdapter';
 import { FEEDS as PROTOTYPE_FEEDS, PROTOTYPE_BREEDS, mockAdapter, mockControls } from './mockAdapter';
@@ -48,6 +57,7 @@ export const ADAPTERS = {
 
 export interface RationService extends RationAppAdapter {
   planRation(profile: AnimalProfile, owned: SelectedFeedInput[]): RationPlan;
+  planHerd(animals: HerdAnimal[], homeFeeds: HomeFeed[], budgetInrPerDay: number): HerdPlan;
 }
 
 export const rationService: RationService = {
@@ -59,6 +69,20 @@ export const rationService: RationService = {
   explainRation: (context, options) => selectAdapter().explainRation(context, options),
   planRation: (profile, owned) =>
     planRation(profile, owned, getInitialFeeds(), currentMonth(), (p, f) => selectAdapter().solveRation(p, f)),
+  planHerd: (animals, homeFeeds, budgetInrPerDay) => {
+    const now = new Date();
+    const month = currentMonth(now);
+    const planDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    return planHerd(
+      animals,
+      homeFeeds,
+      budgetInrPerDay,
+      getInitialFeeds(),
+      getInitialBreeds(),
+      month,
+      planDate,
+    );
+  },
 };
 
 export { LIVE_BREEDS, LIVE_FEEDS, PROTOTYPE_BREEDS, PROTOTYPE_FEEDS, liveAdapter, mockAdapter, mockControls };

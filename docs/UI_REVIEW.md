@@ -138,3 +138,129 @@ None.
 3. **Responsive Reflow:** Zero horizontal overflow across all states at 1440px desktop, 1280px desktop, and 390px/375px mobile viewports. Side-by-side milk tiles align with 40px numbers.
 4. **C3-M2 Feature States:** Feeds section collapsed & optional (AC-C3-2.2); Calculate ration enabled with 0 feeds (AC-C3-2.1); "You have" and "Buy" tags verified (AC-C3-2.6); BuyLadder renders Rung 0 states and Rungs 1..n with non-decreasing milk (AC-C3-2.7, 2.8, 2.9); Not needed line verified (AC-C3-2.11); BudgetIncreasePrompt verified (AC-C3-2.12); Shortfall raise-by alert verified (AC-C3-2.14); Three demos verified (AC-C3-2.15).
 5. **Language & Digits:** Strict one-language isolation in English and Hindi with 0 script leakage. All numerals use Western Arabic digits `0`–`9` across all states.
+
+## Change 4 (herd and 3-step flow), C4-M1 UI Review 1 (2026-10-16)
+
+Verdict: APPROVED
+Screenshots:
+- `.ui-review/C4-M1/screen1-animals-empty-desktop.png`
+- `.ui-review/C4-M1/screen1-animals-empty-mobile.png`
+- `.ui-review/C4-M1/screen1-animals-filled-desktop.png`
+- `.ui-review/C4-M1/screen1-animals-filled-mobile.png`
+- `.ui-review/C4-M1/screen2-feeds-desktop.png`
+- `.ui-review/C4-M1/screen2-feeds-mobile.png`
+- `.ui-review/C4-M1/screen3-result-desktop.png`
+- `.ui-review/C4-M1/screen3-result-mobile.png`
+- `.ui-review/C4-M1/screen3-result-mobile-375.png`
+- `.ui-review/C4-M1/screen3-result-details-desktop.png`
+- `.ui-review/C4-M1/screen3-result-details-mobile.png`
+- `.ui-review/C4-M1/screen3-audit-drawer-desktop.png`
+- `.ui-review/C4-M1/screen3-audit-drawer-mobile.png`
+- `.ui-review/C4-M1/screen3-result-hindi-desktop.png`
+- `.ui-review/C4-M1/screen3-result-hindi-mobile.png`
+
+### Verification Summary
+- **Test command:** `cmd.exe /c "npm test && npx playwright test tests/e2e/herd-flow.spec.ts"` exited with code 0 (22 unit test files / 405 tests passed, all 8 Playwright E2E tests passed).
+- **Design Tokens & Fidelity:** Strict compliance with DESIGN.md color ramp (`--c-ground`, `--c-surface`, `--c-accent`, `--c-accent-ink`, `--c-accent-tint`, etc.). Grep pattern scan found zero hardcoded hex/rgb outside `src/index.css`.
+- **Refuse List Scan:** Exit code 1 / zero hits for gradients, frosted glass, backdrop blur, emoji icons, placeholder copy, invented metrics, or removed focus outlines.
+- **Motion:** Transitions and animations respect `prefers-reduced-motion` in `src/index.css`.
+- **WCAG 2.2 AA Contrast:** All text and control borders meet or exceed standards (body text 14.8:1, secondary text 6.0:1 on surface and 5.6:1 on ground, accent buttons 5.0:1, controls 3.3:1).
+- **Touch Targets:** Verified >= 44x44 px for all buttons, chips, links, and interactive figures (e.g., primary buttons 56px, secondary 48px, interactive figures 44px hit area with `.fig`).
+- **Mobile Viewport & Symmetry (AC-C4-1.18):** Verified at 390px and 375px; sections "What to buy" and "Not needed today" share `.c4-card` with identical padding, verified both visually and via Playwright test #7.
+- **Language Isolation & Numerals:** Strict one-language isolation in English and Hindi toggle states. Latin digits (`0-9`) used consistently in both languages with standard units (`kg`, `g`, `L`, `₹`, `%`) per AC-C4-R10 and DESIGN.md.
+- **Audit Drawer:** Bottom sheet with grab handle, value at 40px, proper provenance rows (`cited_source`, `solver_output`, `user_input`), accessible focus management (focus moves to Close on open, returns to figure on close), and history push/pop support.
+
+### Critical defects (must fix; any defect means REJECTED)
+None.
+
+### Recommendations (non-blocking)
+- `src/components/HerdPlan.tsx`: In the season line, the figure button `<Fig inline>` applies `--s-1` (4px) horizontal padding, which slightly separates the date from enclosing parentheses `( 16 October )`. Removing the outer whitespace inside the string or adjusting the inline fig margin would yield tighter typographical parentheses without reducing target height.
+- `src/components/AnimalPlanCard.tsx`: On desktop (1440px), the expanded "Details (for paravet)" nutrient bars look clean, but adding a slight background tint or card separator to the expanded accordion container could further visually distinguish paravet technical data from the farmer's primary plan view.
+- Desktop multi-column anticipation: Currently the 3-screen flow is centered single-column (max 640px). When C4-M2 introduces multiple herd animals, consider whether multi-animal cards could sit side-by-side on wide viewports to minimize page scrolling.
+
+## Change 4 (herd and 3-step flow), C4-M2 UI Review 1 (2026-10-17)
+
+Verdict: APPROVED
+Screenshots:
+- `.ui-review/C4-M2/screen1-animals-desktop.png`
+- `.ui-review/C4-M2/screen1-animals-mobile.png`
+- `.ui-review/C4-M2/screen1-animals-mobile-375.png`
+- `.ui-review/C4-M2/screen1-10animals-limit-desktop.png`
+- `.ui-review/C4-M2/screen1-10animals-limit-mobile.png`
+- `.ui-review/C4-M2/screen2-feeds-desktop.png`
+- `.ui-review/C4-M2/screen2-feeds-mobile.png`
+- `.ui-review/C4-M2/screen2-feeds-mobile-375.png`
+- `.ui-review/C4-M2/screen3-herdplan-desktop.png`
+- `.ui-review/C4-M2/screen3-herdplan-mobile.png`
+- `.ui-review/C4-M2/screen3-herdplan-mobile-375.png`
+- `.ui-review/C4-M2/screen3-herdplan-details-desktop.png`
+- `.ui-review/C4-M2/screen3-herdplan-details-mobile.png`
+- `.ui-review/C4-M2/screen3-herdplan-hindi-desktop.png`
+- `.ui-review/C4-M2/screen3-herdplan-hindi-mobile.png`
+- `.ui-review/C4-M2/screen3-audit-drawer-desktop.png`
+- `.ui-review/C4-M2/screen3-audit-drawer-mobile.png`
+
+### Critical defects (must fix; any defect means REJECTED)
+None.
+
+### Recommendations (non-blocking)
+- **StepBar floating container on wide desktop viewports**: In desktop viewports with tall screens, `.c4-bar` has `position: sticky; bottom: var(--s-4)` which creates a floating rounded action dock. While functional and accessible, consider evaluating whether an inline position beneath the budget card on desktop viewports (>= 1024px) feels more cohesive with desktop information flow, keeping the pinned sticky bar exclusively for mobile (< 720px).
+- **Animal list visual density when approaching 10 animals**: When 8–10 animals are added, the animal list card becomes long on mobile before reaching the budget input. Consider adding a small counter badge (e.g., "3 of 10") in the card header for quick scanning on small viewports.
+
+### Detailed Audit Summary
+1. **Multi-Animal UI & Monotonic Labeling (AC-C4-2.1, AC-C4-2.2, AC-C4-E5)**
+   - Monotonic labels (`Cow 1`, `Cow 2`, `Buffalo 1` / `गाय 1`, `गाय 2`, `भैंस 1`) accurately preserved across Screen 1 cards and Screen 3 plan cards.
+   - Add-card visibility: correctly available while `< 10` animals, automatically hidden at 10 animals with the limit banner (`You can add up to 10 animals` / `ज़्यादा से ज़्यादा 10 गाय-भैंस जोड़ सकते हैं`).
+   - Animal removal on Screen 3 returns to Screen 1, retains remaining animals/budget/home feeds, and clears stale plan state until recalculated.
+2. **Contrast Ratios & Colors (WCAG 2.2 AA & DESIGN.md)**
+   - Neutral text: `#1f2a24` on `#ffffff` (14.8:1) and `#5b6660` on `#ffffff` (6.0:1) comfortably exceed 4.5:1.
+   - Accent button: `#ffffff` on `#12804a` (5.0:1); hover `#0e6b3d` (6.6:1).
+   - Semantic tags: `tag-buy` (`#0b5a33` on `#e3f4ea`): 7.3:1; `tag-you-have` (`#1f2a24` on `#f1f4f1`): 13.5:1; Limit message (`#704708` on `#fbf3e1`): 7.3:1.
+   - Zero hardcoded hex/rgb outside theme variables in `src/index.css`.
+3. **Touch Targets (AC-C4-1.31)**
+   - All interactive controls (buttons, chips, select controls, remove buttons, and audit figure buttons) meet or exceed the 44×44 px minimum touch target requirement (verified via automated e2e touch target suite).
+4. **Mobile Viewport (375px & 390px)**
+   - Layout reflows smoothly with zero horizontal scroll.
+   - Consistent 16px padding on both sides.
+   - "Not needed today" and "What to buy" sections maintain matching horizontal padding.
+5. **Language Isolation & Numerals (AC-C4-L1, AC-C4-E7)**
+   - Complete language isolation: Hindi mode renders 100% Devanagari text for titles, tags, and headings with zero English leakage.
+   - Western Arabic digits (0–9) maintained across both languages with standard Latin abbreviations (`kg`, `L`, `g`, `Mcal`, `₹`, `%`).
+   - Devanagari feed names properly include team-asserted provenance dagger markers where cited transliterations were used.
+6. **Audit Drawer & Accessibility**
+   - Accessible roles (`role="meter"`, `aria-valuemin`, `aria-valuemax`, `aria-valuenow`, `aria-label`) properly set on nutrient progress indicators.
+   - Keyboard focus management: focus returns to triggering figures upon closing drawers; back-navigation history listener preserves screen state.
+   - Motion respects `prefers-reduced-motion`. All animations cleanly scoped.
+7. **Pattern Scan**
+   - No prohibited gradients, blobs, frosted glass, emoji icons, lorem ipsum/filler text, or invented metrics. Zero hits across the craft refuse list.
+
+## Change 4 (herd and 3-step flow), C4-M3 UI Review 1 (2026-10-18)
+
+Verdict: APPROVED
+Test command: `cmd.exe /c "npm test && npx playwright test tests/e2e/herd-flow.spec.ts"` (exit code 0 across 442 unit tests and 13 E2E tests)
+
+### Critical defects (must fix; any defect means REJECTED)
+None.
+
+### Recommendations (non-blocking)
+- None.
+
+### Detailed Audit Summary
+1. **Consolidated "What to buy" (AC-C4-3.1):**
+   - Feeds required for the within-budget solve are rendered in "What to buy" (`data-group="first"`). No within-budget feeds are partitioned or labeled into "Then, if you can".
+   - Total shopping cost matches $P(F) \le B_d$ and is auditable with `<Fig inline audit={auditShoppingTotal(shopping)}>`.
+2. **Beyond-Budget Expansion Rows ("Then, if you can", AC-C4-3.2, AC-C4-3.3):**
+   - Rendered strictly when $t^* < 1.0$ and herd is not dry.
+   - Each row displays feed chip, localized name, delta kg (`+<amount>`), delta cost (`(+₹<cost>)`), and milk gain (`→ about +<gain> L milk` / Hindi `→ लगभग +<gain> L दूध`).
+   - Every number is wrapped in `<Fig audit={...}>` connecting to solver probe metadata with zero double signs (`++`) or double parentheses.
+3. **Interactive `[+ Add to budget]` Button & Touch Target (AC-C4-3.4, AC-C4-3.5):**
+   - Primary button styling with min-height 48px and min-width 44px meeting $\ge 44\times 44$ px touch target requirements.
+   - Screen-reader accessible `aria-label="Add <Feed> for ₹<cost>/day to budget for +<gain> L milk"` / Hindi `"+<gain> L दूध के लिए बजट में ₹<cost>/दिन में <Feed> जोड़ें"`.
+   - 1-tap interaction triggers immediate auto-resolve with updated budget and persists when navigating back to Screen 2 and Screen 1.
+4. **Contrast & Language Isolation (WCAG 2.2 AA & AC-C4-L1):**
+   - Contrast exceeds 4.5:1 across all expansion elements (`--c-text-2` on `--c-ground`, button inks on backgrounds).
+   - Strict language isolation maintained with Western Arabic numerals (0–9) across English and Hindi.
+5. **Craft Refuse List:**
+   - Zero hardcoded colors outside `src/index.css`, zero emojis, zero gradients or glassmorphism.
+
+

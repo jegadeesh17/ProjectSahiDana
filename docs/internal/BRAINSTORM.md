@@ -231,3 +231,15 @@ Tagline: **"Sahi dana, har number ka hisaab."** (Right feed, every number accoun
 - **No invented caps:** library feeds get no per-feed inclusion caps, because none are cited.
 - Work on branch `feat/farmer-flow`; merge to `main` after both milestones are accepted.
 - **UI kit & primitives (2026-10-15):** Adopted hand-written shadcn-style Button/Input/Badge/Drawer/Accordion skinned with existing tokens, vaul (pinned 1.1.2, unmaintained status accepted) for swipe-to-dismiss audit drawer, Radix Accordion, and lucide-react icons (ADR-0018).
+
+## 12. Decision log: herd and 3-step flow, Change 4 (2026-10-15)
+
+- **Audience:** farmers and paravets, not analysts. Practical over optimal (user).
+- **Flow:** three screens: your animals and budget → feed you already have (optional) → your plan. Phone Back follows the screens.
+- **Animals:** several per herd (Cow 1, Buffalo 1…, up to 10). Per animal: species, breed, today's milk; weight and fat prefilled from the cited breed table.
+- **Home feed:** kg per day for all animals, no price. Costs ₹0 and is used first where it helps; the same feed can also be bought at its cited price. Never forced.
+- **Budget:** one daily amount for buying feed for the whole herd.
+- **Fair money rule:** every animal kept healthy first; the rest of the budget is shared so all animals reach the same share of their milk target.
+- **Result words:** "Buy first" / "If you have more money" (herd-level steps, each a real joint solve, with a per-animal split), "What to give each animal", "Not needed today". Whole ₹, kg to 1 decimal, grams for mineral mixture and salt.
+- **Superseded from §11:** own-feed price, "Today kg", savings vs today, single page.
+- Branch `feat/herd-flow`; each milestone merged and deployed (Vercel CLI) after UAT. If the herd milestone slips past Sat 17 Oct 11 PM, submit the 3-screen build.

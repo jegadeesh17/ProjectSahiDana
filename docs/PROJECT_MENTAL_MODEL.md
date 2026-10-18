@@ -113,3 +113,35 @@ Prototype, meaning the thinnest working path per milestone. Exception: the solve
 - **Tracking files:** `docs/internal/TASKS.json`, `docs/internal/QA_RESULTS.json`, `docs/internal/ADVERSARIAL_REVIEW.md`, `docs/internal/FEEDBACK.md` (Round 5).
 - **Project facts:** `ui` yes, `deploy` yes, `sensitive-data` no, `existing-code` yes.
 - **Team retro:** `~/.se-agents/retros/ProjectSahiDana-2026-10-15.md`
+
+
+---
+
+# Change 4: Herd and 3-step flow (started 2026-10-15)
+
+- **Change:** a simple 3-screen app for the whole herd, built for farmers and paravets, not analysts (user, 2026-10-15). Screen 1 "Your animals": add each cow or buffalo (tap species, pick breed, type today's milk; weight and fat prefilled from the cited breed table), auto-labelled Cow 1 / Buffalo 1, up to 10, plus one daily budget for buying feed for all animals. Screen 2 "Feed you already have" (optional): feed name + kg per day for all animals, no price. Screen 3 "Your plan": "Buy first", "If you have more money", "What to give each animal" per animal, "Not needed today", budget prompts; nutrient detail collapsed under "Details (for paravet)".
+- **User answers (2026-10-15):** home feed is just what the farmer has, used first where it helps; the budget is for buying only; one total herd budget; herd-level buying steps with a per-animal split; everything before the Sun 18 Oct deadline; keep it practical and do not over-optimise.
+- **Rules:** (1) few inputs, breed prefill for weight and fat with the cited source; (2) plain words on the main view ("Buy first", not "Rung"); (3) farmer units: whole ₹, kg to 1 decimal, grams for mineral mixture and salt, exact value in the audit; (4) proof one tap away; (5) fair money rule: every animal kept healthy first, then the budget is shared so all animals reach the same share `t` of their milk target (no animal starved for another).
+- **Solver contract:** home feed at ₹0 capped by herd kg/day, with a separate buy variable for the same feed at its cited price; one joint herd LP (per-animal constraints; shared budget and stock); Stage 1 max `t`, Stage 2 cheapest purchase at that `t`; `solveRation` (single animal) unchanged.
+- **Superseded from Change 3:** own-feed price, "Today kg", savings vs today, single-page layout.
+- **Change type:** Feature. Keep the incumbent design world in root `PRODUCT.md` and `DESIGN.md`.
+- **Posture:** Prototype, matching the project. Solver and number-honesty checks keep thorough tests (including a herd SciPy cross-check).
+- **Branch:** `feat/herd-flow`, merged to `main` per milestone only after tests, review, UAT and the user's yes; deployed with the Vercel CLI after each merge (the project is not git-connected).
+- **Base commit:** `2134ab6`.
+- **Deadline:** Sun 18 Oct 2026, 11:59 PM IST. Targets: C4-M1 Fri 16 Oct 11 PM; C4-M2 Sat 17 Oct 11 PM. Fallback: if C4-M2 is not accepted by Sat 11 PM, submit the C4-M1 build.
+- **Milestones:**
+  - C4-M1: 3 screens, breed prefill, home feed at ₹0, plain result (one animal) — *Accepted 2026-10-16*.
+  - C4-M2: herd (several animals, fair-share joint LP, herd buying steps with per-animal split, herd demos) — *Accepted 2026-10-17*.
+  - C4-M3: Beyond-budget expansion steps & interactive feed upgrade ("Then, if you can") — *Approved 2026-10-17*.
+    - "What to buy" contains all feeds required for the optimal solve within the farmer's entered budget.
+    - "Then, if you can" only appears when budget limits yield ($t^* < 1.0$), suggesting incremental feed additions with extra cost and milk gain, sorted in decreasing order of return ($\Delta L / \Delta\text{Cost}$).
+    - Each item has an interactive `[+ Add to budget]` / `[+ बजट में जोड़ें]` button that increases the daily budget and automatically re-solves the herd plan.
+    - Omitted if herd is already at maximum breed yield ($t^* = 1.0$), dry, or physically intake-capped.
+- **Out of scope:** market value of home stock, total-kg stock over days, savings vs today, per-animal budgets, saving the herd across reloads, `vercel git connect`, a manual month choice.
+- **Deferred by the user (2026-10-15, FEEDBACK Round 6 item 5):** all AI layers in the new flow, both the "Describe your animals and feed" helper and Explain. "Lets just add the core app features now, ill decide upon the AI features later." Existing AI code stays in the repo unused.
+- **Seasons:** the buy set uses feeds in season in today's month (device date, read at Calculate), shown on screen 3 as "in season today (15 October)".
+- **Architecture:** Change 4 section frozen with the user's yes (2026-10-15).
+- **Tracking files:** `docs/internal/TASKS.json`, `docs/internal/QA_RESULTS.json`, `docs/internal/ADVERSARIAL_REVIEW.md`, `docs/internal/FEEDBACK.md` (Round 6).
+- **Project facts:** `ui` yes, `deploy` yes, `sensitive-data` no, `existing-code` yes.
+- **Team retro:** `~/.se-agents/retros/ProjectSahiDana-2026-10-15.md` (continued)
+

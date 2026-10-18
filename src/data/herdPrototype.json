@@ -1,0 +1,3909 @@
+{
+ "version": 1,
+ "note": "PROTOTYPE FIXTURES (Change 4 clickable prototype). Each plan has the HerdPlan shape. Numbers are plausible stand-ins stitched from per-animal solves, not output of the joint herd LP, and every one is tagged PROTO-HERD-FIXTURE. Feed and breed data come from the cited v1 tables; nothing here is a citation.",
+ "fixtures": [
+  {
+   "id": "cow_buffalo",
+   "plan": {
+    "animals": [
+     {
+      "key": "a1",
+      "label": {
+       "species": "cow",
+       "n": 1
+      },
+      "profile": {
+       "species": "cow",
+       "breedId": "rathi",
+       "bodyWeightKg": 295,
+       "milkYieldLitersPerDay": 6,
+       "milkFatPct": 3.85
+      },
+      "weightSource": "breed",
+      "fatSource": "breed_midpoint",
+      "isConfirmed": true
+     },
+     {
+      "key": "a2",
+      "label": {
+       "species": "buffalo",
+       "n": 1
+      },
+      "profile": {
+       "species": "buffalo",
+       "breedId": "murrah",
+       "bodyWeightKg": 516,
+       "milkYieldLitersPerDay": 8,
+       "milkFatPct": 7.34
+      },
+      "weightSource": "breed",
+      "fatSource": "breed",
+      "isConfirmed": true
+     }
+    ],
+    "homeFeeds": [
+     {
+      "feedId": "wheat_straw",
+      "kgPerDay": 10
+     }
+    ],
+    "budgetInrPerDay": 400,
+    "buySet": [
+     {
+      "feedId": "bajra_green",
+      "priceInrPerKgAsFed": 3,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "jowar_green",
+      "priceInrPerKgAsFed": 2.5,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "maize_green",
+      "priceInrPerKgAsFed": 2.5,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "cowpea_green",
+      "priceInrPerKgAsFed": 3,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "guar_green",
+      "priceInrPerKgAsFed": 3,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "lucerne",
+      "priceInrPerKgAsFed": 3.5,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "marvel_grass",
+      "priceInrPerKgAsFed": 6,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "wheat_straw",
+      "priceInrPerKgAsFed": 6,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "bajra_stover",
+      "priceInrPerKgAsFed": 5,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "barley_straw",
+      "priceInrPerKgAsFed": 6,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "groundnut_haulm",
+      "priceInrPerKgAsFed": 8,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "guar_straw",
+      "priceInrPerKgAsFed": 5,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "moong_straw",
+      "priceInrPerKgAsFed": 6,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "jowar_stover",
+      "priceInrPerKgAsFed": 4.5,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "mustard_cake",
+      "priceInrPerKgAsFed": 33,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "cottonseed_cake",
+      "priceInrPerKgAsFed": 38,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "guar_meal",
+      "priceInrPerKgAsFed": 42,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "groundnut_cake",
+      "priceInrPerKgAsFed": 37,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "wheat_bran",
+      "priceInrPerKgAsFed": 20,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "rice_bran_dorb",
+      "priceInrPerKgAsFed": 17,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "pulse_chuni",
+      "priceInrPerKgAsFed": 23,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "bajra_grain",
+      "priceInrPerKgAsFed": 24,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "maize_grain",
+      "priceInrPerKgAsFed": 32,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "saras_compound",
+      "priceInrPerKgAsFed": 22,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "mineral_mix",
+      "priceInrPerKgAsFed": 70,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "common_salt",
+      "priceInrPerKgAsFed": 8,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     }
+    ],
+    "month": 10,
+    "status": "optimal",
+    "best": {
+     "status": "optimal",
+     "shareT": 1,
+     "stage1Feasible": true,
+     "budgetTight": false,
+     "limits": [
+      {
+       "kind": "milk_target"
+      }
+     ],
+     "maintenanceCostInrPerDay": 74.078,
+     "costAtTargetInrPerDay": 334.519,
+     "purchaseCostInrPerDay": 334.519,
+     "budgetInrPerDay": 400,
+     "animals": [
+      {
+       "key": "a1",
+       "milkTargetLPerDay": 8.36,
+       "milkExactLPerDay": 8.36,
+       "milkLPerDay": 8.3,
+       "solution": {
+        "status": "optimal",
+        "breedId": "rathi",
+        "supportedMilkLPerDay": 8.3,
+        "supportedMilkExactLPerDay": 8.36,
+        "milkCapLPerDay": 8.36,
+        "capBasis": "range_top",
+        "effectiveCapLPerDay": 8.36,
+        "effectiveCapSource": "breed",
+        "bindingConstraint": "breed_cap",
+        "tightConstraints": [
+         "breed_cap"
+        ],
+        "feedLimitIds": [],
+        "verdict": {
+         "kind": "gain",
+         "gainLPerDay": 2.3
+        },
+        "costAtTodayMilkInrPerDay": 97.23977959382799,
+        "costAtCapInrPerDay": 124.26714410777882,
+        "fatComparison": {
+         "todayFatPct": 3.85,
+         "breedFatPct": 3.7,
+         "breedFatPctLow": 3.7,
+         "breedFatPctHigh": 4
+        },
+        "maintenanceCostInrPerDay": 29.150167262864976,
+        "budgetInrPerDay": 400,
+        "referenceCostInrPerDay": 400,
+        "underBudgetInr": 65.481,
+        "feeds": [
+         {
+          "feedId": "maize_green",
+          "kgAsFed": 14,
+          "dmKg": 3.22,
+          "costInr": 35,
+          "priceInrPerKg": 2.5,
+          "atCap": false,
+          "source": "buy"
+         },
+         {
+          "feedId": "mustard_cake",
+          "kgAsFed": 1.399,
+          "dmKg": 1.273,
+          "costInr": 46.158,
+          "priceInrPerKg": 33,
+          "atCap": false,
+          "source": "buy"
+         },
+         {
+          "feedId": "wheat_bran",
+          "kgAsFed": 1.751,
+          "dmKg": 1.558,
+          "costInr": 35.022,
+          "priceInrPerKg": 20,
+          "atCap": false,
+          "source": "buy"
+         },
+         {
+          "feedId": "mineral_mix",
+          "kgAsFed": 0.1,
+          "dmKg": 0.098,
+          "costInr": 7,
+          "priceInrPerKg": 70,
+          "atCap": false,
+          "source": "buy"
+         },
+         {
+          "feedId": "common_salt",
+          "kgAsFed": 0.05,
+          "dmKg": 0.05,
+          "costInr": 0.4,
+          "priceInrPerKg": 8,
+          "atCap": false,
+          "source": "buy"
+         },
+         {
+          "feedId": "wheat_straw",
+          "kgAsFed": 3.6,
+          "dmKg": 3.24,
+          "costInr": 0,
+          "priceInrPerKg": 0,
+          "atCap": false,
+          "source": "home"
+         }
+        ],
+        "totalKgAsFed": 20.9,
+        "totalCostInr": 123.58,
+        "requirementsAtS": {
+         "dmKgPerDay": 9.803220559114589,
+         "cpGramsPerDay": 1065.8503008188948,
+         "meMcalPerDay": 19.94930267921439,
+         "caGramsPerDay": 30.402500000000003,
+         "pGramsPerDay": 31.35
+        },
+        "supplied": {
+         "dmKgPerDay": 9.438828051290404,
+         "cpGramsPerDay": 1065.8503008188948,
+         "meMcalPerDay": 19.949302679214387,
+         "caGramsPerDay": 55.290011099191105,
+         "pGramsPerDay": 52.893023860542925
+        },
+        "coveragePct": {
+         "DM": 96.28293063869312,
+         "CP": 100,
+         "ME": 99.99999999999997,
+         "Ca": 181.86008091173784,
+         "P": 168.71777945946707
+        },
+        "bindingConstraints": [
+         "CP",
+         "ME"
+        ],
+        "roughageMinShare": 0.4,
+        "roughageShareAchieved": 0.684407001048911,
+        "roughageSharePct": 68.44070010489109,
+        "roughageMinSharePct": 40,
+        "currentCostInr": null,
+        "savingsInr": null,
+        "savingsPct": null,
+        "solvedOn": "2026-10-15",
+        "sourceKey": "PROTO-HERD-FIXTURE"
+       },
+       "requirementAtS": {
+        "atMilkLPerDay": 8.3,
+        "requirements": {
+         "dmKgPerDay": 9.803220559114589,
+         "cpGramsPerDay": 1065.8503008188948,
+         "meMcalPerDay": 19.94930267921439,
+         "caGramsPerDay": 30.402500000000003,
+         "pGramsPerDay": 31.35
+        },
+        "citations": {
+         "DM": {
+          "sourceDoc": "NRC 2001, Nutrient Requirements of Dairy Cattle (7th rev. ed.)",
+          "sourceTable": "Chapter 1, Equation 1-1",
+          "sourcePage": "p. 4",
+          "formulaDisplay": "k0 + kY * 8.3 L = 6.82 + 0.360 * 8.3 = 9.80 kg/d (WOL=20, lambda=0.989, W^0.75=71.18, FCM/L=0.978)",
+          "maintenancePart": 6.817156151550258,
+          "lactationPart": 2.98606440756433,
+          "provenanceStatus": "cited",
+          "verifiedOn": null,
+          "sourceKey": "REQ-DMI-NRC2001-EQ1-1"
+         },
+         "CP": {
+          "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+          "sourceTable": "Table 4.1, Table 4.2, Table 5.1 & Table 5.2 (Maintenance + Lactation CP)",
+          "sourcePage": "pp. 12–24",
+          "formulaDisplay": "4.15 * 295^0.75 + (37 + 14.5 * 3.9) * 8.3 = 295 + 770 = 1,066 g/d",
+          "maintenancePart": 295.40280081889466,
+          "lactationPart": 770.4475000000001,
+          "provenanceStatus": "cited",
+          "verifiedOn": null,
+          "sourceKey": "REQ-CP-ICAR2013"
+         },
+         "ME": {
+          "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+          "sourceTable": "Table 4.1, Table 4.2, Table 5.1 & Table 5.2 (Maintenance + Lactation ME)",
+          "sourcePage": "pp. 12–24",
+          "formulaDisplay": "0.145 * 295^0.75 + (0.39 + 0.2 * 3.9) * 8.3 = 10.32 + 9.63 = 19.95 Mcal/d",
+          "maintenancePart": 10.32130267921439,
+          "lactationPart": 9.628000000000002,
+          "provenanceStatus": "cited",
+          "verifiedOn": null,
+          "sourceKey": "REQ-ME-ICAR2013"
+         },
+         "Ca": {
+          "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+          "sourceTable": "Table 6.1 (Calcium Maintenance + Lactation)",
+          "sourcePage": "p. 26",
+          "formulaDisplay": "0.07 * 295 + (1 + 0.5 * 0.4) * 8.3 = 20.7 + 9.8 = 30.4 g/d",
+          "maintenancePart": 20.650000000000002,
+          "lactationPart": 9.752500000000001,
+          "provenanceStatus": "cited",
+          "verifiedOn": null,
+          "sourceKey": "REQ-CA-ICAR2013"
+         },
+         "P": {
+          "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+          "sourceTable": "Table 6.1 (Phosphorus Maintenance + Lactation)",
+          "sourcePage": "p. 26",
+          "formulaDisplay": "0.05 * 295 + 2 * 8.3 = 14.8 + 16.6 = 31.4 g/d",
+          "maintenancePart": 14.75,
+          "lactationPart": 16.6,
+          "provenanceStatus": "cited",
+          "verifiedOn": null,
+          "sourceKey": "REQ-P-ICAR2013"
+         }
+        }
+       }
+      },
+      {
+       "key": "a2",
+       "milkTargetLPerDay": 9.64,
+       "milkExactLPerDay": 9.64,
+       "milkLPerDay": 9.6,
+       "solution": {
+        "status": "optimal",
+        "breedId": "murrah",
+        "supportedMilkLPerDay": 9.6,
+        "supportedMilkExactLPerDay": 9.64,
+        "milkCapLPerDay": 9.64,
+        "capBasis": "cited_peak",
+        "effectiveCapLPerDay": 9.64,
+        "effectiveCapSource": "breed",
+        "bindingConstraint": "breed_cap",
+        "tightConstraints": [
+         "breed_cap"
+        ],
+        "feedLimitIds": [],
+        "verdict": {
+         "kind": "gain",
+         "gainLPerDay": 1.6
+        },
+        "costAtTodayMilkInrPerDay": 182.21675500999297,
+        "costAtCapInrPerDay": 211.6572370942943,
+        "fatComparison": {
+         "todayFatPct": 7.34,
+         "breedFatPct": 7.34,
+         "breedFatPctLow": 7.34,
+         "breedFatPctHigh": null
+        },
+        "maintenanceCostInrPerDay": 44.927760135240476,
+        "budgetInrPerDay": 400,
+        "referenceCostInrPerDay": 400,
+        "underBudgetInr": 65.481,
+        "feeds": [
+         {
+          "feedId": "maize_green",
+          "kgAsFed": 20,
+          "dmKg": 4.6,
+          "costInr": 50,
+          "priceInrPerKg": 2.5,
+          "atCap": false,
+          "source": "buy"
+         },
+         {
+          "feedId": "mustard_cake",
+          "kgAsFed": 2.22,
+          "dmKg": 2.02,
+          "costInr": 73.268,
+          "priceInrPerKg": 33,
+          "atCap": false,
+          "source": "buy"
+         },
+         {
+          "feedId": "wheat_bran",
+          "kgAsFed": 4.014,
+          "dmKg": 3.572,
+          "costInr": 80.272,
+          "priceInrPerKg": 20,
+          "atCap": false,
+          "source": "buy"
+         },
+         {
+          "feedId": "mineral_mix",
+          "kgAsFed": 0.1,
+          "dmKg": 0.098,
+          "costInr": 7,
+          "priceInrPerKg": 70,
+          "atCap": false,
+          "source": "buy"
+         },
+         {
+          "feedId": "common_salt",
+          "kgAsFed": 0.05,
+          "dmKg": 0.05,
+          "costInr": 0.4,
+          "priceInrPerKg": 8,
+          "atCap": false,
+          "source": "buy"
+         },
+         {
+          "feedId": "wheat_straw",
+          "kgAsFed": 5.7,
+          "dmKg": 5.13,
+          "costInr": 0,
+          "priceInrPerKg": 0,
+          "atCap": false,
+          "source": "home"
+         }
+        ],
+        "totalKgAsFed": 32.084,
+        "totalCostInr": 210.94,
+        "requirementsAtS": {
+         "dmKgPerDay": 15.672115401134189,
+         "cpGramsPerDay": 1826.2269182116572,
+         "meMcalPerDay": 33.53519593751573,
+         "caGramsPerDay": 64.152,
+         "pGramsPerDay": 45
+        },
+        "supplied": {
+         "dmKgPerDay": 15.469995122777235,
+         "cpGramsPerDay": 1826.2269182116574,
+         "meMcalPerDay": 33.535195937515745,
+         "caGramsPerDay": 73.43936599833448,
+         "pGramsPerDay": 87.99865082046351
+        },
+        "coveragePct": {
+         "DM": 98.71031910381207,
+         "CP": 100.00000000000003,
+         "ME": 100.00000000000004,
+         "Ca": 114.47712619767813,
+         "P": 195.5525573788078
+        },
+        "bindingConstraints": [
+         "CP",
+         "ME"
+        ],
+        "roughageMinShare": 0.4,
+        "roughageShareAchieved": 0.6289594743099852,
+        "roughageSharePct": 62.895947430998525,
+        "roughageMinSharePct": 40,
+        "currentCostInr": null,
+        "savingsInr": null,
+        "savingsPct": null,
+        "solvedOn": "2026-10-15",
+        "sourceKey": "PROTO-HERD-FIXTURE"
+       },
+       "requirementAtS": {
+        "atMilkLPerDay": 9.6,
+        "requirements": {
+         "dmKgPerDay": 15.672115401134189,
+         "cpGramsPerDay": 1826.2269182116572,
+         "meMcalPerDay": 33.53519593751573,
+         "caGramsPerDay": 64.152,
+         "pGramsPerDay": 45
+        },
+        "citations": {
+         "DM": {
+          "sourceDoc": "NRC 2001, Nutrient Requirements of Dairy Cattle (7th rev. ed.)",
+          "sourceTable": "Chapter 1, Equation 1-1",
+          "sourcePage": "p. 4",
+          "formulaDisplay": "k0 + kY * 9.6 L = 10.37 + 0.552 * 9.6 = 15.67 kg/d (WOL=20, lambda=0.989, W^0.75=108.26, FCM/L=1.501)",
+          "maintenancePart": 10.368692766895263,
+          "lactationPart": 5.303422634238926,
+          "provenanceStatus": "cited",
+          "verifiedOn": null,
+          "sourceKey": "REQ-DMI-NRC2001-EQ1-1"
+         },
+         "CP": {
+          "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+          "sourceTable": "Table 4.1, Table 4.2, Table 5.1 & Table 5.2 (Maintenance + Lactation CP)",
+          "sourcePage": "pp. 12–24",
+          "formulaDisplay": "4.15 * 516^0.75 + (37 + 14.5 * 7.3) * 9.6 = 449 + 1,377 = 1,826 g/d",
+          "maintenancePart": 449.29891821165717,
+          "lactationPart": 1376.928,
+          "provenanceStatus": "cited",
+          "verifiedOn": null,
+          "sourceKey": "REQ-CP-ICAR2013"
+         },
+         "ME": {
+          "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+          "sourceTable": "Table 4.1, Table 4.2, Table 5.1 & Table 5.2 (Maintenance + Lactation ME)",
+          "sourcePage": "pp. 12–24",
+          "formulaDisplay": "0.145 * 516^0.75 + (0.39 + 0.2 * 7.3) * 9.6 = 15.70 + 17.84 = 33.54 Mcal/d",
+          "maintenancePart": 15.698395937515729,
+          "lactationPart": 17.8368,
+          "provenanceStatus": "cited",
+          "verifiedOn": null,
+          "sourceKey": "REQ-ME-ICAR2013"
+         },
+         "Ca": {
+          "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+          "sourceTable": "Table 6.1 (Calcium Maintenance + Lactation)",
+          "sourcePage": "p. 26",
+          "formulaDisplay": "0.07 * 516 + (1 + 0.5 * 3.8) * 9.6 = 36.1 + 28.0 = 64.2 g/d",
+          "maintenancePart": 36.120000000000005,
+          "lactationPart": 28.032,
+          "provenanceStatus": "cited",
+          "verifiedOn": null,
+          "sourceKey": "REQ-CA-ICAR2013"
+         },
+         "P": {
+          "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+          "sourceTable": "Table 6.1 (Phosphorus Maintenance + Lactation)",
+          "sourcePage": "p. 26",
+          "formulaDisplay": "0.05 * 516 + 2 * 9.6 = 25.8 + 19.2 = 45.0 g/d",
+          "maintenancePart": 25.8,
+          "lactationPart": 19.2,
+          "provenanceStatus": "cited",
+          "verifiedOn": null,
+          "sourceKey": "REQ-P-ICAR2013"
+         }
+        }
+       }
+      }
+     ],
+     "buyTotals": [
+      {
+       "feedId": "common_salt",
+       "kgPerDay": 0.1,
+       "costInrPerDay": 0.8,
+       "priceInrPerKg": 8,
+       "perAnimalKg": [
+        {
+         "key": "a1",
+         "kg": 0.05
+        },
+        {
+         "key": "a2",
+         "kg": 0.05
+        }
+       ]
+      },
+      {
+       "feedId": "mineral_mix",
+       "kgPerDay": 0.2,
+       "costInrPerDay": 14,
+       "priceInrPerKg": 70,
+       "perAnimalKg": [
+        {
+         "key": "a1",
+         "kg": 0.1
+        },
+        {
+         "key": "a2",
+         "kg": 0.1
+        }
+       ]
+      },
+      {
+       "feedId": "maize_green",
+       "kgPerDay": 34,
+       "costInrPerDay": 85,
+       "priceInrPerKg": 2.5,
+       "perAnimalKg": [
+        {
+         "key": "a1",
+         "kg": 14
+        },
+        {
+         "key": "a2",
+         "kg": 20
+        }
+       ]
+      },
+      {
+       "feedId": "wheat_bran",
+       "kgPerDay": 5.765,
+       "costInrPerDay": 115.294,
+       "priceInrPerKg": 20,
+       "perAnimalKg": [
+        {
+         "key": "a1",
+         "kg": 1.751
+        },
+        {
+         "key": "a2",
+         "kg": 4.014
+        }
+       ]
+      },
+      {
+       "feedId": "mustard_cake",
+       "kgPerDay": 3.619,
+       "costInrPerDay": 119.425,
+       "priceInrPerKg": 33,
+       "perAnimalKg": [
+        {
+         "key": "a1",
+         "kg": 1.399
+        },
+        {
+         "key": "a2",
+         "kg": 2.22
+        }
+       ]
+      }
+     ],
+     "homeUse": [
+      {
+       "feedId": "wheat_straw",
+       "usedKgPerDay": 9.3,
+       "stockKgPerDay": 10,
+       "tight": false
+      }
+     ],
+     "stage2Path": "direct",
+     "stage3Applied": true,
+     "stage2PurchaseInrPerDay": 334.519,
+     "solvedOn": "2026-10-15",
+     "sourceKey": "PROTO-HERD-FIXTURE"
+    },
+    "perAnimal": [
+     {
+      "key": "a1",
+      "milkTargetLPerDay": 8.36,
+      "milkExactLPerDay": 8.36,
+      "milkLPerDay": 8.3,
+      "solution": {
+       "status": "optimal",
+       "breedId": "rathi",
+       "supportedMilkLPerDay": 8.3,
+       "supportedMilkExactLPerDay": 8.36,
+       "milkCapLPerDay": 8.36,
+       "capBasis": "range_top",
+       "effectiveCapLPerDay": 8.36,
+       "effectiveCapSource": "breed",
+       "bindingConstraint": "breed_cap",
+       "tightConstraints": [
+        "breed_cap"
+       ],
+       "feedLimitIds": [],
+       "verdict": {
+        "kind": "gain",
+        "gainLPerDay": 2.3
+       },
+       "costAtTodayMilkInrPerDay": 97.23977959382799,
+       "costAtCapInrPerDay": 124.26714410777882,
+       "fatComparison": {
+        "todayFatPct": 3.85,
+        "breedFatPct": 3.7,
+        "breedFatPctLow": 3.7,
+        "breedFatPctHigh": 4
+       },
+       "maintenanceCostInrPerDay": 29.150167262864976,
+       "budgetInrPerDay": 400,
+       "referenceCostInrPerDay": 400,
+       "underBudgetInr": 65.481,
+       "feeds": [
+        {
+         "feedId": "maize_green",
+         "kgAsFed": 14,
+         "dmKg": 3.22,
+         "costInr": 35,
+         "priceInrPerKg": 2.5,
+         "atCap": false,
+         "source": "buy"
+        },
+        {
+         "feedId": "mustard_cake",
+         "kgAsFed": 1.399,
+         "dmKg": 1.273,
+         "costInr": 46.158,
+         "priceInrPerKg": 33,
+         "atCap": false,
+         "source": "buy"
+        },
+        {
+         "feedId": "wheat_bran",
+         "kgAsFed": 1.751,
+         "dmKg": 1.558,
+         "costInr": 35.022,
+         "priceInrPerKg": 20,
+         "atCap": false,
+         "source": "buy"
+        },
+        {
+         "feedId": "mineral_mix",
+         "kgAsFed": 0.1,
+         "dmKg": 0.098,
+         "costInr": 7,
+         "priceInrPerKg": 70,
+         "atCap": false,
+         "source": "buy"
+        },
+        {
+         "feedId": "common_salt",
+         "kgAsFed": 0.05,
+         "dmKg": 0.05,
+         "costInr": 0.4,
+         "priceInrPerKg": 8,
+         "atCap": false,
+         "source": "buy"
+        },
+        {
+         "feedId": "wheat_straw",
+         "kgAsFed": 3.6,
+         "dmKg": 3.24,
+         "costInr": 0,
+         "priceInrPerKg": 0,
+         "atCap": false,
+         "source": "home"
+        }
+       ],
+       "totalKgAsFed": 20.9,
+       "totalCostInr": 123.58,
+       "requirementsAtS": {
+        "dmKgPerDay": 9.803220559114589,
+        "cpGramsPerDay": 1065.8503008188948,
+        "meMcalPerDay": 19.94930267921439,
+        "caGramsPerDay": 30.402500000000003,
+        "pGramsPerDay": 31.35
+       },
+       "supplied": {
+        "dmKgPerDay": 9.438828051290404,
+        "cpGramsPerDay": 1065.8503008188948,
+        "meMcalPerDay": 19.949302679214387,
+        "caGramsPerDay": 55.290011099191105,
+        "pGramsPerDay": 52.893023860542925
+       },
+       "coveragePct": {
+        "DM": 96.28293063869312,
+        "CP": 100,
+        "ME": 99.99999999999997,
+        "Ca": 181.86008091173784,
+        "P": 168.71777945946707
+       },
+       "bindingConstraints": [
+        "CP",
+        "ME"
+       ],
+       "roughageMinShare": 0.4,
+       "roughageShareAchieved": 0.684407001048911,
+       "roughageSharePct": 68.44070010489109,
+       "roughageMinSharePct": 40,
+       "currentCostInr": null,
+       "savingsInr": null,
+       "savingsPct": null,
+       "solvedOn": "2026-10-15",
+       "sourceKey": "PROTO-HERD-FIXTURE"
+      },
+      "requirementAtS": {
+       "atMilkLPerDay": 8.3,
+       "requirements": {
+        "dmKgPerDay": 9.803220559114589,
+        "cpGramsPerDay": 1065.8503008188948,
+        "meMcalPerDay": 19.94930267921439,
+        "caGramsPerDay": 30.402500000000003,
+        "pGramsPerDay": 31.35
+       },
+       "citations": {
+        "DM": {
+         "sourceDoc": "NRC 2001, Nutrient Requirements of Dairy Cattle (7th rev. ed.)",
+         "sourceTable": "Chapter 1, Equation 1-1",
+         "sourcePage": "p. 4",
+         "formulaDisplay": "k0 + kY * 8.3 L = 6.82 + 0.360 * 8.3 = 9.80 kg/d (WOL=20, lambda=0.989, W^0.75=71.18, FCM/L=0.978)",
+         "maintenancePart": 6.817156151550258,
+         "lactationPart": 2.98606440756433,
+         "provenanceStatus": "cited",
+         "verifiedOn": null,
+         "sourceKey": "REQ-DMI-NRC2001-EQ1-1"
+        },
+        "CP": {
+         "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+         "sourceTable": "Table 4.1, Table 4.2, Table 5.1 & Table 5.2 (Maintenance + Lactation CP)",
+         "sourcePage": "pp. 12–24",
+         "formulaDisplay": "4.15 * 295^0.75 + (37 + 14.5 * 3.9) * 8.3 = 295 + 770 = 1,066 g/d",
+         "maintenancePart": 295.40280081889466,
+         "lactationPart": 770.4475000000001,
+         "provenanceStatus": "cited",
+         "verifiedOn": null,
+         "sourceKey": "REQ-CP-ICAR2013"
+        },
+        "ME": {
+         "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+         "sourceTable": "Table 4.1, Table 4.2, Table 5.1 & Table 5.2 (Maintenance + Lactation ME)",
+         "sourcePage": "pp. 12–24",
+         "formulaDisplay": "0.145 * 295^0.75 + (0.39 + 0.2 * 3.9) * 8.3 = 10.32 + 9.63 = 19.95 Mcal/d",
+         "maintenancePart": 10.32130267921439,
+         "lactationPart": 9.628000000000002,
+         "provenanceStatus": "cited",
+         "verifiedOn": null,
+         "sourceKey": "REQ-ME-ICAR2013"
+        },
+        "Ca": {
+         "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+         "sourceTable": "Table 6.1 (Calcium Maintenance + Lactation)",
+         "sourcePage": "p. 26",
+         "formulaDisplay": "0.07 * 295 + (1 + 0.5 * 0.4) * 8.3 = 20.7 + 9.8 = 30.4 g/d",
+         "maintenancePart": 20.650000000000002,
+         "lactationPart": 9.752500000000001,
+         "provenanceStatus": "cited",
+         "verifiedOn": null,
+         "sourceKey": "REQ-CA-ICAR2013"
+        },
+        "P": {
+         "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+         "sourceTable": "Table 6.1 (Phosphorus Maintenance + Lactation)",
+         "sourcePage": "p. 26",
+         "formulaDisplay": "0.05 * 295 + 2 * 8.3 = 14.8 + 16.6 = 31.4 g/d",
+         "maintenancePart": 14.75,
+         "lactationPart": 16.6,
+         "provenanceStatus": "cited",
+         "verifiedOn": null,
+         "sourceKey": "REQ-P-ICAR2013"
+        }
+       }
+      }
+     },
+     {
+      "key": "a2",
+      "milkTargetLPerDay": 9.64,
+      "milkExactLPerDay": 9.64,
+      "milkLPerDay": 9.6,
+      "solution": {
+       "status": "optimal",
+       "breedId": "murrah",
+       "supportedMilkLPerDay": 9.6,
+       "supportedMilkExactLPerDay": 9.64,
+       "milkCapLPerDay": 9.64,
+       "capBasis": "cited_peak",
+       "effectiveCapLPerDay": 9.64,
+       "effectiveCapSource": "breed",
+       "bindingConstraint": "breed_cap",
+       "tightConstraints": [
+        "breed_cap"
+       ],
+       "feedLimitIds": [],
+       "verdict": {
+        "kind": "gain",
+        "gainLPerDay": 1.6
+       },
+       "costAtTodayMilkInrPerDay": 182.21675500999297,
+       "costAtCapInrPerDay": 211.6572370942943,
+       "fatComparison": {
+        "todayFatPct": 7.34,
+        "breedFatPct": 7.34,
+        "breedFatPctLow": 7.34,
+        "breedFatPctHigh": null
+       },
+       "maintenanceCostInrPerDay": 44.927760135240476,
+       "budgetInrPerDay": 400,
+       "referenceCostInrPerDay": 400,
+       "underBudgetInr": 65.481,
+       "feeds": [
+        {
+         "feedId": "maize_green",
+         "kgAsFed": 20,
+         "dmKg": 4.6,
+         "costInr": 50,
+         "priceInrPerKg": 2.5,
+         "atCap": false,
+         "source": "buy"
+        },
+        {
+         "feedId": "mustard_cake",
+         "kgAsFed": 2.22,
+         "dmKg": 2.02,
+         "costInr": 73.268,
+         "priceInrPerKg": 33,
+         "atCap": false,
+         "source": "buy"
+        },
+        {
+         "feedId": "wheat_bran",
+         "kgAsFed": 4.014,
+         "dmKg": 3.572,
+         "costInr": 80.272,
+         "priceInrPerKg": 20,
+         "atCap": false,
+         "source": "buy"
+        },
+        {
+         "feedId": "mineral_mix",
+         "kgAsFed": 0.1,
+         "dmKg": 0.098,
+         "costInr": 7,
+         "priceInrPerKg": 70,
+         "atCap": false,
+         "source": "buy"
+        },
+        {
+         "feedId": "common_salt",
+         "kgAsFed": 0.05,
+         "dmKg": 0.05,
+         "costInr": 0.4,
+         "priceInrPerKg": 8,
+         "atCap": false,
+         "source": "buy"
+        },
+        {
+         "feedId": "wheat_straw",
+         "kgAsFed": 5.7,
+         "dmKg": 5.13,
+         "costInr": 0,
+         "priceInrPerKg": 0,
+         "atCap": false,
+         "source": "home"
+        }
+       ],
+       "totalKgAsFed": 32.084,
+       "totalCostInr": 210.94,
+       "requirementsAtS": {
+        "dmKgPerDay": 15.672115401134189,
+        "cpGramsPerDay": 1826.2269182116572,
+        "meMcalPerDay": 33.53519593751573,
+        "caGramsPerDay": 64.152,
+        "pGramsPerDay": 45
+       },
+       "supplied": {
+        "dmKgPerDay": 15.469995122777235,
+        "cpGramsPerDay": 1826.2269182116574,
+        "meMcalPerDay": 33.535195937515745,
+        "caGramsPerDay": 73.43936599833448,
+        "pGramsPerDay": 87.99865082046351
+       },
+       "coveragePct": {
+        "DM": 98.71031910381207,
+        "CP": 100.00000000000003,
+        "ME": 100.00000000000004,
+        "Ca": 114.47712619767813,
+        "P": 195.5525573788078
+       },
+       "bindingConstraints": [
+        "CP",
+        "ME"
+       ],
+       "roughageMinShare": 0.4,
+       "roughageShareAchieved": 0.6289594743099852,
+       "roughageSharePct": 62.895947430998525,
+       "roughageMinSharePct": 40,
+       "currentCostInr": null,
+       "savingsInr": null,
+       "savingsPct": null,
+       "solvedOn": "2026-10-15",
+       "sourceKey": "PROTO-HERD-FIXTURE"
+      },
+      "requirementAtS": {
+       "atMilkLPerDay": 9.6,
+       "requirements": {
+        "dmKgPerDay": 15.672115401134189,
+        "cpGramsPerDay": 1826.2269182116572,
+        "meMcalPerDay": 33.53519593751573,
+        "caGramsPerDay": 64.152,
+        "pGramsPerDay": 45
+       },
+       "citations": {
+        "DM": {
+         "sourceDoc": "NRC 2001, Nutrient Requirements of Dairy Cattle (7th rev. ed.)",
+         "sourceTable": "Chapter 1, Equation 1-1",
+         "sourcePage": "p. 4",
+         "formulaDisplay": "k0 + kY * 9.6 L = 10.37 + 0.552 * 9.6 = 15.67 kg/d (WOL=20, lambda=0.989, W^0.75=108.26, FCM/L=1.501)",
+         "maintenancePart": 10.368692766895263,
+         "lactationPart": 5.303422634238926,
+         "provenanceStatus": "cited",
+         "verifiedOn": null,
+         "sourceKey": "REQ-DMI-NRC2001-EQ1-1"
+        },
+        "CP": {
+         "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+         "sourceTable": "Table 4.1, Table 4.2, Table 5.1 & Table 5.2 (Maintenance + Lactation CP)",
+         "sourcePage": "pp. 12–24",
+         "formulaDisplay": "4.15 * 516^0.75 + (37 + 14.5 * 7.3) * 9.6 = 449 + 1,377 = 1,826 g/d",
+         "maintenancePart": 449.29891821165717,
+         "lactationPart": 1376.928,
+         "provenanceStatus": "cited",
+         "verifiedOn": null,
+         "sourceKey": "REQ-CP-ICAR2013"
+        },
+        "ME": {
+         "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+         "sourceTable": "Table 4.1, Table 4.2, Table 5.1 & Table 5.2 (Maintenance + Lactation ME)",
+         "sourcePage": "pp. 12–24",
+         "formulaDisplay": "0.145 * 516^0.75 + (0.39 + 0.2 * 7.3) * 9.6 = 15.70 + 17.84 = 33.54 Mcal/d",
+         "maintenancePart": 15.698395937515729,
+         "lactationPart": 17.8368,
+         "provenanceStatus": "cited",
+         "verifiedOn": null,
+         "sourceKey": "REQ-ME-ICAR2013"
+        },
+        "Ca": {
+         "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+         "sourceTable": "Table 6.1 (Calcium Maintenance + Lactation)",
+         "sourcePage": "p. 26",
+         "formulaDisplay": "0.07 * 516 + (1 + 0.5 * 3.8) * 9.6 = 36.1 + 28.0 = 64.2 g/d",
+         "maintenancePart": 36.120000000000005,
+         "lactationPart": 28.032,
+         "provenanceStatus": "cited",
+         "verifiedOn": null,
+         "sourceKey": "REQ-CA-ICAR2013"
+        },
+        "P": {
+         "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+         "sourceTable": "Table 6.1 (Phosphorus Maintenance + Lactation)",
+         "sourcePage": "p. 26",
+         "formulaDisplay": "0.05 * 516 + 2 * 9.6 = 25.8 + 19.2 = 45.0 g/d",
+         "maintenancePart": 25.8,
+         "lactationPart": 19.2,
+         "provenanceStatus": "cited",
+         "verifiedOn": null,
+         "sourceKey": "REQ-P-ICAR2013"
+        }
+       }
+      }
+     }
+    ],
+    "buyOrder": [
+     "common_salt",
+     "mineral_mix",
+     "maize_green",
+     "wheat_bran",
+     "mustard_cake"
+    ],
+    "shopping": {
+     "buyFirst": [
+      {
+       "feedId": "common_salt",
+       "kgPerDay": 0.1,
+       "costInrPerDay": 0.8,
+       "priceInrPerKg": 8,
+       "perAnimalKg": [
+        {
+         "key": "a1",
+         "kg": 0.05
+        },
+        {
+         "key": "a2",
+         "kg": 0.05
+        }
+       ]
+      },
+      {
+       "feedId": "mineral_mix",
+       "kgPerDay": 0.2,
+       "costInrPerDay": 14,
+       "priceInrPerKg": 70,
+       "perAnimalKg": [
+        {
+         "key": "a1",
+         "kg": 0.1
+        },
+        {
+         "key": "a2",
+         "kg": 0.1
+        }
+       ]
+      },
+      {
+       "feedId": "maize_green",
+       "kgPerDay": 34,
+       "costInrPerDay": 85,
+       "priceInrPerKg": 2.5,
+       "perAnimalKg": [
+        {
+         "key": "a1",
+         "kg": 14
+        },
+        {
+         "key": "a2",
+         "kg": 20
+        }
+       ]
+      }
+     ],
+     "later": [
+      {
+       "line": {
+        "feedId": "wheat_bran",
+        "kgPerDay": 5.765,
+        "costInrPerDay": 115.294,
+        "priceInrPerKg": 20,
+        "perAnimalKg": [
+         {
+          "key": "a1",
+          "kg": 1.751
+         },
+         {
+          "key": "a2",
+          "kg": 4.014
+         }
+        ]
+       },
+       "deltaMilkExactL": 9.1,
+       "deltaMilkL": 9.1,
+       "step": {
+        "k": 4,
+        "prefixFeedIds": [
+         "common_salt",
+         "mineral_mix",
+         "maize_green",
+         "wheat_bran"
+        ],
+        "shareT": 0.561,
+        "totalMilkL": 10.5,
+        "purchaseCostInrPerDay": 257.607,
+        "addedFeedIds": [
+         "wheat_bran"
+        ]
+       },
+       "previous": {
+        "k": 3,
+        "prefixFeedIds": [
+         "common_salt",
+         "mineral_mix",
+         "maize_green"
+        ],
+        "shareT": 0.071,
+        "totalMilkL": 1.4,
+        "purchaseCostInrPerDay": 99.071,
+        "addedFeedIds": [
+         "common_salt",
+         "mineral_mix",
+         "maize_green"
+        ]
+       }
+      },
+      {
+       "line": {
+        "feedId": "mustard_cake",
+        "kgPerDay": 3.619,
+        "costInrPerDay": 119.425,
+        "priceInrPerKg": 33,
+        "perAnimalKg": [
+         {
+          "key": "a1",
+          "kg": 1.399
+         },
+         {
+          "key": "a2",
+          "kg": 2.22
+         }
+        ]
+       },
+       "deltaMilkExactL": 7.4,
+       "deltaMilkL": 7.4,
+       "step": {
+        "k": 5,
+        "prefixFeedIds": [
+         "common_salt",
+         "mineral_mix",
+         "maize_green",
+         "wheat_bran",
+         "mustard_cake"
+        ],
+        "shareT": 1,
+        "totalMilkL": 17.9,
+        "purchaseCostInrPerDay": 334.519,
+        "addedFeedIds": [
+         "mustard_cake"
+        ]
+       },
+       "previous": {
+        "k": 4,
+        "prefixFeedIds": [
+         "common_salt",
+         "mineral_mix",
+         "maize_green",
+         "wheat_bran"
+        ],
+        "shareT": 0.561,
+        "totalMilkL": 10.5,
+        "purchaseCostInrPerDay": 257.607,
+        "addedFeedIds": [
+         "wheat_bran"
+        ]
+       }
+      }
+     ],
+     "totalInr": 334.519,
+     "firstStep": {
+      "k": 3,
+      "prefixFeedIds": [
+       "common_salt",
+       "mineral_mix",
+       "maize_green"
+      ],
+      "shareT": 0.071,
+      "totalMilkL": 1.4,
+      "purchaseCostInrPerDay": 99.071
+     }
+    },
+    "notNeeded": [],
+    "budgetPrompt": null,
+    "shortfall": null,
+    "infeasible": null,
+    "lastStepMatchesBest": true
+   }
+  },
+  {
+   "id": "straw_only",
+   "plan": {
+    "animals": [
+     {
+      "key": "a1",
+      "label": {
+       "species": "cow",
+       "n": 1
+      },
+      "profile": {
+       "species": "cow",
+       "breedId": "hariana",
+       "bodyWeightKg": 325,
+       "milkYieldLitersPerDay": 5,
+       "milkFatPct": 4.5
+      },
+      "weightSource": "breed",
+      "fatSource": "breed",
+      "isConfirmed": true
+     },
+     {
+      "key": "a2",
+      "label": {
+       "species": "cow",
+       "n": 2
+      },
+      "profile": {
+       "species": "cow",
+       "breedId": "nondescript_cow",
+       "bodyWeightKg": 280,
+       "milkYieldLitersPerDay": 3,
+       "milkFatPct": 4.2
+      },
+      "weightSource": "typed",
+      "fatSource": "typed",
+      "isConfirmed": true
+     }
+    ],
+    "homeFeeds": [
+     {
+      "feedId": "wheat_straw",
+      "kgPerDay": 12
+     },
+     {
+      "feedId": "barley_straw",
+      "kgPerDay": 4
+     }
+    ],
+    "budgetInrPerDay": 250,
+    "buySet": [
+     {
+      "feedId": "bajra_green",
+      "priceInrPerKgAsFed": 3,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "jowar_green",
+      "priceInrPerKgAsFed": 2.5,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "maize_green",
+      "priceInrPerKgAsFed": 2.5,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "cowpea_green",
+      "priceInrPerKgAsFed": 3,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "guar_green",
+      "priceInrPerKgAsFed": 3,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "lucerne",
+      "priceInrPerKgAsFed": 3.5,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "marvel_grass",
+      "priceInrPerKgAsFed": 6,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "wheat_straw",
+      "priceInrPerKgAsFed": 6,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "bajra_stover",
+      "priceInrPerKgAsFed": 5,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "barley_straw",
+      "priceInrPerKgAsFed": 6,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "groundnut_haulm",
+      "priceInrPerKgAsFed": 8,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "guar_straw",
+      "priceInrPerKgAsFed": 5,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "moong_straw",
+      "priceInrPerKgAsFed": 6,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "jowar_stover",
+      "priceInrPerKgAsFed": 4.5,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "mustard_cake",
+      "priceInrPerKgAsFed": 33,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "cottonseed_cake",
+      "priceInrPerKgAsFed": 38,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "guar_meal",
+      "priceInrPerKgAsFed": 42,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "groundnut_cake",
+      "priceInrPerKgAsFed": 37,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "wheat_bran",
+      "priceInrPerKgAsFed": 20,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "rice_bran_dorb",
+      "priceInrPerKgAsFed": 17,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "pulse_chuni",
+      "priceInrPerKgAsFed": 23,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "bajra_grain",
+      "priceInrPerKgAsFed": 24,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "maize_grain",
+      "priceInrPerKgAsFed": 32,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "saras_compound",
+      "priceInrPerKgAsFed": 22,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "mineral_mix",
+      "priceInrPerKgAsFed": 70,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "common_salt",
+      "priceInrPerKgAsFed": 8,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     }
+    ],
+    "month": 10,
+    "status": "optimal",
+    "best": {
+     "status": "optimal",
+     "shareT": 1,
+     "stage1Feasible": true,
+     "budgetTight": false,
+     "limits": [
+      {
+       "kind": "milk_target"
+      }
+     ],
+     "maintenanceCostInrPerDay": 36.213,
+     "costAtTargetInrPerDay": 161.823,
+     "purchaseCostInrPerDay": 161.823,
+     "budgetInrPerDay": 250,
+     "animals": [
+      {
+       "key": "a1",
+       "milkTargetLPerDay": 6.45,
+       "milkExactLPerDay": 6.45,
+       "milkLPerDay": 6.4,
+       "solution": {
+        "status": "optimal",
+        "breedId": "hariana",
+        "supportedMilkLPerDay": 6.4,
+        "supportedMilkExactLPerDay": 6.45,
+        "milkCapLPerDay": 6.45,
+        "capBasis": "range_top",
+        "effectiveCapLPerDay": 6.45,
+        "effectiveCapSource": "breed",
+        "bindingConstraint": "breed_cap",
+        "tightConstraints": [
+         "breed_cap",
+         "intake"
+        ],
+        "feedLimitIds": [],
+        "verdict": {
+         "kind": "gain",
+         "gainLPerDay": 1.4
+        },
+        "costAtTodayMilkInrPerDay": 79.43503568697926,
+        "costAtCapInrPerDay": 99.74364427183734,
+        "fatComparison": {
+         "todayFatPct": 4.5,
+         "breedFatPct": 4.5,
+         "breedFatPctLow": 4.5,
+         "breedFatPctHigh": null
+        },
+        "maintenanceCostInrPerDay": 19.62848165525029,
+        "budgetInrPerDay": 250,
+        "referenceCostInrPerDay": 250,
+        "underBudgetInr": 88.177,
+        "feeds": [
+         {
+          "feedId": "maize_green",
+          "kgAsFed": 9.063,
+          "dmKg": 2.085,
+          "costInr": 22.658,
+          "priceInrPerKg": 2.5,
+          "atCap": false,
+          "source": "buy"
+         },
+         {
+          "feedId": "mustard_cake",
+          "kgAsFed": 1.5,
+          "dmKg": 1.365,
+          "costInr": 49.5,
+          "priceInrPerKg": 33,
+          "atCap": false,
+          "source": "buy"
+         },
+         {
+          "feedId": "wheat_bran",
+          "kgAsFed": 0.973,
+          "dmKg": 0.866,
+          "costInr": 19.459,
+          "priceInrPerKg": 20,
+          "atCap": false,
+          "source": "buy"
+         },
+         {
+          "feedId": "mineral_mix",
+          "kgAsFed": 0.1,
+          "dmKg": 0.098,
+          "costInr": 7,
+          "priceInrPerKg": 70,
+          "atCap": false,
+          "source": "buy"
+         },
+         {
+          "feedId": "common_salt",
+          "kgAsFed": 0.05,
+          "dmKg": 0.05,
+          "costInr": 0.4,
+          "priceInrPerKg": 8,
+          "atCap": false,
+          "source": "buy"
+         },
+         {
+          "feedId": "wheat_straw",
+          "kgAsFed": 6,
+          "dmKg": 5.4,
+          "costInr": 0,
+          "priceInrPerKg": 0,
+          "atCap": false,
+          "source": "home"
+         }
+        ],
+        "totalKgAsFed": 17.686,
+        "totalCostInr": 99.017,
+        "requirementsAtS": {
+         "dmKgPerDay": 9.862933574225432,
+         "cpGramsPerDay": 972.0585999429697,
+         "meMcalPerDay": 19.35491493776641,
+         "caGramsPerDay": 32.35000000000001,
+         "pGramsPerDay": 29.05
+        },
+        "supplied": {
+         "dmKgPerDay": 9.86293357422543,
+         "cpGramsPerDay": 972.0585999429697,
+         "meMcalPerDay": 19.714464860910418,
+         "caGramsPerDay": 57.60989248214711,
+         "pGramsPerDay": 45.34858440383884
+        },
+        "coveragePct": {
+         "DM": 99.99999999999997,
+         "CP": 100,
+         "ME": 101.85766728657863,
+         "Ca": 178.0831297747978,
+         "P": 156.10528194092544
+        },
+        "bindingConstraints": [
+         "DM",
+         "CP"
+        ],
+        "roughageMinShare": 0.4,
+        "roughageShareAchieved": 0.7588522819136517,
+        "roughageSharePct": 75.88522819136517,
+        "roughageMinSharePct": 40,
+        "currentCostInr": null,
+        "savingsInr": null,
+        "savingsPct": null,
+        "solvedOn": "2026-10-15",
+        "sourceKey": "PROTO-HERD-FIXTURE"
+       },
+       "requirementAtS": {
+        "atMilkLPerDay": 6.4,
+        "requirements": {
+         "dmKgPerDay": 9.862933574225432,
+         "cpGramsPerDay": 972.0585999429697,
+         "meMcalPerDay": 19.35491493776641,
+         "caGramsPerDay": 32.35000000000001,
+         "pGramsPerDay": 29.05
+        },
+        "citations": {
+         "DM": {
+          "sourceDoc": "NRC 2001, Nutrient Requirements of Dairy Cattle (7th rev. ed.)",
+          "sourceTable": "Chapter 1, Equation 1-1",
+          "sourcePage": "p. 4",
+          "formulaDisplay": "k0 + kY * 6.4 L = 7.33 + 0.396 * 6.4 = 9.86 kg/d (WOL=20, lambda=0.989, W^0.75=76.54, FCM/L=1.075)",
+          "maintenancePart": 7.330764206334317,
+          "lactationPart": 2.532169367891115,
+          "provenanceStatus": "cited",
+          "verifiedOn": null,
+          "sourceKey": "REQ-DMI-NRC2001-EQ1-1"
+         },
+         "CP": {
+          "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+          "sourceTable": "Table 4.1, Table 4.2, Table 5.1 & Table 5.2 (Maintenance + Lactation CP)",
+          "sourcePage": "pp. 12–24",
+          "formulaDisplay": "4.15 * 325^0.75 + (37 + 14.5 * 4.5) * 6.4 = 318 + 654 = 972 g/d",
+          "maintenancePart": 317.6585999429697,
+          "lactationPart": 654.4000000000001,
+          "provenanceStatus": "cited",
+          "verifiedOn": null,
+          "sourceKey": "REQ-CP-ICAR2013"
+         },
+         "ME": {
+          "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+          "sourceTable": "Table 4.1, Table 4.2, Table 5.1 & Table 5.2 (Maintenance + Lactation ME)",
+          "sourcePage": "pp. 12–24",
+          "formulaDisplay": "0.145 * 325^0.75 + (0.39 + 0.2 * 4.5) * 6.4 = 11.10 + 8.26 = 19.35 Mcal/d",
+          "maintenancePart": 11.09891493776641,
+          "lactationPart": 8.256,
+          "provenanceStatus": "cited",
+          "verifiedOn": null,
+          "sourceKey": "REQ-ME-ICAR2013"
+         },
+         "Ca": {
+          "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+          "sourceTable": "Table 6.1 (Calcium Maintenance + Lactation)",
+          "sourcePage": "p. 26",
+          "formulaDisplay": "0.07 * 325 + (1 + 0.5 * 1.0) * 6.4 = 22.8 + 9.6 = 32.4 g/d",
+          "maintenancePart": 22.750000000000004,
+          "lactationPart": 9.600000000000001,
+          "provenanceStatus": "cited",
+          "verifiedOn": null,
+          "sourceKey": "REQ-CA-ICAR2013"
+         },
+         "P": {
+          "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+          "sourceTable": "Table 6.1 (Phosphorus Maintenance + Lactation)",
+          "sourcePage": "p. 26",
+          "formulaDisplay": "0.05 * 325 + 2 * 6.4 = 16.3 + 12.8 = 29.1 g/d",
+          "maintenancePart": 16.25,
+          "lactationPart": 12.8,
+          "provenanceStatus": "cited",
+          "verifiedOn": null,
+          "sourceKey": "REQ-P-ICAR2013"
+         }
+        }
+       }
+      },
+      {
+       "key": "a2",
+       "milkTargetLPerDay": 3.86,
+       "milkExactLPerDay": 3.86,
+       "milkLPerDay": 3.8,
+       "solution": {
+        "status": "optimal",
+        "breedId": "nondescript_cow",
+        "supportedMilkLPerDay": 3.8,
+        "supportedMilkExactLPerDay": 3.86,
+        "milkCapLPerDay": 3.86,
+        "capBasis": "dahd_average",
+        "effectiveCapLPerDay": 3.86,
+        "effectiveCapSource": "breed",
+        "bindingConstraint": "breed_cap",
+        "tightConstraints": [
+         "breed_cap"
+        ],
+        "feedLimitIds": [],
+        "verdict": {
+         "kind": "gain",
+         "gainLPerDay": 0.8
+        },
+        "costAtTodayMilkInrPerDay": 52.650203261938124,
+        "costAtCapInrPerDay": 63.631499443072684,
+        "fatComparison": {
+         "todayFatPct": 4.2,
+         "breedFatPct": null,
+         "breedFatPctLow": null,
+         "breedFatPctHigh": null
+        },
+        "maintenanceCostInrPerDay": 16.584318521429203,
+        "budgetInrPerDay": 250,
+        "referenceCostInrPerDay": 250,
+        "underBudgetInr": 88.177,
+        "feeds": [
+         {
+          "feedId": "maize_green",
+          "kgAsFed": 8,
+          "dmKg": 1.84,
+          "costInr": 20,
+          "priceInrPerKg": 2.5,
+          "atCap": false,
+          "source": "buy"
+         },
+         {
+          "feedId": "mustard_cake",
+          "kgAsFed": 1,
+          "dmKg": 0.91,
+          "costInr": 33,
+          "priceInrPerKg": 33,
+          "atCap": false,
+          "source": "buy"
+         },
+         {
+          "feedId": "wheat_bran",
+          "kgAsFed": 0.12,
+          "dmKg": 0.107,
+          "costInr": 2.406,
+          "priceInrPerKg": 20,
+          "atCap": false,
+          "source": "buy"
+         },
+         {
+          "feedId": "mineral_mix",
+          "kgAsFed": 0.1,
+          "dmKg": 0.098,
+          "costInr": 7,
+          "priceInrPerKg": 70,
+          "atCap": false,
+          "source": "buy"
+         },
+         {
+          "feedId": "common_salt",
+          "kgAsFed": 0.05,
+          "dmKg": 0.05,
+          "costInr": 0.4,
+          "priceInrPerKg": 8,
+          "atCap": false,
+          "source": "buy"
+         },
+         {
+          "feedId": "wheat_straw",
+          "kgAsFed": 5.5,
+          "dmKg": 4.95,
+          "costInr": 0,
+          "priceInrPerKg": 0,
+          "atCap": false,
+          "source": "home"
+         }
+        ],
+        "totalKgAsFed": 14.77,
+        "totalCostInr": 62.806,
+        "requirementsAtS": {
+         "dmKgPerDay": 7.996030797869552,
+         "cpGramsPerDay": 656.0842760346775,
+         "meMcalPerDay": 14.599137355428491,
+         "caGramsPerDay": 24.73,
+         "pGramsPerDay": 21.6
+        },
+        "supplied": {
+         "dmKgPerDay": 7.9545892252167345,
+         "cpGramsPerDay": 656.0842760346775,
+         "meMcalPerDay": 15.181640908085182,
+         "caGramsPerDay": 51.308507070260085,
+         "pGramsPerDay": 30.915981477384076
+        },
+        "coveragePct": {
+         "DM": 99.48172319866678,
+         "CP": 100,
+         "ME": 103.98998610996762,
+         "Ca": 207.47475564197364,
+         "P": 143.12954387677811
+        },
+        "bindingConstraints": [
+         "DM",
+         "CP"
+        ],
+        "roughageMinShare": 0.4,
+        "roughageShareAchieved": 0.8535953030076165,
+        "roughageSharePct": 85.35953030076165,
+        "roughageMinSharePct": 40,
+        "currentCostInr": null,
+        "savingsInr": null,
+        "savingsPct": null,
+        "solvedOn": "2026-10-15",
+        "sourceKey": "PROTO-HERD-FIXTURE"
+       },
+       "requirementAtS": {
+        "atMilkLPerDay": 3.8,
+        "requirements": {
+         "dmKgPerDay": 7.996030797869552,
+         "cpGramsPerDay": 656.0842760346775,
+         "meMcalPerDay": 14.599137355428491,
+         "caGramsPerDay": 24.73,
+         "pGramsPerDay": 21.6
+        },
+        "citations": {
+         "DM": {
+          "sourceDoc": "NRC 2001, Nutrient Requirements of Dairy Cattle (7th rev. ed.)",
+          "sourceTable": "Chapter 1, Equation 1-1",
+          "sourcePage": "p. 4",
+          "formulaDisplay": "k0 + kY * 3.8 L = 6.56 + 0.379 * 3.8 = 8.00 kg/d (WOL=20, lambda=0.989, W^0.75=68.45, FCM/L=1.030)",
+          "maintenancePart": 6.55549142200824,
+          "lactationPart": 1.4405393758613119,
+          "provenanceStatus": "cited",
+          "verifiedOn": null,
+          "sourceKey": "REQ-DMI-NRC2001-EQ1-1"
+         },
+         "CP": {
+          "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+          "sourceTable": "Table 4.1, Table 4.2, Table 5.1 & Table 5.2 (Maintenance + Lactation CP)",
+          "sourcePage": "pp. 12–24",
+          "formulaDisplay": "4.15 * 280^0.75 + (37 + 14.5 * 4.2) * 3.8 = 284 + 372 = 656 g/d",
+          "maintenancePart": 284.06427603467756,
+          "lactationPart": 372.02,
+          "provenanceStatus": "cited",
+          "verifiedOn": null,
+          "sourceKey": "REQ-CP-ICAR2013"
+         },
+         "ME": {
+          "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+          "sourceTable": "Table 4.1, Table 4.2, Table 5.1 & Table 5.2 (Maintenance + Lactation ME)",
+          "sourcePage": "pp. 12–24",
+          "formulaDisplay": "0.145 * 280^0.75 + (0.39 + 0.2 * 4.2) * 3.8 = 9.93 + 4.67 = 14.60 Mcal/d",
+          "maintenancePart": 9.925137355428491,
+          "lactationPart": 4.6739999999999995,
+          "provenanceStatus": "cited",
+          "verifiedOn": null,
+          "sourceKey": "REQ-ME-ICAR2013"
+         },
+         "Ca": {
+          "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+          "sourceTable": "Table 6.1 (Calcium Maintenance + Lactation)",
+          "sourcePage": "p. 26",
+          "formulaDisplay": "0.07 * 280 + (1 + 0.5 * 0.7) * 3.8 = 19.6 + 5.1 = 24.7 g/d",
+          "maintenancePart": 19.6,
+          "lactationPart": 5.13,
+          "provenanceStatus": "cited",
+          "verifiedOn": null,
+          "sourceKey": "REQ-CA-ICAR2013"
+         },
+         "P": {
+          "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+          "sourceTable": "Table 6.1 (Phosphorus Maintenance + Lactation)",
+          "sourcePage": "p. 26",
+          "formulaDisplay": "0.05 * 280 + 2 * 3.8 = 14.0 + 7.6 = 21.6 g/d",
+          "maintenancePart": 14,
+          "lactationPart": 7.6,
+          "provenanceStatus": "cited",
+          "verifiedOn": null,
+          "sourceKey": "REQ-P-ICAR2013"
+         }
+        }
+       }
+      }
+     ],
+     "buyTotals": [
+      {
+       "feedId": "common_salt",
+       "kgPerDay": 0.1,
+       "costInrPerDay": 0.8,
+       "priceInrPerKg": 8,
+       "perAnimalKg": [
+        {
+         "key": "a1",
+         "kg": 0.05
+        },
+        {
+         "key": "a2",
+         "kg": 0.05
+        }
+       ]
+      },
+      {
+       "feedId": "mineral_mix",
+       "kgPerDay": 0.2,
+       "costInrPerDay": 14,
+       "priceInrPerKg": 70,
+       "perAnimalKg": [
+        {
+         "key": "a1",
+         "kg": 0.1
+        },
+        {
+         "key": "a2",
+         "kg": 0.1
+        }
+       ]
+      },
+      {
+       "feedId": "wheat_bran",
+       "kgPerDay": 1.093,
+       "costInrPerDay": 21.865,
+       "priceInrPerKg": 20,
+       "perAnimalKg": [
+        {
+         "key": "a1",
+         "kg": 0.973
+        },
+        {
+         "key": "a2",
+         "kg": 0.12
+        }
+       ]
+      },
+      {
+       "feedId": "maize_green",
+       "kgPerDay": 17.063,
+       "costInrPerDay": 42.658,
+       "priceInrPerKg": 2.5,
+       "perAnimalKg": [
+        {
+         "key": "a1",
+         "kg": 9.063
+        },
+        {
+         "key": "a2",
+         "kg": 8
+        }
+       ]
+      },
+      {
+       "feedId": "mustard_cake",
+       "kgPerDay": 2.5,
+       "costInrPerDay": 82.5,
+       "priceInrPerKg": 33,
+       "perAnimalKg": [
+        {
+         "key": "a1",
+         "kg": 1.5
+        },
+        {
+         "key": "a2",
+         "kg": 1
+        }
+       ]
+      }
+     ],
+     "homeUse": [
+      {
+       "feedId": "wheat_straw",
+       "usedKgPerDay": 11.5,
+       "stockKgPerDay": 12,
+       "tight": false
+      },
+      {
+       "feedId": "barley_straw",
+       "usedKgPerDay": 0,
+       "stockKgPerDay": 4,
+       "tight": false
+      }
+     ],
+     "stage2Path": "direct",
+     "stage3Applied": true,
+     "stage2PurchaseInrPerDay": 161.823,
+     "solvedOn": "2026-10-15",
+     "sourceKey": "PROTO-HERD-FIXTURE"
+    },
+    "perAnimal": [
+     {
+      "key": "a1",
+      "milkTargetLPerDay": 6.45,
+      "milkExactLPerDay": 6.45,
+      "milkLPerDay": 6.4,
+      "solution": {
+       "status": "optimal",
+       "breedId": "hariana",
+       "supportedMilkLPerDay": 6.4,
+       "supportedMilkExactLPerDay": 6.45,
+       "milkCapLPerDay": 6.45,
+       "capBasis": "range_top",
+       "effectiveCapLPerDay": 6.45,
+       "effectiveCapSource": "breed",
+       "bindingConstraint": "breed_cap",
+       "tightConstraints": [
+        "breed_cap",
+        "intake"
+       ],
+       "feedLimitIds": [],
+       "verdict": {
+        "kind": "gain",
+        "gainLPerDay": 1.4
+       },
+       "costAtTodayMilkInrPerDay": 79.43503568697926,
+       "costAtCapInrPerDay": 99.74364427183734,
+       "fatComparison": {
+        "todayFatPct": 4.5,
+        "breedFatPct": 4.5,
+        "breedFatPctLow": 4.5,
+        "breedFatPctHigh": null
+       },
+       "maintenanceCostInrPerDay": 19.62848165525029,
+       "budgetInrPerDay": 250,
+       "referenceCostInrPerDay": 250,
+       "underBudgetInr": 88.177,
+       "feeds": [
+        {
+         "feedId": "maize_green",
+         "kgAsFed": 9.063,
+         "dmKg": 2.085,
+         "costInr": 22.658,
+         "priceInrPerKg": 2.5,
+         "atCap": false,
+         "source": "buy"
+        },
+        {
+         "feedId": "mustard_cake",
+         "kgAsFed": 1.5,
+         "dmKg": 1.365,
+         "costInr": 49.5,
+         "priceInrPerKg": 33,
+         "atCap": false,
+         "source": "buy"
+        },
+        {
+         "feedId": "wheat_bran",
+         "kgAsFed": 0.973,
+         "dmKg": 0.866,
+         "costInr": 19.459,
+         "priceInrPerKg": 20,
+         "atCap": false,
+         "source": "buy"
+        },
+        {
+         "feedId": "mineral_mix",
+         "kgAsFed": 0.1,
+         "dmKg": 0.098,
+         "costInr": 7,
+         "priceInrPerKg": 70,
+         "atCap": false,
+         "source": "buy"
+        },
+        {
+         "feedId": "common_salt",
+         "kgAsFed": 0.05,
+         "dmKg": 0.05,
+         "costInr": 0.4,
+         "priceInrPerKg": 8,
+         "atCap": false,
+         "source": "buy"
+        },
+        {
+         "feedId": "wheat_straw",
+         "kgAsFed": 6,
+         "dmKg": 5.4,
+         "costInr": 0,
+         "priceInrPerKg": 0,
+         "atCap": false,
+         "source": "home"
+        }
+       ],
+       "totalKgAsFed": 17.686,
+       "totalCostInr": 99.017,
+       "requirementsAtS": {
+        "dmKgPerDay": 9.862933574225432,
+        "cpGramsPerDay": 972.0585999429697,
+        "meMcalPerDay": 19.35491493776641,
+        "caGramsPerDay": 32.35000000000001,
+        "pGramsPerDay": 29.05
+       },
+       "supplied": {
+        "dmKgPerDay": 9.86293357422543,
+        "cpGramsPerDay": 972.0585999429697,
+        "meMcalPerDay": 19.714464860910418,
+        "caGramsPerDay": 57.60989248214711,
+        "pGramsPerDay": 45.34858440383884
+       },
+       "coveragePct": {
+        "DM": 99.99999999999997,
+        "CP": 100,
+        "ME": 101.85766728657863,
+        "Ca": 178.0831297747978,
+        "P": 156.10528194092544
+       },
+       "bindingConstraints": [
+        "DM",
+        "CP"
+       ],
+       "roughageMinShare": 0.4,
+       "roughageShareAchieved": 0.7588522819136517,
+       "roughageSharePct": 75.88522819136517,
+       "roughageMinSharePct": 40,
+       "currentCostInr": null,
+       "savingsInr": null,
+       "savingsPct": null,
+       "solvedOn": "2026-10-15",
+       "sourceKey": "PROTO-HERD-FIXTURE"
+      },
+      "requirementAtS": {
+       "atMilkLPerDay": 6.4,
+       "requirements": {
+        "dmKgPerDay": 9.862933574225432,
+        "cpGramsPerDay": 972.0585999429697,
+        "meMcalPerDay": 19.35491493776641,
+        "caGramsPerDay": 32.35000000000001,
+        "pGramsPerDay": 29.05
+       },
+       "citations": {
+        "DM": {
+         "sourceDoc": "NRC 2001, Nutrient Requirements of Dairy Cattle (7th rev. ed.)",
+         "sourceTable": "Chapter 1, Equation 1-1",
+         "sourcePage": "p. 4",
+         "formulaDisplay": "k0 + kY * 6.4 L = 7.33 + 0.396 * 6.4 = 9.86 kg/d (WOL=20, lambda=0.989, W^0.75=76.54, FCM/L=1.075)",
+         "maintenancePart": 7.330764206334317,
+         "lactationPart": 2.532169367891115,
+         "provenanceStatus": "cited",
+         "verifiedOn": null,
+         "sourceKey": "REQ-DMI-NRC2001-EQ1-1"
+        },
+        "CP": {
+         "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+         "sourceTable": "Table 4.1, Table 4.2, Table 5.1 & Table 5.2 (Maintenance + Lactation CP)",
+         "sourcePage": "pp. 12–24",
+         "formulaDisplay": "4.15 * 325^0.75 + (37 + 14.5 * 4.5) * 6.4 = 318 + 654 = 972 g/d",
+         "maintenancePart": 317.6585999429697,
+         "lactationPart": 654.4000000000001,
+         "provenanceStatus": "cited",
+         "verifiedOn": null,
+         "sourceKey": "REQ-CP-ICAR2013"
+        },
+        "ME": {
+         "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+         "sourceTable": "Table 4.1, Table 4.2, Table 5.1 & Table 5.2 (Maintenance + Lactation ME)",
+         "sourcePage": "pp. 12–24",
+         "formulaDisplay": "0.145 * 325^0.75 + (0.39 + 0.2 * 4.5) * 6.4 = 11.10 + 8.26 = 19.35 Mcal/d",
+         "maintenancePart": 11.09891493776641,
+         "lactationPart": 8.256,
+         "provenanceStatus": "cited",
+         "verifiedOn": null,
+         "sourceKey": "REQ-ME-ICAR2013"
+        },
+        "Ca": {
+         "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+         "sourceTable": "Table 6.1 (Calcium Maintenance + Lactation)",
+         "sourcePage": "p. 26",
+         "formulaDisplay": "0.07 * 325 + (1 + 0.5 * 1.0) * 6.4 = 22.8 + 9.6 = 32.4 g/d",
+         "maintenancePart": 22.750000000000004,
+         "lactationPart": 9.600000000000001,
+         "provenanceStatus": "cited",
+         "verifiedOn": null,
+         "sourceKey": "REQ-CA-ICAR2013"
+        },
+        "P": {
+         "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+         "sourceTable": "Table 6.1 (Phosphorus Maintenance + Lactation)",
+         "sourcePage": "p. 26",
+         "formulaDisplay": "0.05 * 325 + 2 * 6.4 = 16.3 + 12.8 = 29.1 g/d",
+         "maintenancePart": 16.25,
+         "lactationPart": 12.8,
+         "provenanceStatus": "cited",
+         "verifiedOn": null,
+         "sourceKey": "REQ-P-ICAR2013"
+        }
+       }
+      }
+     },
+     {
+      "key": "a2",
+      "milkTargetLPerDay": 3.86,
+      "milkExactLPerDay": 3.86,
+      "milkLPerDay": 3.8,
+      "solution": {
+       "status": "optimal",
+       "breedId": "nondescript_cow",
+       "supportedMilkLPerDay": 3.8,
+       "supportedMilkExactLPerDay": 3.86,
+       "milkCapLPerDay": 3.86,
+       "capBasis": "dahd_average",
+       "effectiveCapLPerDay": 3.86,
+       "effectiveCapSource": "breed",
+       "bindingConstraint": "breed_cap",
+       "tightConstraints": [
+        "breed_cap"
+       ],
+       "feedLimitIds": [],
+       "verdict": {
+        "kind": "gain",
+        "gainLPerDay": 0.8
+       },
+       "costAtTodayMilkInrPerDay": 52.650203261938124,
+       "costAtCapInrPerDay": 63.631499443072684,
+       "fatComparison": {
+        "todayFatPct": 4.2,
+        "breedFatPct": null,
+        "breedFatPctLow": null,
+        "breedFatPctHigh": null
+       },
+       "maintenanceCostInrPerDay": 16.584318521429203,
+       "budgetInrPerDay": 250,
+       "referenceCostInrPerDay": 250,
+       "underBudgetInr": 88.177,
+       "feeds": [
+        {
+         "feedId": "maize_green",
+         "kgAsFed": 8,
+         "dmKg": 1.84,
+         "costInr": 20,
+         "priceInrPerKg": 2.5,
+         "atCap": false,
+         "source": "buy"
+        },
+        {
+         "feedId": "mustard_cake",
+         "kgAsFed": 1,
+         "dmKg": 0.91,
+         "costInr": 33,
+         "priceInrPerKg": 33,
+         "atCap": false,
+         "source": "buy"
+        },
+        {
+         "feedId": "wheat_bran",
+         "kgAsFed": 0.12,
+         "dmKg": 0.107,
+         "costInr": 2.406,
+         "priceInrPerKg": 20,
+         "atCap": false,
+         "source": "buy"
+        },
+        {
+         "feedId": "mineral_mix",
+         "kgAsFed": 0.1,
+         "dmKg": 0.098,
+         "costInr": 7,
+         "priceInrPerKg": 70,
+         "atCap": false,
+         "source": "buy"
+        },
+        {
+         "feedId": "common_salt",
+         "kgAsFed": 0.05,
+         "dmKg": 0.05,
+         "costInr": 0.4,
+         "priceInrPerKg": 8,
+         "atCap": false,
+         "source": "buy"
+        },
+        {
+         "feedId": "wheat_straw",
+         "kgAsFed": 5.5,
+         "dmKg": 4.95,
+         "costInr": 0,
+         "priceInrPerKg": 0,
+         "atCap": false,
+         "source": "home"
+        }
+       ],
+       "totalKgAsFed": 14.77,
+       "totalCostInr": 62.806,
+       "requirementsAtS": {
+        "dmKgPerDay": 7.996030797869552,
+        "cpGramsPerDay": 656.0842760346775,
+        "meMcalPerDay": 14.599137355428491,
+        "caGramsPerDay": 24.73,
+        "pGramsPerDay": 21.6
+       },
+       "supplied": {
+        "dmKgPerDay": 7.9545892252167345,
+        "cpGramsPerDay": 656.0842760346775,
+        "meMcalPerDay": 15.181640908085182,
+        "caGramsPerDay": 51.308507070260085,
+        "pGramsPerDay": 30.915981477384076
+       },
+       "coveragePct": {
+        "DM": 99.48172319866678,
+        "CP": 100,
+        "ME": 103.98998610996762,
+        "Ca": 207.47475564197364,
+        "P": 143.12954387677811
+       },
+       "bindingConstraints": [
+        "DM",
+        "CP"
+       ],
+       "roughageMinShare": 0.4,
+       "roughageShareAchieved": 0.8535953030076165,
+       "roughageSharePct": 85.35953030076165,
+       "roughageMinSharePct": 40,
+       "currentCostInr": null,
+       "savingsInr": null,
+       "savingsPct": null,
+       "solvedOn": "2026-10-15",
+       "sourceKey": "PROTO-HERD-FIXTURE"
+      },
+      "requirementAtS": {
+       "atMilkLPerDay": 3.8,
+       "requirements": {
+        "dmKgPerDay": 7.996030797869552,
+        "cpGramsPerDay": 656.0842760346775,
+        "meMcalPerDay": 14.599137355428491,
+        "caGramsPerDay": 24.73,
+        "pGramsPerDay": 21.6
+       },
+       "citations": {
+        "DM": {
+         "sourceDoc": "NRC 2001, Nutrient Requirements of Dairy Cattle (7th rev. ed.)",
+         "sourceTable": "Chapter 1, Equation 1-1",
+         "sourcePage": "p. 4",
+         "formulaDisplay": "k0 + kY * 3.8 L = 6.56 + 0.379 * 3.8 = 8.00 kg/d (WOL=20, lambda=0.989, W^0.75=68.45, FCM/L=1.030)",
+         "maintenancePart": 6.55549142200824,
+         "lactationPart": 1.4405393758613119,
+         "provenanceStatus": "cited",
+         "verifiedOn": null,
+         "sourceKey": "REQ-DMI-NRC2001-EQ1-1"
+        },
+        "CP": {
+         "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+         "sourceTable": "Table 4.1, Table 4.2, Table 5.1 & Table 5.2 (Maintenance + Lactation CP)",
+         "sourcePage": "pp. 12–24",
+         "formulaDisplay": "4.15 * 280^0.75 + (37 + 14.5 * 4.2) * 3.8 = 284 + 372 = 656 g/d",
+         "maintenancePart": 284.06427603467756,
+         "lactationPart": 372.02,
+         "provenanceStatus": "cited",
+         "verifiedOn": null,
+         "sourceKey": "REQ-CP-ICAR2013"
+        },
+        "ME": {
+         "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+         "sourceTable": "Table 4.1, Table 4.2, Table 5.1 & Table 5.2 (Maintenance + Lactation ME)",
+         "sourcePage": "pp. 12–24",
+         "formulaDisplay": "0.145 * 280^0.75 + (0.39 + 0.2 * 4.2) * 3.8 = 9.93 + 4.67 = 14.60 Mcal/d",
+         "maintenancePart": 9.925137355428491,
+         "lactationPart": 4.6739999999999995,
+         "provenanceStatus": "cited",
+         "verifiedOn": null,
+         "sourceKey": "REQ-ME-ICAR2013"
+        },
+        "Ca": {
+         "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+         "sourceTable": "Table 6.1 (Calcium Maintenance + Lactation)",
+         "sourcePage": "p. 26",
+         "formulaDisplay": "0.07 * 280 + (1 + 0.5 * 0.7) * 3.8 = 19.6 + 5.1 = 24.7 g/d",
+         "maintenancePart": 19.6,
+         "lactationPart": 5.13,
+         "provenanceStatus": "cited",
+         "verifiedOn": null,
+         "sourceKey": "REQ-CA-ICAR2013"
+        },
+        "P": {
+         "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+         "sourceTable": "Table 6.1 (Phosphorus Maintenance + Lactation)",
+         "sourcePage": "p. 26",
+         "formulaDisplay": "0.05 * 280 + 2 * 3.8 = 14.0 + 7.6 = 21.6 g/d",
+         "maintenancePart": 14,
+         "lactationPart": 7.6,
+         "provenanceStatus": "cited",
+         "verifiedOn": null,
+         "sourceKey": "REQ-P-ICAR2013"
+        }
+       }
+      }
+     }
+    ],
+    "buyOrder": [
+     "common_salt",
+     "mineral_mix",
+     "wheat_bran",
+     "maize_green",
+     "mustard_cake"
+    ],
+    "shopping": {
+     "buyFirst": [
+      {
+       "feedId": "common_salt",
+       "kgPerDay": 0.1,
+       "costInrPerDay": 0.8,
+       "priceInrPerKg": 8,
+       "perAnimalKg": [
+        {
+         "key": "a1",
+         "kg": 0.05
+        },
+        {
+         "key": "a2",
+         "kg": 0.05
+        }
+       ]
+      },
+      {
+       "feedId": "mineral_mix",
+       "kgPerDay": 0.2,
+       "costInrPerDay": 14,
+       "priceInrPerKg": 70,
+       "perAnimalKg": [
+        {
+         "key": "a1",
+         "kg": 0.1
+        },
+        {
+         "key": "a2",
+         "kg": 0.1
+        }
+       ]
+      },
+      {
+       "feedId": "wheat_bran",
+       "kgPerDay": 1.093,
+       "costInrPerDay": 21.865,
+       "priceInrPerKg": 20,
+       "perAnimalKg": [
+        {
+         "key": "a1",
+         "kg": 0.973
+        },
+        {
+         "key": "a2",
+         "kg": 0.12
+        }
+       ]
+      }
+     ],
+     "later": [
+      {
+       "line": {
+        "feedId": "maize_green",
+        "kgPerDay": 17.063,
+        "costInrPerDay": 42.658,
+        "priceInrPerKg": 2.5,
+        "perAnimalKg": [
+         {
+          "key": "a1",
+          "kg": 9.063
+         },
+         {
+          "key": "a2",
+          "kg": 8
+         }
+        ]
+       },
+       "deltaMilkExactL": 2.4,
+       "deltaMilkL": 2.4,
+       "step": {
+        "k": 4,
+        "prefixFeedIds": [
+         "common_salt",
+         "mineral_mix",
+         "wheat_bran",
+         "maize_green"
+        ],
+        "shareT": 0.651,
+        "totalMilkL": 7,
+        "purchaseCostInrPerDay": 157.713,
+        "addedFeedIds": [
+         "maize_green"
+        ]
+       },
+       "previous": {
+        "k": 3,
+        "prefixFeedIds": [
+         "common_salt",
+         "mineral_mix",
+         "wheat_bran"
+        ],
+        "shareT": 0.453,
+        "totalMilkL": 4.6,
+        "purchaseCostInrPerDay": 113.456,
+        "addedFeedIds": [
+         "common_salt",
+         "mineral_mix",
+         "wheat_bran"
+        ]
+       }
+      },
+      {
+       "line": {
+        "feedId": "mustard_cake",
+        "kgPerDay": 2.5,
+        "costInrPerDay": 82.5,
+        "priceInrPerKg": 33,
+        "perAnimalKg": [
+         {
+          "key": "a1",
+          "kg": 1.5
+         },
+         {
+          "key": "a2",
+          "kg": 1
+         }
+        ]
+       },
+       "deltaMilkExactL": 3.2,
+       "deltaMilkL": 3.2,
+       "step": {
+        "k": 5,
+        "prefixFeedIds": [
+         "common_salt",
+         "mineral_mix",
+         "wheat_bran",
+         "maize_green",
+         "mustard_cake"
+        ],
+        "shareT": 1,
+        "totalMilkL": 10.2,
+        "purchaseCostInrPerDay": 161.823,
+        "addedFeedIds": [
+         "mustard_cake"
+        ]
+       },
+       "previous": {
+        "k": 4,
+        "prefixFeedIds": [
+         "common_salt",
+         "mineral_mix",
+         "wheat_bran",
+         "maize_green"
+        ],
+        "shareT": 0.651,
+        "totalMilkL": 7,
+        "purchaseCostInrPerDay": 157.713,
+        "addedFeedIds": [
+         "maize_green"
+        ]
+       }
+      }
+     ],
+     "totalInr": 161.823,
+     "firstStep": {
+      "k": 3,
+      "prefixFeedIds": [
+       "common_salt",
+       "mineral_mix",
+       "wheat_bran"
+      ],
+      "shareT": 0.453,
+      "totalMilkL": 4.6,
+      "purchaseCostInrPerDay": 113.456
+     }
+    },
+    "notNeeded": [
+     "barley_straw"
+    ],
+    "budgetPrompt": null,
+    "shortfall": null,
+    "infeasible": null,
+    "lastStepMatchesBest": true
+   }
+  },
+  {
+   "id": "tight_budget",
+   "plan": {
+    "animals": [
+     {
+      "key": "a1",
+      "label": {
+       "species": "cow",
+       "n": 1
+      },
+      "profile": {
+       "species": "cow",
+       "breedId": "sahiwal",
+       "bodyWeightKg": 298,
+       "milkYieldLitersPerDay": 10,
+       "milkFatPct": 4.93
+      },
+      "weightSource": "breed",
+      "fatSource": "breed",
+      "isConfirmed": true
+     },
+     {
+      "key": "a2",
+      "label": {
+       "species": "buffalo",
+       "n": 1
+      },
+      "profile": {
+       "species": "buffalo",
+       "breedId": "murrah",
+       "bodyWeightKg": 516,
+       "milkYieldLitersPerDay": 8,
+       "milkFatPct": 7.34
+      },
+      "weightSource": "breed",
+      "fatSource": "breed",
+      "isConfirmed": true
+     }
+    ],
+    "homeFeeds": [
+     {
+      "feedId": "wheat_straw",
+      "kgPerDay": 8
+     }
+    ],
+    "budgetInrPerDay": 200,
+    "buySet": [
+     {
+      "feedId": "bajra_green",
+      "priceInrPerKgAsFed": 3,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "jowar_green",
+      "priceInrPerKgAsFed": 2.5,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "maize_green",
+      "priceInrPerKgAsFed": 2.5,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "cowpea_green",
+      "priceInrPerKgAsFed": 3,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "guar_green",
+      "priceInrPerKgAsFed": 3,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "lucerne",
+      "priceInrPerKgAsFed": 3.5,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "marvel_grass",
+      "priceInrPerKgAsFed": 6,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "wheat_straw",
+      "priceInrPerKgAsFed": 6,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "bajra_stover",
+      "priceInrPerKgAsFed": 5,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "barley_straw",
+      "priceInrPerKgAsFed": 6,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "groundnut_haulm",
+      "priceInrPerKgAsFed": 8,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "guar_straw",
+      "priceInrPerKgAsFed": 5,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "moong_straw",
+      "priceInrPerKgAsFed": 6,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "jowar_stover",
+      "priceInrPerKgAsFed": 4.5,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "mustard_cake",
+      "priceInrPerKgAsFed": 33,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "cottonseed_cake",
+      "priceInrPerKgAsFed": 38,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "guar_meal",
+      "priceInrPerKgAsFed": 42,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "groundnut_cake",
+      "priceInrPerKgAsFed": 37,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "wheat_bran",
+      "priceInrPerKgAsFed": 20,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "rice_bran_dorb",
+      "priceInrPerKgAsFed": 17,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "pulse_chuni",
+      "priceInrPerKgAsFed": 23,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "bajra_grain",
+      "priceInrPerKgAsFed": 24,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "maize_grain",
+      "priceInrPerKgAsFed": 32,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "saras_compound",
+      "priceInrPerKgAsFed": 22,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "mineral_mix",
+      "priceInrPerKgAsFed": 70,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     },
+     {
+      "feedId": "common_salt",
+      "priceInrPerKgAsFed": 8,
+      "maxKgAsFedPerDay": null,
+      "currentKgAsFedPerDay": null
+     }
+    ],
+    "month": 10,
+    "status": "optimal",
+    "best": {
+     "status": "optimal",
+     "shareT": 0.385,
+     "stage1Feasible": true,
+     "budgetTight": true,
+     "limits": [
+      {
+       "kind": "budget"
+      }
+     ],
+     "maintenanceCostInrPerDay": 83.156,
+     "costAtTargetInrPerDay": 387.425,
+     "purchaseCostInrPerDay": 198.586,
+     "budgetInrPerDay": 200,
+     "animals": [
+      {
+       "key": "a1",
+       "milkTargetLPerDay": 11.15,
+       "milkExactLPerDay": 4.291,
+       "milkLPerDay": 4.2,
+       "solution": {
+        "status": "optimal",
+        "breedId": "sahiwal",
+        "supportedMilkLPerDay": 4.2,
+        "supportedMilkExactLPerDay": 4.291,
+        "milkCapLPerDay": 11.15,
+        "capBasis": "cited_peak",
+        "effectiveCapLPerDay": 11.15,
+        "effectiveCapSource": "breed",
+        "bindingConstraint": "budget",
+        "tightConstraints": [
+         "budget"
+        ],
+        "feedLimitIds": [],
+        "verdict": {
+         "kind": "below_today",
+         "todayMilkLPerDay": 10,
+         "keepCostInrPerDay": 170.13521530759303,
+         "costToKeepTodayInrPerDay": 170.13521530759303,
+         "limitingNutrients": [],
+         "limitingAtToday": []
+        },
+        "costAtTodayMilkInrPerDay": 170.13521530759303,
+        "costAtCapInrPerDay": null,
+        "fatComparison": {
+         "todayFatPct": 4.93,
+         "breedFatPct": 4.93,
+         "breedFatPctLow": 4.93,
+         "breedFatPctHigh": null
+        },
+        "maintenanceCostInrPerDay": 33.818579223513765,
+        "budgetInrPerDay": 200,
+        "referenceCostInrPerDay": 200,
+        "underBudgetInr": 1.414,
+        "feeds": [
+         {
+          "feedId": "maize_green",
+          "kgAsFed": 16,
+          "dmKg": 3.68,
+          "costInr": 40,
+          "priceInrPerKg": 2.5,
+          "atCap": false,
+          "source": "buy"
+         },
+         {
+          "feedId": "mustard_cake",
+          "kgAsFed": 0.805,
+          "dmKg": 0.733,
+          "costInr": 26.576,
+          "priceInrPerKg": 33,
+          "atCap": false,
+          "source": "buy"
+         },
+         {
+          "feedId": "wheat_bran",
+          "kgAsFed": 0.758,
+          "dmKg": 0.674,
+          "costInr": 15.154,
+          "priceInrPerKg": 20,
+          "atCap": false,
+          "source": "buy"
+         },
+         {
+          "feedId": "mineral_mix",
+          "kgAsFed": 0.1,
+          "dmKg": 0.098,
+          "costInr": 7,
+          "priceInrPerKg": 70,
+          "atCap": false,
+          "source": "buy"
+         },
+         {
+          "feedId": "common_salt",
+          "kgAsFed": 0.05,
+          "dmKg": 0.05,
+          "costInr": 0.4,
+          "priceInrPerKg": 8,
+          "atCap": false,
+          "source": "buy"
+         },
+         {
+          "feedId": "wheat_straw",
+          "kgAsFed": 3,
+          "dmKg": 2.7,
+          "costInr": 0,
+          "priceInrPerKg": 0,
+          "atCap": false,
+          "source": "home"
+         }
+        ],
+        "totalKgAsFed": 20.713,
+        "totalCostInr": 89.13,
+        "requirementsAtS": {
+         "dmKgPerDay": 8.630525909679411,
+         "cpGramsPerDay": 753.290021020632,
+         "meMcalPerDay": 16.179124830841356,
+         "caGramsPerDay": 28.063000000000002,
+         "pGramsPerDay": 23.3
+        },
+        "supplied": {
+         "dmKgPerDay": 7.9346885065442745,
+         "cpGramsPerDay": 753.2900210206321,
+         "meMcalPerDay": 16.17912483084136,
+         "caGramsPerDay": 50.43910614388776,
+         "pGramsPerDay": 37.59149425612794
+        },
+        "coveragePct": {
+         "DM": 91.93748549720785,
+         "CP": 100.00000000000003,
+         "ME": 100.00000000000003,
+         "Ca": 179.73526046355616,
+         "P": 161.3368852194332
+        },
+        "bindingConstraints": [
+         "CP",
+         "ME"
+        ],
+        "roughageMinShare": 0.4,
+        "roughageShareAchieved": 0.8040643302806384,
+        "roughageSharePct": 80.40643302806384,
+        "roughageMinSharePct": 40,
+        "currentCostInr": null,
+        "savingsInr": null,
+        "savingsPct": null,
+        "solvedOn": "2026-10-15",
+        "sourceKey": "PROTO-HERD-FIXTURE"
+       },
+       "requirementAtS": {
+        "atMilkLPerDay": 4.2,
+        "requirements": {
+         "dmKgPerDay": 8.630525909679411,
+         "cpGramsPerDay": 753.290021020632,
+         "meMcalPerDay": 16.179124830841356,
+         "caGramsPerDay": 28.063000000000002,
+         "pGramsPerDay": 23.3
+        },
+        "citations": {
+         "DM": {
+          "sourceDoc": "NRC 2001, Nutrient Requirements of Dairy Cattle (7th rev. ed.)",
+          "sourceTable": "Chapter 1, Equation 1-1",
+          "sourcePage": "p. 4",
+          "formulaDisplay": "k0 + kY * 4.2 L = 6.87 + 0.419 * 4.2 = 8.63 kg/d (WOL=20, lambda=0.989, W^0.75=71.72, FCM/L=1.140)",
+          "maintenancePart": 6.869085593140155,
+          "lactationPart": 1.761440316539257,
+          "provenanceStatus": "cited",
+          "verifiedOn": null,
+          "sourceKey": "REQ-DMI-NRC2001-EQ1-1"
+         },
+         "CP": {
+          "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+          "sourceTable": "Table 4.1, Table 4.2, Table 5.1 & Table 5.2 (Maintenance + Lactation CP)",
+          "sourcePage": "pp. 12–24",
+          "formulaDisplay": "4.15 * 298^0.75 + (37 + 14.5 * 4.9) * 4.2 = 298 + 456 = 753 g/d",
+          "maintenancePart": 297.653021020632,
+          "lactationPart": 455.637,
+          "provenanceStatus": "cited",
+          "verifiedOn": null,
+          "sourceKey": "REQ-CP-ICAR2013"
+         },
+         "ME": {
+          "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+          "sourceTable": "Table 4.1, Table 4.2, Table 5.1 & Table 5.2 (Maintenance + Lactation ME)",
+          "sourcePage": "pp. 12–24",
+          "formulaDisplay": "0.145 * 298^0.75 + (0.39 + 0.2 * 4.9) * 4.2 = 10.40 + 5.78 = 16.18 Mcal/d",
+          "maintenancePart": 10.399924830841357,
+          "lactationPart": 5.7791999999999994,
+          "provenanceStatus": "cited",
+          "verifiedOn": null,
+          "sourceKey": "REQ-ME-ICAR2013"
+         },
+         "Ca": {
+          "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+          "sourceTable": "Table 6.1 (Calcium Maintenance + Lactation)",
+          "sourcePage": "p. 26",
+          "formulaDisplay": "0.07 * 298 + (1 + 0.5 * 1.4) * 4.2 = 20.9 + 7.2 = 28.1 g/d",
+          "maintenancePart": 20.860000000000003,
+          "lactationPart": 7.202999999999999,
+          "provenanceStatus": "cited",
+          "verifiedOn": null,
+          "sourceKey": "REQ-CA-ICAR2013"
+         },
+         "P": {
+          "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+          "sourceTable": "Table 6.1 (Phosphorus Maintenance + Lactation)",
+          "sourcePage": "p. 26",
+          "formulaDisplay": "0.05 * 298 + 2 * 4.2 = 14.9 + 8.4 = 23.3 g/d",
+          "maintenancePart": 14.9,
+          "lactationPart": 8.4,
+          "provenanceStatus": "cited",
+          "verifiedOn": null,
+          "sourceKey": "REQ-P-ICAR2013"
+         }
+        }
+       }
+      },
+      {
+       "key": "a2",
+       "milkTargetLPerDay": 9.64,
+       "milkExactLPerDay": 3.71,
+       "milkLPerDay": 3.7,
+       "solution": {
+        "status": "optimal",
+        "breedId": "murrah",
+        "supportedMilkLPerDay": 3.7,
+        "supportedMilkExactLPerDay": 3.71,
+        "milkCapLPerDay": 9.64,
+        "capBasis": "cited_peak",
+        "effectiveCapLPerDay": 9.64,
+        "effectiveCapSource": "breed",
+        "bindingConstraint": "budget",
+        "tightConstraints": [
+         "budget"
+        ],
+        "feedLimitIds": [],
+        "verdict": {
+         "kind": "below_today",
+         "todayMilkLPerDay": 8,
+         "keepCostInrPerDay": 186.64811599623818,
+         "costToKeepTodayInrPerDay": 186.64811599623818,
+         "limitingNutrients": [],
+         "limitingAtToday": []
+        },
+        "costAtTodayMilkInrPerDay": 186.64811599623818,
+        "costAtCapInrPerDay": 216.08859808053947,
+        "fatComparison": {
+         "todayFatPct": 7.34,
+         "breedFatPct": 7.34,
+         "breedFatPctLow": 7.34,
+         "breedFatPctHigh": null
+        },
+        "maintenanceCostInrPerDay": 49.3373757679965,
+        "budgetInrPerDay": 200,
+        "referenceCostInrPerDay": 200,
+        "underBudgetInr": 1.414,
+        "feeds": [
+         {
+          "feedId": "maize_green",
+          "kgAsFed": 22,
+          "dmKg": 5.06,
+          "costInr": 55,
+          "priceInrPerKg": 2.5,
+          "atCap": false,
+          "source": "buy"
+         },
+         {
+          "feedId": "mustard_cake",
+          "kgAsFed": 0.989,
+          "dmKg": 0.9,
+          "costInr": 32.647,
+          "priceInrPerKg": 33,
+          "atCap": false,
+          "source": "buy"
+         },
+         {
+          "feedId": "wheat_bran",
+          "kgAsFed": 0.72,
+          "dmKg": 0.641,
+          "costInr": 14.409,
+          "priceInrPerKg": 20,
+          "atCap": false,
+          "source": "buy"
+         },
+         {
+          "feedId": "mineral_mix",
+          "kgAsFed": 0.1,
+          "dmKg": 0.098,
+          "costInr": 7,
+          "priceInrPerKg": 70,
+          "atCap": false,
+          "source": "buy"
+         },
+         {
+          "feedId": "common_salt",
+          "kgAsFed": 0.05,
+          "dmKg": 0.05,
+          "costInr": 0.4,
+          "priceInrPerKg": 8,
+          "atCap": false,
+          "source": "buy"
+         },
+         {
+          "feedId": "wheat_straw",
+          "kgAsFed": 5,
+          "dmKg": 4.5,
+          "costInr": 0,
+          "priceInrPerKg": 0,
+          "atCap": false,
+          "source": "home"
+         }
+        ],
+        "totalKgAsFed": 28.859,
+        "totalCostInr": 109.456,
+        "requirementsAtS": {
+         "dmKgPerDay": 12.412720240508182,
+         "cpGramsPerDay": 979.9899182116571,
+         "meMcalPerDay": 22.572995937515728,
+         "caGramsPerDay": 46.92400000000001,
+         "pGramsPerDay": 33.2
+        },
+        "supplied": {
+         "dmKgPerDay": 11.248990018807477,
+         "cpGramsPerDay": 979.9899182116571,
+         "meMcalPerDay": 22.572995937515735,
+         "caGramsPerDay": 61.80136059190727,
+         "pGramsPerDay": 43.448525773204494
+        },
+        "coveragePct": {
+         "DM": 90.62469628612962,
+         "CP": 100,
+         "ME": 100.00000000000003,
+         "Ca": 131.70522673239122,
+         "P": 130.86905353374846
+        },
+        "bindingConstraints": [
+         "CP",
+         "ME"
+        ],
+        "roughageMinShare": 0.4,
+        "roughageShareAchieved": 0.8498540743672448,
+        "roughageSharePct": 84.98540743672449,
+        "roughageMinSharePct": 40,
+        "currentCostInr": null,
+        "savingsInr": null,
+        "savingsPct": null,
+        "solvedOn": "2026-10-15",
+        "sourceKey": "PROTO-HERD-FIXTURE"
+       },
+       "requirementAtS": {
+        "atMilkLPerDay": 3.7,
+        "requirements": {
+         "dmKgPerDay": 12.412720240508182,
+         "cpGramsPerDay": 979.9899182116571,
+         "meMcalPerDay": 22.572995937515728,
+         "caGramsPerDay": 46.92400000000001,
+         "pGramsPerDay": 33.2
+        },
+        "citations": {
+         "DM": {
+          "sourceDoc": "NRC 2001, Nutrient Requirements of Dairy Cattle (7th rev. ed.)",
+          "sourceTable": "Chapter 1, Equation 1-1",
+          "sourcePage": "p. 4",
+          "formulaDisplay": "k0 + kY * 3.7 L = 10.37 + 0.552 * 3.7 = 12.41 kg/d (WOL=20, lambda=0.989, W^0.75=108.26, FCM/L=1.501)",
+          "maintenancePart": 10.368692766895263,
+          "lactationPart": 2.0440274736129194,
+          "provenanceStatus": "cited",
+          "verifiedOn": null,
+          "sourceKey": "REQ-DMI-NRC2001-EQ1-1"
+         },
+         "CP": {
+          "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+          "sourceTable": "Table 4.1, Table 4.2, Table 5.1 & Table 5.2 (Maintenance + Lactation CP)",
+          "sourcePage": "pp. 12–24",
+          "formulaDisplay": "4.15 * 516^0.75 + (37 + 14.5 * 7.3) * 3.7 = 449 + 531 = 980 g/d",
+          "maintenancePart": 449.29891821165717,
+          "lactationPart": 530.691,
+          "provenanceStatus": "cited",
+          "verifiedOn": null,
+          "sourceKey": "REQ-CP-ICAR2013"
+         },
+         "ME": {
+          "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+          "sourceTable": "Table 4.1, Table 4.2, Table 5.1 & Table 5.2 (Maintenance + Lactation ME)",
+          "sourcePage": "pp. 12–24",
+          "formulaDisplay": "0.145 * 516^0.75 + (0.39 + 0.2 * 7.3) * 3.7 = 15.70 + 6.87 = 22.57 Mcal/d",
+          "maintenancePart": 15.698395937515729,
+          "lactationPart": 6.874600000000001,
+          "provenanceStatus": "cited",
+          "verifiedOn": null,
+          "sourceKey": "REQ-ME-ICAR2013"
+         },
+         "Ca": {
+          "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+          "sourceTable": "Table 6.1 (Calcium Maintenance + Lactation)",
+          "sourcePage": "p. 26",
+          "formulaDisplay": "0.07 * 516 + (1 + 0.5 * 3.8) * 3.7 = 36.1 + 10.8 = 46.9 g/d",
+          "maintenancePart": 36.120000000000005,
+          "lactationPart": 10.804,
+          "provenanceStatus": "cited",
+          "verifiedOn": null,
+          "sourceKey": "REQ-CA-ICAR2013"
+         },
+         "P": {
+          "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+          "sourceTable": "Table 6.1 (Phosphorus Maintenance + Lactation)",
+          "sourcePage": "p. 26",
+          "formulaDisplay": "0.05 * 516 + 2 * 3.7 = 25.8 + 7.4 = 33.2 g/d",
+          "maintenancePart": 25.8,
+          "lactationPart": 7.4,
+          "provenanceStatus": "cited",
+          "verifiedOn": null,
+          "sourceKey": "REQ-P-ICAR2013"
+         }
+        }
+       }
+      }
+     ],
+     "buyTotals": [
+      {
+       "feedId": "common_salt",
+       "kgPerDay": 0.1,
+       "costInrPerDay": 0.8,
+       "priceInrPerKg": 8,
+       "perAnimalKg": [
+        {
+         "key": "a1",
+         "kg": 0.05
+        },
+        {
+         "key": "a2",
+         "kg": 0.05
+        }
+       ]
+      },
+      {
+       "feedId": "mineral_mix",
+       "kgPerDay": 0.2,
+       "costInrPerDay": 14,
+       "priceInrPerKg": 70,
+       "perAnimalKg": [
+        {
+         "key": "a1",
+         "kg": 0.1
+        },
+        {
+         "key": "a2",
+         "kg": 0.1
+        }
+       ]
+      },
+      {
+       "feedId": "wheat_bran",
+       "kgPerDay": 1.478,
+       "costInrPerDay": 29.563,
+       "priceInrPerKg": 20,
+       "perAnimalKg": [
+        {
+         "key": "a1",
+         "kg": 0.758
+        },
+        {
+         "key": "a2",
+         "kg": 0.72
+        }
+       ]
+      },
+      {
+       "feedId": "mustard_cake",
+       "kgPerDay": 1.795,
+       "costInrPerDay": 59.223,
+       "priceInrPerKg": 33,
+       "perAnimalKg": [
+        {
+         "key": "a1",
+         "kg": 0.805
+        },
+        {
+         "key": "a2",
+         "kg": 0.989
+        }
+       ]
+      },
+      {
+       "feedId": "maize_green",
+       "kgPerDay": 38,
+       "costInrPerDay": 95,
+       "priceInrPerKg": 2.5,
+       "perAnimalKg": [
+        {
+         "key": "a1",
+         "kg": 16
+        },
+        {
+         "key": "a2",
+         "kg": 22
+        }
+       ]
+      }
+     ],
+     "homeUse": [
+      {
+       "feedId": "wheat_straw",
+       "usedKgPerDay": 8,
+       "stockKgPerDay": 8,
+       "tight": true
+      }
+     ],
+     "stage2Path": "direct",
+     "stage3Applied": true,
+     "stage2PurchaseInrPerDay": 198.586,
+     "solvedOn": "2026-10-15",
+     "sourceKey": "PROTO-HERD-FIXTURE"
+    },
+    "perAnimal": [
+     {
+      "key": "a1",
+      "milkTargetLPerDay": 11.15,
+      "milkExactLPerDay": 4.291,
+      "milkLPerDay": 4.2,
+      "solution": {
+       "status": "optimal",
+       "breedId": "sahiwal",
+       "supportedMilkLPerDay": 4.2,
+       "supportedMilkExactLPerDay": 4.291,
+       "milkCapLPerDay": 11.15,
+       "capBasis": "cited_peak",
+       "effectiveCapLPerDay": 11.15,
+       "effectiveCapSource": "breed",
+       "bindingConstraint": "budget",
+       "tightConstraints": [
+        "budget"
+       ],
+       "feedLimitIds": [],
+       "verdict": {
+        "kind": "below_today",
+        "todayMilkLPerDay": 10,
+        "keepCostInrPerDay": 170.13521530759303,
+        "costToKeepTodayInrPerDay": 170.13521530759303,
+        "limitingNutrients": [],
+        "limitingAtToday": []
+       },
+       "costAtTodayMilkInrPerDay": 170.13521530759303,
+       "costAtCapInrPerDay": null,
+       "fatComparison": {
+        "todayFatPct": 4.93,
+        "breedFatPct": 4.93,
+        "breedFatPctLow": 4.93,
+        "breedFatPctHigh": null
+       },
+       "maintenanceCostInrPerDay": 33.818579223513765,
+       "budgetInrPerDay": 200,
+       "referenceCostInrPerDay": 200,
+       "underBudgetInr": 1.414,
+       "feeds": [
+        {
+         "feedId": "maize_green",
+         "kgAsFed": 16,
+         "dmKg": 3.68,
+         "costInr": 40,
+         "priceInrPerKg": 2.5,
+         "atCap": false,
+         "source": "buy"
+        },
+        {
+         "feedId": "mustard_cake",
+         "kgAsFed": 0.805,
+         "dmKg": 0.733,
+         "costInr": 26.576,
+         "priceInrPerKg": 33,
+         "atCap": false,
+         "source": "buy"
+        },
+        {
+         "feedId": "wheat_bran",
+         "kgAsFed": 0.758,
+         "dmKg": 0.674,
+         "costInr": 15.154,
+         "priceInrPerKg": 20,
+         "atCap": false,
+         "source": "buy"
+        },
+        {
+         "feedId": "mineral_mix",
+         "kgAsFed": 0.1,
+         "dmKg": 0.098,
+         "costInr": 7,
+         "priceInrPerKg": 70,
+         "atCap": false,
+         "source": "buy"
+        },
+        {
+         "feedId": "common_salt",
+         "kgAsFed": 0.05,
+         "dmKg": 0.05,
+         "costInr": 0.4,
+         "priceInrPerKg": 8,
+         "atCap": false,
+         "source": "buy"
+        },
+        {
+         "feedId": "wheat_straw",
+         "kgAsFed": 3,
+         "dmKg": 2.7,
+         "costInr": 0,
+         "priceInrPerKg": 0,
+         "atCap": false,
+         "source": "home"
+        }
+       ],
+       "totalKgAsFed": 20.713,
+       "totalCostInr": 89.13,
+       "requirementsAtS": {
+        "dmKgPerDay": 8.630525909679411,
+        "cpGramsPerDay": 753.290021020632,
+        "meMcalPerDay": 16.179124830841356,
+        "caGramsPerDay": 28.063000000000002,
+        "pGramsPerDay": 23.3
+       },
+       "supplied": {
+        "dmKgPerDay": 7.9346885065442745,
+        "cpGramsPerDay": 753.2900210206321,
+        "meMcalPerDay": 16.17912483084136,
+        "caGramsPerDay": 50.43910614388776,
+        "pGramsPerDay": 37.59149425612794
+       },
+       "coveragePct": {
+        "DM": 91.93748549720785,
+        "CP": 100.00000000000003,
+        "ME": 100.00000000000003,
+        "Ca": 179.73526046355616,
+        "P": 161.3368852194332
+       },
+       "bindingConstraints": [
+        "CP",
+        "ME"
+       ],
+       "roughageMinShare": 0.4,
+       "roughageShareAchieved": 0.8040643302806384,
+       "roughageSharePct": 80.40643302806384,
+       "roughageMinSharePct": 40,
+       "currentCostInr": null,
+       "savingsInr": null,
+       "savingsPct": null,
+       "solvedOn": "2026-10-15",
+       "sourceKey": "PROTO-HERD-FIXTURE"
+      },
+      "requirementAtS": {
+       "atMilkLPerDay": 4.2,
+       "requirements": {
+        "dmKgPerDay": 8.630525909679411,
+        "cpGramsPerDay": 753.290021020632,
+        "meMcalPerDay": 16.179124830841356,
+        "caGramsPerDay": 28.063000000000002,
+        "pGramsPerDay": 23.3
+       },
+       "citations": {
+        "DM": {
+         "sourceDoc": "NRC 2001, Nutrient Requirements of Dairy Cattle (7th rev. ed.)",
+         "sourceTable": "Chapter 1, Equation 1-1",
+         "sourcePage": "p. 4",
+         "formulaDisplay": "k0 + kY * 4.2 L = 6.87 + 0.419 * 4.2 = 8.63 kg/d (WOL=20, lambda=0.989, W^0.75=71.72, FCM/L=1.140)",
+         "maintenancePart": 6.869085593140155,
+         "lactationPart": 1.761440316539257,
+         "provenanceStatus": "cited",
+         "verifiedOn": null,
+         "sourceKey": "REQ-DMI-NRC2001-EQ1-1"
+        },
+        "CP": {
+         "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+         "sourceTable": "Table 4.1, Table 4.2, Table 5.1 & Table 5.2 (Maintenance + Lactation CP)",
+         "sourcePage": "pp. 12–24",
+         "formulaDisplay": "4.15 * 298^0.75 + (37 + 14.5 * 4.9) * 4.2 = 298 + 456 = 753 g/d",
+         "maintenancePart": 297.653021020632,
+         "lactationPart": 455.637,
+         "provenanceStatus": "cited",
+         "verifiedOn": null,
+         "sourceKey": "REQ-CP-ICAR2013"
+        },
+        "ME": {
+         "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+         "sourceTable": "Table 4.1, Table 4.2, Table 5.1 & Table 5.2 (Maintenance + Lactation ME)",
+         "sourcePage": "pp. 12–24",
+         "formulaDisplay": "0.145 * 298^0.75 + (0.39 + 0.2 * 4.9) * 4.2 = 10.40 + 5.78 = 16.18 Mcal/d",
+         "maintenancePart": 10.399924830841357,
+         "lactationPart": 5.7791999999999994,
+         "provenanceStatus": "cited",
+         "verifiedOn": null,
+         "sourceKey": "REQ-ME-ICAR2013"
+        },
+        "Ca": {
+         "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+         "sourceTable": "Table 6.1 (Calcium Maintenance + Lactation)",
+         "sourcePage": "p. 26",
+         "formulaDisplay": "0.07 * 298 + (1 + 0.5 * 1.4) * 4.2 = 20.9 + 7.2 = 28.1 g/d",
+         "maintenancePart": 20.860000000000003,
+         "lactationPart": 7.202999999999999,
+         "provenanceStatus": "cited",
+         "verifiedOn": null,
+         "sourceKey": "REQ-CA-ICAR2013"
+        },
+        "P": {
+         "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+         "sourceTable": "Table 6.1 (Phosphorus Maintenance + Lactation)",
+         "sourcePage": "p. 26",
+         "formulaDisplay": "0.05 * 298 + 2 * 4.2 = 14.9 + 8.4 = 23.3 g/d",
+         "maintenancePart": 14.9,
+         "lactationPart": 8.4,
+         "provenanceStatus": "cited",
+         "verifiedOn": null,
+         "sourceKey": "REQ-P-ICAR2013"
+        }
+       }
+      }
+     },
+     {
+      "key": "a2",
+      "milkTargetLPerDay": 9.64,
+      "milkExactLPerDay": 3.71,
+      "milkLPerDay": 3.7,
+      "solution": {
+       "status": "optimal",
+       "breedId": "murrah",
+       "supportedMilkLPerDay": 3.7,
+       "supportedMilkExactLPerDay": 3.71,
+       "milkCapLPerDay": 9.64,
+       "capBasis": "cited_peak",
+       "effectiveCapLPerDay": 9.64,
+       "effectiveCapSource": "breed",
+       "bindingConstraint": "budget",
+       "tightConstraints": [
+        "budget"
+       ],
+       "feedLimitIds": [],
+       "verdict": {
+        "kind": "below_today",
+        "todayMilkLPerDay": 8,
+        "keepCostInrPerDay": 186.64811599623818,
+        "costToKeepTodayInrPerDay": 186.64811599623818,
+        "limitingNutrients": [],
+        "limitingAtToday": []
+       },
+       "costAtTodayMilkInrPerDay": 186.64811599623818,
+       "costAtCapInrPerDay": 216.08859808053947,
+       "fatComparison": {
+        "todayFatPct": 7.34,
+        "breedFatPct": 7.34,
+        "breedFatPctLow": 7.34,
+        "breedFatPctHigh": null
+       },
+       "maintenanceCostInrPerDay": 49.3373757679965,
+       "budgetInrPerDay": 200,
+       "referenceCostInrPerDay": 200,
+       "underBudgetInr": 1.414,
+       "feeds": [
+        {
+         "feedId": "maize_green",
+         "kgAsFed": 22,
+         "dmKg": 5.06,
+         "costInr": 55,
+         "priceInrPerKg": 2.5,
+         "atCap": false,
+         "source": "buy"
+        },
+        {
+         "feedId": "mustard_cake",
+         "kgAsFed": 0.989,
+         "dmKg": 0.9,
+         "costInr": 32.647,
+         "priceInrPerKg": 33,
+         "atCap": false,
+         "source": "buy"
+        },
+        {
+         "feedId": "wheat_bran",
+         "kgAsFed": 0.72,
+         "dmKg": 0.641,
+         "costInr": 14.409,
+         "priceInrPerKg": 20,
+         "atCap": false,
+         "source": "buy"
+        },
+        {
+         "feedId": "mineral_mix",
+         "kgAsFed": 0.1,
+         "dmKg": 0.098,
+         "costInr": 7,
+         "priceInrPerKg": 70,
+         "atCap": false,
+         "source": "buy"
+        },
+        {
+         "feedId": "common_salt",
+         "kgAsFed": 0.05,
+         "dmKg": 0.05,
+         "costInr": 0.4,
+         "priceInrPerKg": 8,
+         "atCap": false,
+         "source": "buy"
+        },
+        {
+         "feedId": "wheat_straw",
+         "kgAsFed": 5,
+         "dmKg": 4.5,
+         "costInr": 0,
+         "priceInrPerKg": 0,
+         "atCap": false,
+         "source": "home"
+        }
+       ],
+       "totalKgAsFed": 28.859,
+       "totalCostInr": 109.456,
+       "requirementsAtS": {
+        "dmKgPerDay": 12.412720240508182,
+        "cpGramsPerDay": 979.9899182116571,
+        "meMcalPerDay": 22.572995937515728,
+        "caGramsPerDay": 46.92400000000001,
+        "pGramsPerDay": 33.2
+       },
+       "supplied": {
+        "dmKgPerDay": 11.248990018807477,
+        "cpGramsPerDay": 979.9899182116571,
+        "meMcalPerDay": 22.572995937515735,
+        "caGramsPerDay": 61.80136059190727,
+        "pGramsPerDay": 43.448525773204494
+       },
+       "coveragePct": {
+        "DM": 90.62469628612962,
+        "CP": 100,
+        "ME": 100.00000000000003,
+        "Ca": 131.70522673239122,
+        "P": 130.86905353374846
+       },
+       "bindingConstraints": [
+        "CP",
+        "ME"
+       ],
+       "roughageMinShare": 0.4,
+       "roughageShareAchieved": 0.8498540743672448,
+       "roughageSharePct": 84.98540743672449,
+       "roughageMinSharePct": 40,
+       "currentCostInr": null,
+       "savingsInr": null,
+       "savingsPct": null,
+       "solvedOn": "2026-10-15",
+       "sourceKey": "PROTO-HERD-FIXTURE"
+      },
+      "requirementAtS": {
+       "atMilkLPerDay": 3.7,
+       "requirements": {
+        "dmKgPerDay": 12.412720240508182,
+        "cpGramsPerDay": 979.9899182116571,
+        "meMcalPerDay": 22.572995937515728,
+        "caGramsPerDay": 46.92400000000001,
+        "pGramsPerDay": 33.2
+       },
+       "citations": {
+        "DM": {
+         "sourceDoc": "NRC 2001, Nutrient Requirements of Dairy Cattle (7th rev. ed.)",
+         "sourceTable": "Chapter 1, Equation 1-1",
+         "sourcePage": "p. 4",
+         "formulaDisplay": "k0 + kY * 3.7 L = 10.37 + 0.552 * 3.7 = 12.41 kg/d (WOL=20, lambda=0.989, W^0.75=108.26, FCM/L=1.501)",
+         "maintenancePart": 10.368692766895263,
+         "lactationPart": 2.0440274736129194,
+         "provenanceStatus": "cited",
+         "verifiedOn": null,
+         "sourceKey": "REQ-DMI-NRC2001-EQ1-1"
+        },
+        "CP": {
+         "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+         "sourceTable": "Table 4.1, Table 4.2, Table 5.1 & Table 5.2 (Maintenance + Lactation CP)",
+         "sourcePage": "pp. 12–24",
+         "formulaDisplay": "4.15 * 516^0.75 + (37 + 14.5 * 7.3) * 3.7 = 449 + 531 = 980 g/d",
+         "maintenancePart": 449.29891821165717,
+         "lactationPart": 530.691,
+         "provenanceStatus": "cited",
+         "verifiedOn": null,
+         "sourceKey": "REQ-CP-ICAR2013"
+        },
+        "ME": {
+         "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+         "sourceTable": "Table 4.1, Table 4.2, Table 5.1 & Table 5.2 (Maintenance + Lactation ME)",
+         "sourcePage": "pp. 12–24",
+         "formulaDisplay": "0.145 * 516^0.75 + (0.39 + 0.2 * 7.3) * 3.7 = 15.70 + 6.87 = 22.57 Mcal/d",
+         "maintenancePart": 15.698395937515729,
+         "lactationPart": 6.874600000000001,
+         "provenanceStatus": "cited",
+         "verifiedOn": null,
+         "sourceKey": "REQ-ME-ICAR2013"
+        },
+        "Ca": {
+         "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+         "sourceTable": "Table 6.1 (Calcium Maintenance + Lactation)",
+         "sourcePage": "p. 26",
+         "formulaDisplay": "0.07 * 516 + (1 + 0.5 * 3.8) * 3.7 = 36.1 + 10.8 = 46.9 g/d",
+         "maintenancePart": 36.120000000000005,
+         "lactationPart": 10.804,
+         "provenanceStatus": "cited",
+         "verifiedOn": null,
+         "sourceKey": "REQ-CA-ICAR2013"
+        },
+        "P": {
+         "sourceDoc": "ICAR 2013, Nutrient Requirements of Cattle and Buffalo; CELKAU Dairy Nutrition Standards",
+         "sourceTable": "Table 6.1 (Phosphorus Maintenance + Lactation)",
+         "sourcePage": "p. 26",
+         "formulaDisplay": "0.05 * 516 + 2 * 3.7 = 25.8 + 7.4 = 33.2 g/d",
+         "maintenancePart": 25.8,
+         "lactationPart": 7.4,
+         "provenanceStatus": "cited",
+         "verifiedOn": null,
+         "sourceKey": "REQ-P-ICAR2013"
+        }
+       }
+      }
+     }
+    ],
+    "buyOrder": [
+     "common_salt",
+     "mineral_mix",
+     "wheat_bran",
+     "mustard_cake",
+     "maize_green"
+    ],
+    "shopping": {
+     "buyFirst": [
+      {
+       "feedId": "common_salt",
+       "kgPerDay": 0.1,
+       "costInrPerDay": 0.8,
+       "priceInrPerKg": 8,
+       "perAnimalKg": [
+        {
+         "key": "a1",
+         "kg": 0.05
+        },
+        {
+         "key": "a2",
+         "kg": 0.05
+        }
+       ]
+      },
+      {
+       "feedId": "mineral_mix",
+       "kgPerDay": 0.2,
+       "costInrPerDay": 14,
+       "priceInrPerKg": 70,
+       "perAnimalKg": [
+        {
+         "key": "a1",
+         "kg": 0.1
+        },
+        {
+         "key": "a2",
+         "kg": 0.1
+        }
+       ]
+      },
+      {
+       "feedId": "wheat_bran",
+       "kgPerDay": 1.478,
+       "costInrPerDay": 29.563,
+       "priceInrPerKg": 20,
+       "perAnimalKg": [
+        {
+         "key": "a1",
+         "kg": 0.758
+        },
+        {
+         "key": "a2",
+         "kg": 0.72
+        }
+       ]
+      }
+     ],
+     "later": [
+      {
+       "line": {
+        "feedId": "mustard_cake",
+        "kgPerDay": 1.795,
+        "costInrPerDay": 59.223,
+        "priceInrPerKg": 33,
+        "perAnimalKg": [
+         {
+          "key": "a1",
+          "kg": 0.805
+         },
+         {
+          "key": "a2",
+          "kg": 0.989
+         }
+        ]
+       },
+       "deltaMilkExactL": 1.3,
+       "deltaMilkL": 1.3,
+       "step": {
+        "k": 4,
+        "prefixFeedIds": [
+         "common_salt",
+         "mineral_mix",
+         "wheat_bran",
+         "mustard_cake"
+        ],
+        "shareT": 0.207,
+        "totalMilkL": 4.6,
+        "purchaseCostInrPerDay": 198.762,
+        "addedFeedIds": [
+         "mustard_cake"
+        ]
+       },
+       "previous": {
+        "k": 3,
+        "prefixFeedIds": [
+         "common_salt",
+         "mineral_mix",
+         "wheat_bran"
+        ],
+        "shareT": 0.1,
+        "totalMilkL": 3.3,
+        "purchaseCostInrPerDay": 173.832,
+        "addedFeedIds": [
+         "common_salt",
+         "mineral_mix",
+         "wheat_bran"
+        ]
+       }
+      },
+      {
+       "line": {
+        "feedId": "maize_green",
+        "kgPerDay": 38,
+        "costInrPerDay": 95,
+        "priceInrPerKg": 2.5,
+        "perAnimalKg": [
+         {
+          "key": "a1",
+          "kg": 16
+         },
+         {
+          "key": "a2",
+          "kg": 22
+         }
+        ]
+       },
+       "deltaMilkExactL": 3.3,
+       "deltaMilkL": 3.3,
+       "step": {
+        "k": 5,
+        "prefixFeedIds": [
+         "common_salt",
+         "mineral_mix",
+         "wheat_bran",
+         "mustard_cake",
+         "maize_green"
+        ],
+        "shareT": 0.385,
+        "totalMilkL": 7.9,
+        "purchaseCostInrPerDay": 198.586,
+        "addedFeedIds": [
+         "maize_green"
+        ]
+       },
+       "previous": {
+        "k": 4,
+        "prefixFeedIds": [
+         "common_salt",
+         "mineral_mix",
+         "wheat_bran",
+         "mustard_cake"
+        ],
+        "shareT": 0.207,
+        "totalMilkL": 4.6,
+        "purchaseCostInrPerDay": 198.762,
+        "addedFeedIds": [
+         "mustard_cake"
+        ]
+       }
+      }
+     ],
+     "totalInr": 198.586,
+     "firstStep": {
+      "k": 3,
+      "prefixFeedIds": [
+       "common_salt",
+       "mineral_mix",
+       "wheat_bran"
+      ],
+      "shareT": 0.1,
+      "totalMilkL": 3.3,
+      "purchaseCostInrPerDay": 173.832
+     }
+    },
+    "notNeeded": [],
+    "budgetPrompt": {
+     "extraInrPerDay": 188,
+     "targetMilkL": 20.7,
+     "perAnimalTargetL": [
+      {
+       "key": "a1",
+       "targetL": 11.1
+      },
+      {
+       "key": "a2",
+       "targetL": 9.6
+      }
+     ],
+     "costAtTargetInrPerDay": 387.425,
+     "budgetInrPerDay": 200
+    },
+    "shortfall": null,
+    "infeasible": null,
+    "lastStepMatchesBest": true
+   }
+  }
+ ]
+}
