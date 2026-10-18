@@ -79,6 +79,7 @@ SahiDana is an offline-first, auditable Progressive Web Application (PWA) design
 - **Fair-Share Joint LP Optimization:** Solves a multi-animal joint LP maximizing a shared scale factor $t^* \in [0, 1]$ across milking animals ($Y_i = t^* g_i$) while holding dry animals at maintenance ($y_i = 0$), distributing shared on-farm feeds at ₹0 across the herd according to nutritional demand.
 - **Marginal Milk Buying Steps:** Computes a consolidated shopping list with real joint prefix solves guaranteeing non-decreasing milk production ($\Delta L_k \ge 0$) at each purchasing step.
 - **Independent SciPy HiGHS Cross-Check:** 100% mathematical agreement with Python's SciPy HiGHS optimizer within $10^{-4}$ across 18 single animals and 7 multi-animal benchmark herds.
+- **Beyond-Budget Expansion & Interactive Upgrade ("Then, if you can"):** Consolidates all affordable feeds into "What to buy" within the entered budget ($P(F) \le B_d$). When budget restricts yield ($t^* < 1.0$), "Then, if you can" dynamically suggests beyond-budget feed additions sorted descending by economic return ($\Delta L / \Delta\text{Cost}$) with an accessible `[+ Add to budget]` action that automatically increments the budget and triggers instant re-optimization.
 
 
 ---
